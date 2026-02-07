@@ -6,14 +6,18 @@ interface MovieCardProps {
   year: string;
   rating: string;
   color: string;
+  image: string;
   delay?: number;
+  onClick?: () => void;
 }
 export function MovieCard({
   title,
   year,
   rating,
   color,
-  delay = 0
+  image,
+  delay = 0,
+  onClick
 }: MovieCardProps) {
   return (
     <motion.div
@@ -37,7 +41,8 @@ export function MovieCard({
       whileHover={{
         y: -10,
         scale: 1.02
-      }}>
+      }}
+      onClick={onClick}>
 
       {/* Card Container with Clip Path */}
       <div
@@ -46,17 +51,28 @@ export function MovieCard({
           clipPath: 'polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%)'
         }}>
 
-        {/* Placeholder Gradient Image */}
+        {/* Real Image Background */}
         <div
-          className="absolute inset-0 opacity-60 transition-opacity duration-500 group-hover:opacity-80"
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
           style={{
-            background: `linear-gradient(135deg, ${color} 0%, #000 100%)`
+            backgroundImage: `url(${image})`
+          }} />
+
+
+        {/* Gradient Overlay (always visible for text readability) */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+
+        {/* Color Tint Overlay (subtle) */}
+        <div
+          className="absolute inset-0 opacity-20 mix-blend-overlay group-hover:opacity-30 transition-opacity"
+          style={{
+            backgroundColor: color
           }} />
 
 
         {/* Geometric Overlay Pattern */}
         <div
-          className="absolute inset-0 opacity-20 mix-blend-overlay"
+          className="absolute inset-0 opacity-10 mix-blend-overlay"
           style={{
             backgroundImage:
             'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.4) 0%, transparent 60%)'
@@ -64,8 +80,8 @@ export function MovieCard({
 
 
         {/* Content Overlay */}
-        <div className="absolute inset-0 p-6 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/40 to-transparent">
-          <h3 className="text-2xl font-bold text-white mb-1 leading-tight tracking-wide font-['Advent_Pro'] group-hover:text-cyan-200 transition-colors">
+        <div className="absolute inset-0 p-6 flex flex-col justify-end">
+          <h3 className="text-2xl font-bold text-white mb-1 leading-tight tracking-wide font-['Advent_Pro'] group-hover:text-cyan-200 transition-colors drop-shadow-lg">
             {title}
           </h3>
 
@@ -82,27 +98,23 @@ export function MovieCard({
             <div className="pt-4 flex items-center gap-2 text-cyan-300">
               <PlayCircle size={20} />
               <span className="text-sm uppercase tracking-widest">
-                Watch Now
+                View Details
               </span>
             </div>
           </div>
         </div>
 
         {/* Prismatic Shine Effect */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
       </div>
 
-      {/* Border Glow Effect (Simulated via separate element due to clip-path) */}
+      {/* Border Glow Effect */}
       <div
         className="absolute inset-[-1px] z-[-1] bg-gradient-to-br from-white/20 via-transparent to-white/20 opacity-30 group-hover:opacity-60 transition-opacity duration-300"
         style={{
           clipPath: 'polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%)'
         }} />
 
-
-      {/* Chromatic Aberration Shadow on Hover */}
-      <div className="absolute inset-0 z-[-2] bg-cyan-500/20 blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500 translate-x-2 translate-y-2" />
-      <div className="absolute inset-0 z-[-2] bg-red-500/20 blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500 -translate-x-2 -translate-y-2" />
     </motion.div>);
 
 }

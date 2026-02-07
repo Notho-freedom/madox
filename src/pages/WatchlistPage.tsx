@@ -7,31 +7,42 @@ const watchlist = [
   title: 'Interstellar',
   year: '2014',
   rating: '8.7',
-  color: '#0f766e'
+  color: '#0f766e',
+  image:
+  'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop'
 },
 {
   title: 'Dark',
   year: '2017',
   rating: '8.8',
-  color: '#ca8a04'
+  color: '#ca8a04',
+  image:
+  'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop'
 },
 {
   title: 'Arrival',
   year: '2016',
   rating: '7.9',
-  color: '#1d4ed8'
+  color: '#1d4ed8',
+  image:
+  'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop'
 },
 {
   title: 'Blade Runner 2049',
   year: '2017',
   rating: '8.0',
-  color: '#b91c1c'
+  color: '#b91c1c',
+  image:
+  'https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=2576&auto=format&fit=crop'
 }];
 
-export function WatchlistPage() {
+interface WatchlistPageProps {
+  onMovieClick: (movie: any) => void;
+}
+export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
   return (
     <motion.div
-      className="px-16 py-12 pb-32"
+      className="px-16 py-12 pb-32 pt-24"
       initial={{
         opacity: 0,
         y: 20
@@ -71,7 +82,11 @@ export function WatchlistPage() {
           {watchlist.map((item, index) =>
         <div key={index} className="relative group">
               <div className="flex justify-center">
-                <MovieCard {...item} delay={index * 0.05} />
+                <MovieCard
+              {...item}
+              delay={index * 0.05}
+              onClick={() => onMovieClick(item)} />
+
               </div>
               <button className="absolute top-4 right-8 z-20 p-2 bg-black/50 backdrop-blur-md rounded-full text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 border border-red-500/30">
                 <Trash2 size={16} />

@@ -7,79 +7,106 @@ const seriesList = [
   title: 'Severance',
   year: '2022',
   rating: '8.7',
-  color: '#0e7490'
+  color: '#0e7490',
+  image:
+  'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop'
 },
 {
   title: 'Dark',
   year: '2017',
   rating: '8.8',
-  color: '#ca8a04'
+  color: '#ca8a04',
+  image:
+  'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop'
 },
 {
   title: 'Westworld',
   year: '2016',
   rating: '8.5',
-  color: '#7e22ce'
+  color: '#7e22ce',
+  image:
+  'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop'
 },
 {
   title: 'Altered Carbon',
   year: '2018',
   rating: '7.9',
-  color: '#be123c'
+  color: '#be123c',
+  image:
+  'https://images.unsplash.com/photo-1506318137071-a8bcbf6755dd?q=80&w=800&auto=format&fit=crop'
 },
 {
   title: 'Black Mirror',
   year: '2011',
   rating: '8.7',
-  color: '#1e293b'
+  color: '#1e293b',
+  image:
+  'https://images.unsplash.com/photo-1509347528160-9a9e33742cd4?q=80&w=800&auto=format&fit=crop'
 },
 {
   title: 'The Expanse',
   year: '2015',
   rating: '8.5',
-  color: '#15803d'
+  color: '#15803d',
+  image:
+  'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=800&auto=format&fit=crop'
 },
 {
   title: 'Silo',
   year: '2023',
   rating: '8.1',
-  color: '#4b5563'
+  color: '#4b5563',
+  image:
+  'https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=2576&auto=format&fit=crop'
 },
 {
   title: 'Foundation',
   year: '2021',
   rating: '7.6',
-  color: '#1d4ed8'
+  color: '#1d4ed8',
+  image:
+  'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop'
 },
 {
   title: 'Andor',
   year: '2022',
   rating: '8.4',
-  color: '#ea580c'
+  color: '#ea580c',
+  image:
+  'https://images.unsplash.com/photo-1509347528160-9a9e33742cd4?q=80&w=800&auto=format&fit=crop'
 },
 {
   title: 'Stranger Things',
   year: '2016',
   rating: '8.7',
-  color: '#b91c1c'
+  color: '#b91c1c',
+  image:
+  'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop'
 },
 {
   title: 'The Mandalorian',
   year: '2019',
   rating: '8.7',
-  color: '#0f766e'
+  color: '#0f766e',
+  image:
+  'https://images.unsplash.com/photo-1506318137071-a8bcbf6755dd?q=80&w=800&auto=format&fit=crop'
 },
 {
   title: 'Arcane',
   year: '2021',
   rating: '9.0',
-  color: '#7e22ce'
+  color: '#7e22ce',
+  image:
+  'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=800&auto=format&fit=crop'
 }];
 
-export function SeriesPage() {
+interface SeriesPageProps {
+  onMovieClick: (movie: any) => void;
+}
+export function SeriesPage({ onMovieClick }: SeriesPageProps) {
   return (
     <motion.div
-      className="px-16 py-12 pb-32"
+      className="px-16 py-12 pb-32 pt-24"
       initial={{
         opacity: 0,
         y: 20
@@ -96,7 +123,6 @@ export function SeriesPage() {
         duration: 0.5
       }}>
 
-      {/* Featured Series Banner */}
       <div className="relative w-full h-[400px] mb-16 overflow-hidden group">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -132,7 +158,6 @@ export function SeriesPage() {
         </div>
       </div>
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-12 border-b border-white/10 pb-6">
         <div className="flex items-center gap-4">
           <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
@@ -142,11 +167,14 @@ export function SeriesPage() {
         </div>
       </div>
 
-      {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {seriesList.map((series, index) =>
         <div key={index} className="flex justify-center">
-            <MovieCard {...series} delay={index * 0.05} />
+            <MovieCard
+            {...series}
+            delay={index * 0.05}
+            onClick={() => onMovieClick(series)} />
+
           </div>
         )}
       </div>
