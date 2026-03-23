@@ -11,17 +11,21 @@ import {
   SkipForward,
   ChevronRight,
   X,
-  Loader2 } from
+  Loader2,
+  ExternalLink,
+  RefreshCcw,
+  AlertTriangle } from
 'lucide-react';
 import YouTube from 'react-youtube';
 import type { YouTubeEvent, YouTubePlayer } from 'react-youtube';
 import { getYouTubeThumbnail, type MovieData } from '../data/movies';
 import { useTrending } from '../hooks/useTMDB';
-import { poster, backdrop } from '../services/tmdb';
+import { isDesktopApp, openExternal } from '../utils/desktop';
 interface PlayerPageProps {
   movie: MovieData;
   onBack: () => void;
 }
+
 function formatTime(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor(seconds % 3600 / 60);
@@ -31,6 +35,13 @@ function formatTime(seconds: number): string {
   }
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
+
+function getPlayerOrigin(): string | undefined {
+  return /^https?:$/.test(window.location.protocol) ?
+  window.location.origin :
+  undefined;
+}
+
 export function PlayerPage({ movie, onBack }: PlayerPageProps) {
   const [player, setPlayer] = useState<YouTubePlayer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -43,11 +54,53 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
   const [showControls, setShowControls] = useState(true);
   const [showUpNext, setShowUpNext] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
+  const [playerError, setPlayerError] = useState<string | null>(null);
+  const [playerInstanceKey, setPlayerInstanceKey] = useState(0);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const startupTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasPlayerLoaded = useRef(false);
   const progressRef = useRef<HTMLDivElement>(null);
   const { data: upNextData } = useTrending('all', 'week');
   const upNextItems = upNextData.filter((m) => m.id !== movie.id).slice(0, 5);
+  const isDesktop = isDesktopApp();
+  const playerOrigin = getPlayerOrigin();
+  const trailerUrl = movie.videoId ?
+  `https://www.youtube.com/watch?v=${movie.videoId}` :
+  '';
+
+  const clearStartupTimeout = useCallback(() => {
+    if (startupTimeout.current) {
+      clearTimeout(startupTimeout.current);
+      startupTimeout.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    hasPlayerLoaded.current = false;
+    setPlayer(null);
+    setIsPlaying(false);
+    setIsBuffering(true);
+    setPlayerError(null);
+    clearStartupTimeout();
+    startupTimeout.current = setTimeout(() => {
+      if (hasPlayerLoaded.current) {
+        return;
+      }
+
+      setIsBuffering(false);
+      setPlayerError(
+        isDesktop ?
+        'The integrated desktop player could not load this trailer.' :
+        'The integrated player could not load this trailer.'
+      );
+    }, 12000);
+
+    return () => {
+      clearStartupTimeout();
+    };
+  }, [movie.videoId, playerInstanceKey, isDesktop, clearStartupTimeout]);
+
   // Sync time from player
   const startTimeSync = useCallback(() => {
     if (progressInterval.current) clearInterval(progressInterval.current);
@@ -60,7 +113,9 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
           setCurrentTime(ct);
           if (dur > 0) setDuration(dur);
           setBuffered(buf * 100);
-        } catch {}
+        } catch {
+          return;
+        }
       }
     }, 250);
   }, [player, isSeeking]);
@@ -125,7 +180,10 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
   }, [player, isPlaying, currentTime, duration, volume]);
   const onReady = (event: YouTubeEvent) => {
     const p = event.target;
+    hasPlayerLoaded.current = true;
+    clearStartupTimeout();
     setPlayer(p);
+    setPlayerError(null);
     p.setVolume(volume);
     const dur = p.getDuration();
     if (dur > 0) setDuration(dur);
@@ -156,6 +214,19 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
         break;
     }
   };
+
+  const onError = () => {
+    clearStartupTimeout();
+    setPlayer(null);
+    setIsPlaying(false);
+    setIsBuffering(false);
+    setPlayerError(
+      isDesktop ?
+      'The desktop player could not start this trailer. You can retry or open it in your browser.' :
+      'The player could not start this trailer. You can retry or open it in your browser.'
+    );
+  };
+
   const togglePlay = () => {
     if (!player) return;
     if (isPlaying) {
@@ -207,6 +278,23 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
     if (!player) return;
     player.seekTo(Math.min(duration, currentTime + 30), true);
   };
+
+  const retryPlayer = () => {
+    setPlayerInstanceKey((current) => current + 1);
+  };
+
+  const openTrailerExternally = async () => {
+    if (!trailerUrl) {
+      return;
+    }
+
+    try {
+      await openExternal(trailerUrl);
+    } catch (error) {
+      console.error('Failed to open trailer externally:', error);
+    }
+  };
+
   const progress = duration > 0 ? currentTime / duration * 100 : 0;
   return (
     <motion.div
@@ -230,6 +318,7 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
       {/* YouTube Player (hidden controls, full size) */}
       <div className="absolute inset-0 overflow-hidden">
         <YouTube
+          key={`${movie.id}-${playerInstanceKey}`}
           videoId={movie.videoId}
           opts={{
             width: '100%',
@@ -245,11 +334,12 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
               disablekb: 1,
               playsinline: 1,
               enablejsapi: 1,
-              origin: window.location.origin
+              ...(playerOrigin ? { origin: playerOrigin } : {})
             }
           }}
           onReady={onReady}
           onStateChange={onStateChange}
+          onError={onError}
           className="absolute inset-0 w-full h-full"
           iframeClassName="w-full h-full"
           style={{
@@ -284,9 +374,64 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
         }
       </AnimatePresence>
 
+      <AnimatePresence>
+        {playerError &&
+        <motion.div
+          className="absolute inset-0 z-20 flex items-center justify-center bg-black/75 px-6"
+          initial={{
+            opacity: 0
+          }}
+          animate={{
+            opacity: 1
+          }}
+          exit={{
+            opacity: 0
+          }}>
+          
+            <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#10101a]/95 p-8 shadow-2xl">
+              <div className="mb-6 flex items-center gap-3 text-cyan-300">
+                <AlertTriangle size={24} />
+                <div>
+                  <h3 className="text-lg font-bold tracking-wide text-white">
+                    Trailer playback issue
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    {playerError}
+                  </p>
+                </div>
+              </div>
+
+              <p className="mb-6 text-sm leading-6 text-gray-300">
+                {isDesktop ?
+                'The embedded player is still the default desktop experience, but packaged apps can occasionally fail to initialize a YouTube iframe.' :
+                'The embedded player did not initialize correctly in this browser session.'
+                }
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={retryPlayer}
+                  className="flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-200 transition-colors hover:bg-cyan-400/20">
+                  
+                  <RefreshCcw size={16} />
+                  Retry
+                </button>
+                <button
+                  onClick={openTrailerExternally}
+                  className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-white/10">
+                  
+                  <ExternalLink size={16} />
+                  Open In Browser
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        }
+      </AnimatePresence>
+
       {/* Pause Indicator */}
       <AnimatePresence>
-        {!isPlaying && !isBuffering &&
+        {!playerError && !isPlaying && !isBuffering &&
         <motion.div
           className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
           initial={{
@@ -313,7 +458,7 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
       </AnimatePresence>
 
       {/* Click area for play/pause — only active when controls are visible */}
-      {showControls &&
+      {showControls && !playerError &&
       <div
         className="absolute inset-0 z-10"
         onClick={togglePlay}
@@ -325,7 +470,7 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
 
       {/* Controls Overlay */}
       <AnimatePresence>
-        {showControls &&
+        {showControls && !playerError &&
         <motion.div
           className="absolute inset-0 z-30 pointer-events-none"
           initial={{

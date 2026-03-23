@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   Play,
@@ -28,7 +28,6 @@ export function MovieDetailPage({
   onPlay,
   onMovieClick
 }: MovieDetailPageProps) {
-  if (!movie) return null;
   const mediaType = movie.mediaType || 'movie';
   const tmdbId = movie.tmdbId || parseInt(movie.id);
   const { details, cast, similar, loading } = useDetails(tmdbId, mediaType);
@@ -38,7 +37,7 @@ export function MovieDetailPage({
     if (trailerId) {
       movie.videoId = trailerId;
     }
-  }, [trailerId]);
+  }, [movie, trailerId]);
   const heroImage =
   backdrop(movie.backdropPath || null) || (
   movie.videoId ? getYouTubeThumbnail(movie.videoId, 'maxres') : '');

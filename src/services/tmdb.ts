@@ -126,7 +126,7 @@ window: 'day' | 'week' = 'week')
 // Popular
 export async function getPopular(
 type: 'movie' | 'tv' = 'movie',
-page: number = 1)
+page = 1)
 : Promise<TMDBMovie[]> {
   const data = await tmdbFetch<PageResult<TMDBMovie>>(`/${type}/popular`, {
     page: String(page)
@@ -137,7 +137,7 @@ page: number = 1)
 // Top Rated
 export async function getTopRated(
 type: 'movie' | 'tv' = 'movie',
-page: number = 1)
+page = 1)
 : Promise<TMDBMovie[]> {
   const data = await tmdbFetch<PageResult<TMDBMovie>>(`/${type}/top_rated`, {
     page: String(page)
@@ -164,7 +164,7 @@ export async function getUpcoming(): Promise<TMDBMovie[]> {
 export async function search(
 query: string,
 type: 'movie' | 'tv' | 'multi' = 'multi',
-page: number = 1)
+page = 1)
 : Promise<TMDBMovie[]> {
   const data = await tmdbFetch<PageResult<TMDBMovie>>(`/search/${type}`, {
     query,
@@ -177,7 +177,7 @@ page: number = 1)
 export async function discoverByGenre(
 type: 'movie' | 'tv',
 genreId: number,
-page: number = 1)
+page = 1)
 : Promise<TMDBMovie[]> {
   const data = await tmdbFetch<PageResult<TMDBMovie>>(`/discover/${type}`, {
     with_genres: String(genreId),

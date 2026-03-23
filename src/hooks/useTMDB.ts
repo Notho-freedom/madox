@@ -294,7 +294,7 @@ mediaType: 'movie' | 'tv' = 'movie')
         map(tmdbToMovieData)
       );
     }).
-    catch(() => {}).
+    catch(() => undefined).
     finally(() => setLoading(false));
   }, [tmdbId, mediaType]);
 

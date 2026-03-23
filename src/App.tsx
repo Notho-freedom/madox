@@ -6,7 +6,7 @@ import { HeroSection } from './components/HeroSection';
 import { GenreFilter } from './components/GenreFilter';
 import { ContinueWatching } from './components/ContinueWatching';
 import { MovieGrid, type CategoryData } from './components/MovieGrid';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { MoviesPage } from './pages/MoviesPage';
 import { SeriesPage } from './pages/SeriesPage';
 import { TrendingPage } from './pages/TrendingPage';

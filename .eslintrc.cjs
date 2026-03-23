@@ -6,9 +6,19 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
   ],
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
+  ignorePatterns: ['dist', 'dist-electron', 'release', '.eslintrc.cjs'],
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh'],
+  overrides: [
+    {
+      files: ['postcss.config.js', 'tailwind.config.js'],
+      env: { node: true, es2020: true },
+    },
+    {
+      files: ['electron/**/*.ts'],
+      env: { node: true, es2020: true },
+    },
+  ],
   rules: {
     'react-refresh/only-export-components': [
       'warn',

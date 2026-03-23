@@ -1,20 +1,25 @@
 {
-  "name": "magic-patterns-vite-template",
+  "name": "madox",
   "version": "0.0.1",
   "private": true,
+  "description": "Madox desktop and web app",
   "type": "module",
+  "main": "dist-electron/main.js",
   "scripts": {
     "dev": "npx vite",
+    "dev:desktop": "cross-env VITE_DESKTOP=true npx vite",
     "build": "npx vite build",
+    "build:desktop": "cross-env VITE_DESKTOP=true npx vite build",
+    "package:desktop": "npm run build:desktop && npx electron-builder --win",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "preview": "npx vite preview"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "@emotion/react": "^11.13.3",
     "framer-motion": "^11.5.4",
     "lucide-react": "0.522.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "react-youtube": "^10.1.0"
   },
   "devDependencies": {
@@ -24,13 +29,40 @@
     "@typescript-eslint/eslint-plugin": "^5.54.0",
     "@typescript-eslint/parser": "^5.54.0",
     "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "latest",
+    "cross-env": "^7.0.3",
+    "electron": "^35.1.5",
+    "electron-builder": "^25.1.8",
     "eslint": "^8.50.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.1",
+    "postcss": "latest",
+    "tailwindcss": "3.4.17",
     "typescript": "^5.5.4",
     "vite": "^5.2.0",
-    "tailwindcss": "3.4.17",
-    "autoprefixer": "latest",
-    "postcss": "latest"
+    "vite-plugin-electron": "^0.29.1"
+  },
+  "build": {
+    "appId": "com.bobim.madox",
+    "productName": "Madox",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "asar": true,
+    "win": {
+      "target": [
+        "nsis",
+        "dir"
+      ],
+      "icon": "build/icon.png",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }
