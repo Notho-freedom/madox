@@ -1,7 +1,14 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Play, Plus } from 'lucide-react';
-export function HeroSection() {
+import { movies, getYouTubeThumbnail, type MovieData } from '../data/movies';
+const featured = movies.find((m) => m.id === 'dune-part-two')!;
+interface HeroSectionProps {
+  onMovieClick?: (movie: MovieData) => void;
+  onPlay?: (movie: MovieData) => void;
+}
+export function HeroSection({ onMovieClick, onPlay }: HeroSectionProps) {
+  const heroThumbnail = getYouTubeThumbnail(featured.videoId, 'maxres');
   return (
     <section className="relative w-full min-h-[85vh] flex items-center px-16 py-20 overflow-hidden">
       {/* Content Container */}
@@ -39,20 +46,19 @@ export function HeroSection() {
           </h1>
 
           <div className="flex items-center gap-6 text-gray-300 mb-8 font-light tracking-wide">
-            <span className="text-white font-medium">2024</span>
+            <span className="text-white font-medium">{featured.year}</span>
             <span className="w-px h-4 bg-white/20" />
-            <span>Sci-Fi / Adventure</span>
+            <span>{featured.genre} / Adventure</span>
             <span className="w-px h-4 bg-white/20" />
             <span className="flex items-center gap-1">
-              <span className="text-yellow-500">★</span> 8.9
+              <span className="text-yellow-500">★</span> {featured.rating}
             </span>
             <span className="w-px h-4 bg-white/20" />
-            <span>2h 46m</span>
+            <span>{featured.duration}</span>
           </div>
 
           <p className="text-lg text-gray-400 mb-10 leading-relaxed max-w-lg border-l-2 border-orange-500/30 pl-6">
-            Paul Atreides unites with Chani and the Fremen while on a warpath of
-            revenge against the conspirators who destroyed his family.
+            {featured.description}
           </p>
 
           <div className="flex gap-6">
@@ -63,6 +69,7 @@ export function HeroSection() {
               whileTap={{
                 scale: 0.95
               }}
+              onClick={() => onPlay?.(featured)}
               className="group relative px-8 py-4 bg-white text-black font-bold tracking-widest uppercase flex items-center gap-3 clip-facet-btn overflow-hidden">
               
               <div className="absolute inset-0 bg-gradient-to-r from-orange-200 via-white to-orange-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -77,19 +84,20 @@ export function HeroSection() {
               whileTap={{
                 scale: 0.95
               }}
+              onClick={() => onMovieClick?.(featured)}
               className="group px-8 py-4 bg-white/5 border border-white/20 text-white font-bold tracking-widest uppercase flex items-center gap-3 clip-facet-btn backdrop-blur-sm hover:bg-white/10 transition-colors">
               
               <Plus
                 size={20}
                 className="group-hover:rotate-90 transition-transform duration-300" />
               
-              <span>Add to List</span>
+              <span>More Info</span>
             </motion.button>
           </div>
         </motion.div>
       </div>
 
-      {/* Hero Visual - Crystal Frame */}
+      {/* Hero Visual - Crystal Frame with YouTube Thumbnail */}
       <motion.div
         className="absolute right-[-5%] top-1/2 -translate-y-1/2 w-[65%] h-[85%] z-0"
         initial={{
@@ -109,7 +117,6 @@ export function HeroSection() {
         }}>
         
         <div className="relative w-full h-full">
-          {/* Main Crystal Shape */}
           <div
             className="absolute inset-0 overflow-hidden"
             style={{
@@ -117,20 +124,16 @@ export function HeroSection() {
               'polygon(20% 0%, 90% 0%, 100% 30%, 100% 85%, 80% 100%, 10% 100%, 0% 70%, 0% 15%)'
             }}>
             
-            {/* Image */}
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{
-                backgroundImage:
-                'url(https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=2576&auto=format&fit=crop)',
+                backgroundImage: `url(${heroThumbnail})`,
                 filter: 'brightness(0.7) contrast(1.1) saturate(1.1)'
               }} />
             
 
-            {/* Overlay Gradient */}
             <div className="absolute inset-0 bg-gradient-to-l from-transparent via-black/20 to-black/80" />
 
-            {/* Prismatic Sheen Animation */}
             <motion.div
               className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
               animate={{
@@ -145,11 +148,9 @@ export function HeroSection() {
             
           </div>
 
-          {/* Prismatic Borders / Light Leaks */}
           <div className="absolute -top-1 -right-1 w-32 h-32 bg-gradient-to-bl from-cyan-400/30 to-transparent blur-2xl" />
           <div className="absolute -bottom-1 -left-1 w-32 h-32 bg-gradient-to-tr from-orange-400/30 to-transparent blur-2xl" />
 
-          {/* Decorative Lines */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none opacity-30"
             style={{

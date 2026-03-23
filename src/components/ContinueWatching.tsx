@@ -1,41 +1,43 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, MoreVertical } from 'lucide-react';
+import { Play } from 'lucide-react';
+import { series, getYouTubeThumbnail, type MovieData } from '../data/movies';
 const continueItems = [
 {
-  id: 1,
-  title: 'Severance',
+  ...series.find((s) => s.id === 'severance')!,
   episode: 'S2 E4',
-  progress: 65,
-  image:
-  'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop'
+  progress: 65
 },
 {
-  id: 2,
-  title: 'Dark',
+  ...series.find((s) => s.id === 'dark')!,
   episode: 'S3 E2',
-  progress: 30,
-  image:
-  'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop'
+  progress: 30
 },
 {
-  id: 3,
-  title: 'Westworld',
-  episode: 'S4 E1',
-  progress: 80,
-  image:
-  'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop'
+  ...series.find((s) => s.id === 'the-last-of-us')!,
+  episode: 'S2 E3',
+  progress: 80
 },
 {
-  id: 4,
-  title: 'Altered Carbon',
+  ...series.find((s) => s.id === 'shogun')!,
   episode: 'S1 E7',
-  progress: 45,
-  image:
-  'https://images.unsplash.com/photo-1506318137071-a8bcbf6755dd?q=80&w=800&auto=format&fit=crop'
-}];
-
-export function ContinueWatching() {
+  progress: 45
+},
+{
+  ...series.find((s) => s.id === 'arcane')!,
+  episode: 'S2 E5',
+  progress: 55
+},
+{
+  ...series.find((s) => s.id === 'the-bear')!,
+  episode: 'S3 E1',
+  progress: 15
+}].
+filter((item) => item.id);
+interface ContinueWatchingProps {
+  onMovieClick?: (movie: MovieData) => void;
+}
+export function ContinueWatching({ onMovieClick }: ContinueWatchingProps) {
   return (
     <div className="w-full px-16 mb-12">
       <div className="flex items-center gap-4 mb-6">
@@ -45,7 +47,7 @@ export function ContinueWatching() {
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {continueItems.map((item, index) =>
         <motion.div
           key={item.id}
@@ -62,48 +64,43 @@ export function ContinueWatching() {
             once: true
           }}
           transition={{
-            delay: index * 0.1
+            delay: index * 0.08
           }}
           whileHover={{
-            scale: 1.02
-          }}>
+            scale: 1.03
+          }}
+          onClick={() => onMovieClick?.(item)}>
           
-            {/* Card Container */}
             <div
             className="relative aspect-video bg-[#12121a] overflow-hidden"
             style={{
               clipPath:
-              'polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%)'
+              'polygon(8% 0, 100% 0, 100% 88%, 92% 100%, 0 100%, 0 12%)'
             }}>
             
-              {/* Image */}
               <div
-              className="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-80 transition-opacity duration-500"
+              className="absolute inset-0 bg-cover bg-center opacity-70 group-hover:opacity-90 transition-opacity duration-500 group-hover:scale-110 transition-transform"
               style={{
-                backgroundImage: `url(${item.image})`
+                backgroundImage: `url(${getYouTubeThumbnail(item.videoId, 'mq')})`
               }} />
             
 
-              {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
 
-              {/* Play Button Overlay */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                  <Play size={20} fill="white" className="text-white ml-1" />
+                <div className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+                  <Play size={16} fill="white" className="text-white ml-0.5" />
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <h3 className="text-lg font-bold text-white leading-tight mb-1 truncate">
+              <div className="absolute bottom-0 left-0 right-0 p-3">
+                <h3 className="text-sm font-bold text-white leading-tight mb-0.5 truncate">
                   {item.title}
                 </h3>
-                <p className="text-xs text-cyan-300 tracking-wider mb-3">
+                <p className="text-[10px] text-cyan-300 tracking-wider mb-2">
                   {item.episode}
                 </p>
 
-                {/* Progress Bar */}
                 <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
                   <div
                   className="h-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"
@@ -115,12 +112,11 @@ export function ContinueWatching() {
               </div>
             </div>
 
-            {/* Border Glow */}
             <div
             className="absolute inset-[-1px] z-[-1] bg-gradient-to-br from-white/10 via-transparent to-white/10 opacity-30 group-hover:opacity-60 transition-opacity duration-300"
             style={{
               clipPath:
-              'polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%)'
+              'polygon(8% 0, 100% 0, 100% 88%, 92% 100%, 0 100%, 0 12%)'
             }} />
           
           </motion.div>

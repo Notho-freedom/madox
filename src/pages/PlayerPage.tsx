@@ -246,7 +246,9 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
               iv_load_policy: 3,
               fs: 0,
               disablekb: 1,
-              playsinline: 1
+              playsinline: 1,
+              enablejsapi: 1,
+              origin: window.location.origin
             }
           }}
           onReady={onReady}
@@ -313,8 +315,16 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
         }
       </AnimatePresence>
 
-      {/* Click area for play/pause */}
-      <div className="absolute inset-0 z-10" onClick={togglePlay} />
+      {/* Click area for play/pause — only active when controls are visible */}
+      {showControls &&
+      <div
+        className="absolute inset-0 z-10"
+        onClick={togglePlay}
+        style={{
+          pointerEvents: showControls ? 'auto' : 'none'
+        }} />
+
+      }
 
       {/* Controls Overlay */}
       <AnimatePresence>

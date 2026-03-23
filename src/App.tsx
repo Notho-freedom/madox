@@ -33,7 +33,8 @@ export function App() {
       behavior: 'smooth'
     });
   };
-  const handlePlay = () => {
+  const handlePlay = (movie?: MovieData) => {
+    if (movie) setSelectedMovie(movie);
     setIsPlayerOpen(true);
   };
   const handlePlayerBack = () => {
@@ -80,9 +81,9 @@ export function App() {
       case 'home':
         return (
           <>
-            <HeroSection />
+            <HeroSection onMovieClick={handleMovieClick} onPlay={handlePlay} />
             <GenreFilter />
-            <ContinueWatching />
+            <ContinueWatching onMovieClick={handleMovieClick} />
             <MovieGrid
               onMovieClick={handleMovieClick}
               onViewAll={handleViewAll} />
