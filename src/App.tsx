@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { CrystalBackground } from './components/CrystalBackground';
 import { CrystalNavbar } from './components/CrystalNavbar';
 import { CrystalSidePanel } from './components/CrystalSidePanel';
@@ -16,6 +16,7 @@ import { MovieDetailPage } from './pages/MovieDetailPage';
 import { PlayerPage } from './pages/PlayerPage';
 import { ViewAllPage } from './pages/ViewAllPage';
 import { type MovieData } from './data/movies';
+import { getTrailerId } from './services/tmdb';
 export function App() {
   const [activePage, setActivePage] = useState('home');
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -24,6 +25,7 @@ export function App() {
   const [viewAllCategory, setViewAllCategory] = useState<CategoryData | null>(
     null
   );
+  const [isLoadingTrailer, setIsLoadingTrailer] = useState(false);
   const handleMovieClick = (movie: MovieData) => {
     setSelectedMovie(movie);
     setIsPlayerOpen(false);
@@ -33,10 +35,38 @@ export function App() {
       behavior: 'smooth'
     });
   };
-  const handlePlay = (movie?: MovieData) => {
-    if (movie) setSelectedMovie(movie);
-    setIsPlayerOpen(true);
-  };
+  const handlePlay = useCallback(
+    async (movie?: MovieData) => {
+      const target = movie || selectedMovie;
+      if (!target) return;
+      // If we already have a videoId, play immediately
+      if (target.videoId) {
+        setSelectedMovie(target);
+        setIsPlayerOpen(true);
+        return;
+      }
+      // Fetch trailer from TMDB
+      setIsLoadingTrailer(true);
+      try {
+        const tmdbId = target.tmdbId || parseInt(target.id);
+        const mediaType = target.mediaType || 'movie';
+        const trailerId = await getTrailerId(mediaType, tmdbId);
+        if (trailerId) {
+          const updatedMovie = {
+            ...target,
+            videoId: trailerId
+          };
+          setSelectedMovie(updatedMovie);
+          setIsPlayerOpen(true);
+        }
+      } catch (err) {
+        console.error('Failed to fetch trailer:', err);
+      } finally {
+        setIsLoadingTrailer(false);
+      }
+    },
+    [selectedMovie]
+  );
   const handlePlayerBack = () => {
     setIsPlayerOpen(false);
   };
@@ -52,20 +82,17 @@ export function App() {
     setViewAllCategory(null);
   };
   const renderContent = () => {
-    // Player takes over everything
     if (selectedMovie && isPlayerOpen) return null;
-    // Movie detail page
     if (selectedMovie && !isPlayerOpen) {
       return (
         <MovieDetailPage
           movie={selectedMovie}
           onBack={() => setSelectedMovie(null)}
-          onPlay={handlePlay}
+          onPlay={() => handlePlay()}
           onMovieClick={handleMovieClick} />);
 
 
     }
-    // View All page (from home sections)
     if (viewAllCategory) {
       return (
         <ViewAllPage
@@ -134,8 +161,33 @@ export function App() {
       </main>
 
       <AnimatePresence>
-        {isPlayerOpen && selectedMovie &&
+        {isPlayerOpen && selectedMovie && selectedMovie.videoId &&
         <PlayerPage movie={selectedMovie} onBack={handlePlayerBack} />
+        }
+      </AnimatePresence>
+
+      {/* Trailer loading overlay */}
+      <AnimatePresence>
+        {isLoadingTrailer &&
+        <motion.div
+          className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center"
+          initial={{
+            opacity: 0
+          }}
+          animate={{
+            opacity: 1
+          }}
+          exit={{
+            opacity: 0
+          }}>
+          
+            <div className="text-center">
+              <div className="w-16 h-16 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-gray-400 uppercase tracking-widest text-sm">
+                Loading trailer...
+              </p>
+            </div>
+          </motion.div>
         }
       </AnimatePresence>
 

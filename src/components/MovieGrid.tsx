@@ -2,55 +2,42 @@ import React, { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { MovieCard } from './MovieCard';
 import { ChevronRight } from 'lucide-react';
-import { movies, series, type MovieData } from '../data/movies';
-export type CategoryId =
-'trending-now' |
-'new-releases' |
-'top-series' |
-'critically-acclaimed';
+import { CardSkeleton, ErrorState } from './LoadingSkeleton';
+import {
+  useTrending,
+  usePopular,
+  useTopRated,
+  useNowPlaying } from
+'../hooks/useTMDB';
+import { type MovieData } from '../data/movies';
 export interface CategoryData {
-  id: CategoryId;
+  id: string;
   title: string;
   description: string;
   items: MovieData[];
 }
-export const categories: CategoryData[] = [
-{
-  id: 'trending-now',
-  title: 'Trending Now',
-  description: 'The most popular movies this week, curated by our editors.',
-  items: movies
-},
-{
-  id: 'new-releases',
-  title: 'New Releases',
-  description: 'Fresh arrivals and latest premieres to watch right now.',
-  items: [...movies].reverse()
-},
-{
-  id: 'top-series',
-  title: 'Top Series',
-  description: 'Binge-worthy series that everyone is talking about.',
-  items: series
-},
-{
-  id: 'critically-acclaimed',
-  title: 'Critically Acclaimed',
-  description: 'Award-winning and critically praised masterpieces.',
-  items: [...series].reverse()
-}];
-
 interface SectionProps {
   title: string;
-  items: MovieData[];
+  data: MovieData[];
+  loading: boolean;
+  error: string | null;
+  onRetry: () => void;
   onMovieClick: (movie: MovieData) => void;
   onViewAll?: () => void;
 }
-function GridSection({ title, items, onMovieClick, onViewAll }: SectionProps) {
+function GridSection({
+  title,
+  data,
+  loading,
+  error,
+  onRetry,
+  onMovieClick,
+  onViewAll
+}: SectionProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, {
     once: true,
-    margin: '-100px'
+    margin: '-50px'
   });
   return (
     <div ref={ref} className="mb-16 pl-16">
@@ -75,30 +62,38 @@ function GridSection({ title, items, onMovieClick, onViewAll }: SectionProps) {
         <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
         <h2 className="text-3xl font-bold text-white tracking-wide">{title}</h2>
         <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ml-4" />
+        {data.length > 0 &&
         <button
           onClick={onViewAll}
           className="flex items-center gap-1 text-sm text-cyan-400 hover:text-cyan-300 transition-colors mr-16 uppercase tracking-widest group">
           
-          View All{' '}
-          <ChevronRight
+            View All{' '}
+            <ChevronRight
             size={16}
             className="group-hover:translate-x-1 transition-transform" />
           
-        </button>
+          </button>
+        }
       </motion.div>
 
+      {loading ?
+      <CardSkeleton count={6} /> :
+      error ?
+      <ErrorState message={error} onRetry={onRetry} /> :
+
       <div className="overflow-x-auto pb-12 scrollbar-hide">
-        <div className="flex gap-6 pr-16 min-w-max">
-          {items.map((movie, index) =>
+          <div className="flex gap-6 pr-16 min-w-max">
+            {data.slice(0, 10).map((movie, index) =>
           <MovieCard
             key={movie.id}
             {...movie}
-            delay={index * 0.1}
+            delay={index * 0.06}
             onClick={() => onMovieClick(movie)} />
 
           )}
+          </div>
         </div>
-      </div>
+      }
     </div>);
 
 }
@@ -107,15 +102,55 @@ interface MovieGridProps {
   onViewAll?: (category: CategoryData) => void;
 }
 export function MovieGrid({ onMovieClick, onViewAll }: MovieGridProps) {
+  const trending = useTrending('all', 'week');
+  const popularMovies = usePopular('movie');
+  const topRated = useTopRated('movie');
+  const popularTV = usePopular('tv');
+  const sections = [
+  {
+    id: 'trending',
+    title: 'Trending Now',
+    desc: 'The most popular content this week.',
+    ...trending
+  },
+  {
+    id: 'popular-movies',
+    title: 'Popular Movies',
+    desc: 'Movies everyone is watching right now.',
+    ...popularMovies
+  },
+  {
+    id: 'top-rated',
+    title: 'Top Rated',
+    desc: 'The highest rated movies of all time.',
+    ...topRated
+  },
+  {
+    id: 'popular-tv',
+    title: 'Popular Series',
+    desc: 'Binge-worthy series everyone is talking about.',
+    ...popularTV
+  }];
+
   return (
     <div className="relative z-10 pb-20">
-      {categories.map((cat) =>
+      {sections.map((s) =>
       <GridSection
-        key={cat.id}
-        title={cat.title}
-        items={cat.items.slice(0, 6)}
+        key={s.id}
+        title={s.title}
+        data={s.data}
+        loading={s.loading}
+        error={s.error}
+        onRetry={s.refetch}
         onMovieClick={onMovieClick}
-        onViewAll={() => onViewAll?.(cat)} />
+        onViewAll={() =>
+        onViewAll?.({
+          id: s.id,
+          title: s.title,
+          description: s.desc,
+          items: s.data
+        })
+        } />
 
       )}
     </div>);

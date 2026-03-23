@@ -15,12 +15,9 @@ import {
 'lucide-react';
 import YouTube from 'react-youtube';
 import type { YouTubeEvent, YouTubePlayer } from 'react-youtube';
-import {
-  movies,
-  series,
-  getYouTubeThumbnail,
-  type MovieData } from
-'../data/movies';
+import { getYouTubeThumbnail, type MovieData } from '../data/movies';
+import { useTrending } from '../hooks/useTMDB';
+import { poster, backdrop } from '../services/tmdb';
 interface PlayerPageProps {
   movie: MovieData;
   onBack: () => void;
@@ -49,8 +46,8 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
-  const allContent = [...movies, ...series];
-  const upNextItems = allContent.filter((m) => m.id !== movie.id).slice(0, 5);
+  const { data: upNextData } = useTrending('all', 'week');
+  const upNextItems = upNextData.filter((m) => m.id !== movie.id).slice(0, 5);
   // Sync time from player
   const startTimeSync = useCallback(() => {
     if (progressInterval.current) clearInterval(progressInterval.current);
@@ -584,7 +581,7 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
                     <div
                   className="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-500"
                   style={{
-                    backgroundImage: `url(${getYouTubeThumbnail(item.videoId, 'mq')})`
+                    backgroundImage: `url(${item.backdropPath ? `https://image.tmdb.org/t/p/w300${item.backdropPath}` : item.posterPath ? `https://image.tmdb.org/t/p/w185${item.posterPath}` : getYouTubeThumbnail(item.videoId, 'mq')})`
                   }} />
                 
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
