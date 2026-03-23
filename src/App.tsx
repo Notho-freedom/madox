@@ -154,9 +154,9 @@ export function App() {
       {!isPlayerOpen &&
       <>
           <CrystalSidebar
-          activePage={activePage}
-          onNavigate={handleNavigate}
-          onOpenMenu={() => setIsPanelOpen(true)} />
+            activePage={activePage}
+            onNavigate={handleNavigate}
+          />
           <div className="fixed left-6 top-6 z-50 md:hidden">
             <CrystalMenuTrigger className="h-12 w-12 overflow-hidden" onClick={() => setIsPanelOpen(true)} />
           </div>

@@ -1,18 +1,23 @@
 import React from 'react';
 
 interface CrystalMenuTriggerProps {
+  ariaExpanded?: boolean;
+  ariaLabel?: string;
   className?: string;
   onClick: () => void;
 }
 
 export function CrystalMenuTrigger({
+  ariaExpanded,
+  ariaLabel = 'Open menu',
   className = '',
   onClick
 }: CrystalMenuTriggerProps) {
   return (
     <button
       type="button"
-      aria-label="Open menu"
+      aria-label={ariaLabel}
+      aria-expanded={ariaExpanded}
       onClick={onClick}
       className={`group relative flex items-center justify-center bg-white/5 border border-white/20 hover:bg-white/10 transition-colors ${className}`}
       style={{
