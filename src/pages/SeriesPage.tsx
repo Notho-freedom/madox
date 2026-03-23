@@ -2,108 +2,12 @@ import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { MovieCard } from '../components/MovieCard';
 import { Play } from 'lucide-react';
-const seriesList = [
-{
-  title: 'Severance',
-  year: '2022',
-  rating: '8.7',
-  color: '#0e7490',
-  image:
-  'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop'
-},
-{
-  title: 'Dark',
-  year: '2017',
-  rating: '8.8',
-  color: '#ca8a04',
-  image:
-  'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop'
-},
-{
-  title: 'Westworld',
-  year: '2016',
-  rating: '8.5',
-  color: '#7e22ce',
-  image:
-  'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop'
-},
-{
-  title: 'Altered Carbon',
-  year: '2018',
-  rating: '7.9',
-  color: '#be123c',
-  image:
-  'https://images.unsplash.com/photo-1506318137071-a8bcbf6755dd?q=80&w=800&auto=format&fit=crop'
-},
-{
-  title: 'Black Mirror',
-  year: '2011',
-  rating: '8.7',
-  color: '#1e293b',
-  image:
-  'https://images.unsplash.com/photo-1509347528160-9a9e33742cd4?q=80&w=800&auto=format&fit=crop'
-},
-{
-  title: 'The Expanse',
-  year: '2015',
-  rating: '8.5',
-  color: '#15803d',
-  image:
-  'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=800&auto=format&fit=crop'
-},
-{
-  title: 'Silo',
-  year: '2023',
-  rating: '8.1',
-  color: '#4b5563',
-  image:
-  'https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=2576&auto=format&fit=crop'
-},
-{
-  title: 'Foundation',
-  year: '2021',
-  rating: '7.6',
-  color: '#1d4ed8',
-  image:
-  'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop'
-},
-{
-  title: 'Andor',
-  year: '2022',
-  rating: '8.4',
-  color: '#ea580c',
-  image:
-  'https://images.unsplash.com/photo-1509347528160-9a9e33742cd4?q=80&w=800&auto=format&fit=crop'
-},
-{
-  title: 'Stranger Things',
-  year: '2016',
-  rating: '8.7',
-  color: '#b91c1c',
-  image:
-  'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop'
-},
-{
-  title: 'The Mandalorian',
-  year: '2019',
-  rating: '8.7',
-  color: '#0f766e',
-  image:
-  'https://images.unsplash.com/photo-1506318137071-a8bcbf6755dd?q=80&w=800&auto=format&fit=crop'
-},
-{
-  title: 'Arcane',
-  year: '2021',
-  rating: '9.0',
-  color: '#7e22ce',
-  image:
-  'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=800&auto=format&fit=crop'
-}];
-
+import { series, getYouTubeThumbnail, type MovieData } from '../data/movies';
 interface SeriesPageProps {
-  onMovieClick: (movie: any) => void;
+  onMovieClick: (movie: MovieData) => void;
 }
 export function SeriesPage({ onMovieClick }: SeriesPageProps) {
+  const featured = series[0];
   return (
     <motion.div
       className="px-16 py-12 pb-32 pt-24"
@@ -123,12 +27,12 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
         duration: 0.5
       }}>
       
+      {/* Featured Series Banner */}
       <div className="relative w-full h-[400px] mb-16 overflow-hidden group">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage:
-            'url(https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop)',
+            backgroundImage: `url(${getYouTubeThumbnail(featured.videoId, 'maxres')})`,
             clipPath:
             'polygon(0 0, 100% 0, 100% 85%, 95% 100%, 5% 100%, 0 85%)'
           }} />
@@ -140,20 +44,21 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
             New Season
           </span>
           <h1 className="text-6xl font-bold text-white mb-4 font-['Advent_Pro']">
-            SEVERANCE
+            {featured.title.toUpperCase()}
           </h1>
           <p className="text-gray-300 text-lg mb-8 max-w-xl">
             Mark leads a team of office workers whose memories have been
             surgically divided between their work and personal lives.
           </p>
           <button
+            onClick={() => onMovieClick(featured)}
             className="flex items-center gap-3 px-8 py-3 bg-white text-black font-bold uppercase tracking-widest hover:bg-cyan-50 transition-colors"
             style={{
               clipPath:
               'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
             }}>
             
-            <Play size={20} fill="currentColor" /> Watch Season 2
+            <Play size={20} fill="currentColor" /> Watch Now
           </button>
         </div>
       </div>
@@ -168,12 +73,12 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-        {seriesList.map((series, index) =>
-        <div key={index} className="flex justify-center">
+        {series.map((s, index) =>
+        <div key={s.id} className="flex justify-center">
             <MovieCard
-            {...series}
+            {...s}
             delay={index * 0.05}
-            onClick={() => onMovieClick(series)} />
+            onClick={() => onMovieClick(s)} />
           
           </div>
         )}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -7,59 +7,80 @@ import {
   Volume2,
   VolumeX,
   Maximize,
-  Minimize,
   SkipBack,
   SkipForward,
-  Subtitles,
-  Settings,
   ChevronRight,
-  X } from
+  X,
+  Loader2 } from
 'lucide-react';
+import YouTube from 'react-youtube';
+import type { YouTubeEvent, YouTubePlayer } from 'react-youtube';
+import {
+  movies,
+  series,
+  getYouTubeThumbnail,
+  type MovieData } from
+'../data/movies';
 interface PlayerPageProps {
-  movie: any;
+  movie: MovieData;
   onBack: () => void;
 }
+function formatTime(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor(seconds % 3600 / 60);
+  const s = Math.floor(seconds % 60);
+  if (h > 0) {
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
 export function PlayerPage({ movie, onBack }: PlayerPageProps) {
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [player, setPlayer] = useState<YouTubePlayer | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [volume, setVolume] = useState(80);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [buffered, setBuffered] = useState(0);
   const [showControls, setShowControls] = useState(true);
   const [showUpNext, setShowUpNext] = useState(false);
-  const [showQuality, setShowQuality] = useState(false);
-  const [quality, setQuality] = useState('4K');
-  const [volume, setVolume] = useState(80);
-  const [currentTime, setCurrentTime] = useState('00:12:34');
-  const [totalTime] = useState('02:15:00');
-  const hideTimer = useRef<any>(null);
+  const [isSeeking, setIsSeeking] = useState(false);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
-  // Simulate playback progress
+  const allContent = [...movies, ...series];
+  const upNextItems = allContent.filter((m) => m.id !== movie.id).slice(0, 5);
+  // Sync time from player
+  const startTimeSync = useCallback(() => {
+    if (progressInterval.current) clearInterval(progressInterval.current);
+    progressInterval.current = setInterval(() => {
+      if (player && !isSeeking) {
+        try {
+          const ct = player.getCurrentTime?.() ?? 0;
+          const dur = player.getDuration?.() ?? 0;
+          const buf = player.getVideoLoadedFraction?.() ?? 0;
+          setCurrentTime(ct);
+          if (dur > 0) setDuration(dur);
+          setBuffered(buf * 100);
+        } catch {}
+      }
+    }, 250);
+  }, [player, isSeeking]);
   useEffect(() => {
-    if (!isPlaying) return;
-    const interval = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 100) return 0;
-        const next = p + 0.05;
-        const totalSeconds = 2 * 3600 + 15 * 60;
-        const currentSeconds = Math.floor(next / 100 * totalSeconds);
-        const h = Math.floor(currentSeconds / 3600);
-        const m = Math.floor(currentSeconds % 3600 / 60);
-        const s = currentSeconds % 60;
-        setCurrentTime(
-          `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-        );
-        return next;
-      });
-    }, 100);
-    return () => clearInterval(interval);
-  }, [isPlaying]);
+    startTimeSync();
+    return () => {
+      if (progressInterval.current) clearInterval(progressInterval.current);
+    };
+  }, [startTimeSync]);
   // Auto-hide controls
   useEffect(() => {
     const resetTimer = () => {
       setShowControls(true);
       if (hideTimer.current) clearTimeout(hideTimer.current);
       hideTimer.current = setTimeout(() => {
-        if (isPlaying) setShowControls(false);
-      }, 3000);
+        if (isPlaying && !showUpNext) setShowControls(false);
+      }, 3500);
     };
     window.addEventListener('mousemove', resetTimer);
     resetTimer();
@@ -67,37 +88,132 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
       window.removeEventListener('mousemove', resetTimer);
       if (hideTimer.current) clearTimeout(hideTimer.current);
     };
-  }, [isPlaying]);
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressRef.current) return;
+  }, [isPlaying, showUpNext]);
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (!player) return;
+      switch (e.key) {
+        case ' ':
+        case 'k':
+          e.preventDefault();
+          isPlaying ? player.pauseVideo() : player.playVideo();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          player.seekTo(Math.max(0, currentTime - 10), true);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          player.seekTo(Math.min(duration, currentTime + 10), true);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          handleVolumeChange(Math.min(100, volume + 10));
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          handleVolumeChange(Math.max(0, volume - 10));
+          break;
+        case 'm':
+          toggleMute();
+          break;
+        case 'Escape':
+          onBack();
+          break;
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [player, isPlaying, currentTime, duration, volume]);
+  const onReady = (event: YouTubeEvent) => {
+    const p = event.target;
+    setPlayer(p);
+    p.setVolume(volume);
+    const dur = p.getDuration();
+    if (dur > 0) setDuration(dur);
+    setIsBuffering(false);
+  };
+  const onStateChange = (event: YouTubeEvent) => {
+    const state = event.data;
+    // YT states: -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 cued
+    switch (state) {
+      case 1:
+        // playing
+        setIsPlaying(true);
+        setIsBuffering(false);
+        break;
+      case 2:
+        // paused
+        setIsPlaying(false);
+        setIsBuffering(false);
+        break;
+      case 3:
+        // buffering
+        setIsBuffering(true);
+        break;
+      case 0:
+        // ended
+        setIsPlaying(false);
+        setIsBuffering(false);
+        break;
+    }
+  };
+  const togglePlay = () => {
+    if (!player) return;
+    if (isPlaying) {
+      player.pauseVideo();
+    } else {
+      player.playVideo();
+    }
+  };
+  const toggleMute = () => {
+    if (!player) return;
+    if (isMuted) {
+      player.unMute();
+      player.setVolume(volume);
+      setIsMuted(false);
+    } else {
+      player.mute();
+      setIsMuted(true);
+    }
+  };
+  const handleVolumeChange = (val: number) => {
+    if (!player) return;
+    setVolume(val);
+    player.setVolume(val);
+    if (val > 0 && isMuted) {
+      player.unMute();
+      setIsMuted(false);
+    }
+    if (val === 0) {
+      player.mute();
+      setIsMuted(true);
+    }
+  };
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!progressRef.current || !player || duration === 0) return;
     const rect = progressRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const pct = x / rect.width * 100;
-    setProgress(Math.max(0, Math.min(100, pct)));
+    const pct = Math.max(0, Math.min(1, x / rect.width));
+    const seekTime = pct * duration;
+    setIsSeeking(true);
+    setCurrentTime(seekTime);
+    player.seekTo(seekTime, true);
+    setTimeout(() => setIsSeeking(false), 500);
   };
-  const upNextItems = [
-  {
-    title: 'Interstellar',
-    duration: '2h 49m',
-    image:
-    'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=400&auto=format&fit=crop'
-  },
-  {
-    title: 'Arrival',
-    duration: '1h 56m',
-    image:
-    'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=400&auto=format&fit=crop'
-  },
-  {
-    title: 'Ex Machina',
-    duration: '1h 48m',
-    image:
-    'https://images.unsplash.com/photo-1506318137071-a8bcbf6755dd?q=80&w=400&auto=format&fit=crop'
-  }];
-
+  const skipBack = () => {
+    if (!player) return;
+    player.seekTo(Math.max(0, currentTime - 10), true);
+  };
+  const skipForward = () => {
+    if (!player) return;
+    player.seekTo(Math.min(duration, currentTime + 30), true);
+  };
+  const progress = duration > 0 ? currentTime / duration * 100 : 0;
   return (
     <motion.div
-      className="fixed inset-0 z-[100] bg-black cursor-none"
+      className="fixed inset-0 z-[100] bg-black"
       initial={{
         opacity: 0
       }}
@@ -114,27 +230,44 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
         cursor: showControls ? 'default' : 'none'
       }}>
       
-      {/* Video Background (simulated) */}
-      <div className="absolute inset-0">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
+      {/* YouTube Player (hidden controls, full size) */}
+      <div className="absolute inset-0 overflow-hidden">
+        <YouTube
+          videoId={movie.videoId}
+          opts={{
+            width: '100%',
+            height: '100%',
+            playerVars: {
+              autoplay: 1,
+              controls: 0,
+              modestbranding: 1,
+              rel: 0,
+              showinfo: 0,
+              iv_load_policy: 3,
+              fs: 0,
+              disablekb: 1,
+              playsinline: 1
+            }
+          }}
+          onReady={onReady}
+          onStateChange={onStateChange}
+          className="absolute inset-0 w-full h-full"
+          iframeClassName="w-full h-full"
           style={{
-            backgroundImage: `url(${movie.image})`,
-            filter: 'brightness(0.4) saturate(1.2)'
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%'
           }} />
         
-        <div className="absolute inset-0 bg-black/30" />
-
-        {/* Cinematic letterbox bars */}
-        <div className="absolute top-0 left-0 right-0 h-[8%] bg-gradient-to-b from-black to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-[8%] bg-gradient-to-t from-black to-transparent" />
       </div>
 
-      {/* Play/Pause Center Indicator */}
+      {/* Buffering Indicator */}
       <AnimatePresence>
-        {!isPlaying &&
+        {isBuffering &&
         <motion.div
-          className="absolute inset-0 flex items-center justify-center z-20"
+          className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
           initial={{
             opacity: 0
           }}
@@ -145,6 +278,34 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
             opacity: 0
           }}>
           
+            <div className="w-20 h-20 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center">
+              <Loader2 size={36} className="text-cyan-400 animate-spin" />
+            </div>
+          </motion.div>
+        }
+      </AnimatePresence>
+
+      {/* Pause Indicator */}
+      <AnimatePresence>
+        {!isPlaying && !isBuffering &&
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
+          initial={{
+            opacity: 0,
+            scale: 0.8
+          }}
+          animate={{
+            opacity: 1,
+            scale: 1
+          }}
+          exit={{
+            opacity: 0,
+            scale: 0.8
+          }}
+          transition={{
+            duration: 0.2
+          }}>
+          
             <div className="w-24 h-24 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 flex items-center justify-center">
               <Play size={40} fill="white" className="text-white ml-2" />
             </div>
@@ -152,11 +313,8 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
         }
       </AnimatePresence>
 
-      {/* Click to play/pause */}
-      <div
-        className="absolute inset-0 z-10"
-        onClick={() => setIsPlaying(!isPlaying)} />
-      
+      {/* Click area for play/pause */}
+      <div className="absolute inset-0 z-10" onClick={togglePlay} />
 
       {/* Controls Overlay */}
       <AnimatePresence>
@@ -177,7 +335,7 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
           }}>
           
             {/* Top Bar */}
-            <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between pointer-events-auto bg-gradient-to-b from-black/80 to-transparent pb-20">
+            <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between pointer-events-auto bg-gradient-to-b from-black/80 via-black/40 to-transparent pb-24">
               <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -194,7 +352,8 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
                   {movie.title}
                 </h2>
                 <p className="text-xs text-gray-400 tracking-wider">
-                  {movie.year} • {quality}
+                  {movie.year} • {movie.genre || 'Sci-Fi'} •{' '}
+                  {movie.duration || '2h 15m'}
                 </p>
               </div>
 
@@ -213,52 +372,65 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
             </div>
 
             {/* Bottom Controls */}
-            <div className="absolute bottom-0 left-0 right-0 pointer-events-auto bg-gradient-to-t from-black/90 to-transparent pt-20">
+            <div className="absolute bottom-0 left-0 right-0 pointer-events-auto bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-24">
               {/* Progress Bar */}
               <div className="px-8 mb-4">
                 <div
                 ref={progressRef}
-                className="group relative w-full h-1 bg-white/20 rounded-full cursor-pointer hover:h-2 transition-all"
+                className="group relative w-full h-1.5 bg-white/15 rounded-full cursor-pointer hover:h-2.5 transition-all"
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleProgressClick(e);
+                  handleSeek(e);
                 }}>
                 
                   {/* Buffered */}
                   <div
-                  className="absolute left-0 top-0 h-full bg-white/10 rounded-full"
+                  className="absolute left-0 top-0 h-full bg-white/15 rounded-full transition-all duration-300"
                   style={{
-                    width: `${Math.min(progress + 15, 100)}%`
+                    width: `${buffered}%`
                   }} />
                 
                   {/* Progress */}
                   <div
-                  className="absolute left-0 top-0 h-full bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.6)]"
+                  className="absolute left-0 top-0 h-full bg-cyan-400 rounded-full shadow-[0_0_12px_rgba(34,211,238,0.6)] transition-[width] duration-150"
                   style={{
                     width: `${progress}%`
                   }} />
                 
                   {/* Thumb */}
                   <div
-                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_12px_rgba(34,211,238,0.8)] opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-cyan-400 rounded-full shadow-[0_0_14px_rgba(34,211,238,0.9)] scale-0 group-hover:scale-100 transition-transform"
                   style={{
                     left: `calc(${progress}% - 8px)`
                   }} />
                 
+                  {/* Hover time tooltip */}
+                  <div
+                  className="absolute -top-8 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                  style={{
+                    left: `${progress}%`,
+                    transform: 'translateX(-50%)'
+                  }}>
+                  
+                    <span className="px-2 py-1 bg-black/80 rounded text-xs text-white font-mono">
+                      {formatTime(currentTime)}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex justify-between mt-2 text-xs text-gray-400 font-mono tracking-wider">
-                  <span>{currentTime}</span>
-                  <span>{totalTime}</span>
+                  <span>{formatTime(currentTime)}</span>
+                  <span>{duration > 0 ? formatTime(duration) : '--:--'}</span>
                 </div>
               </div>
 
               {/* Control Buttons */}
               <div className="px-8 pb-8 flex items-center justify-between">
                 <div className="flex items-center gap-6">
+                  {/* Play/Pause */}
                   <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsPlaying(!isPlaying);
+                    togglePlay();
                   }}
                   className="hover:text-cyan-300 transition-colors">
                   
@@ -268,23 +440,33 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
                   <Play size={28} fill="white" />
                   }
                   </button>
+
+                  {/* Skip Back 10s */}
                   <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setProgress(Math.max(0, progress - 5));
+                    skipBack();
                   }}
-                  className="hover:text-cyan-300 transition-colors">
+                  className="hover:text-cyan-300 transition-colors relative group/skip">
                   
                     <SkipBack size={22} />
+                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-gray-400 opacity-0 group-hover/skip:opacity-100 transition-opacity whitespace-nowrap">
+                      -10s
+                    </span>
                   </button>
+
+                  {/* Skip Forward 30s */}
                   <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setProgress(Math.min(100, progress + 5));
+                    skipForward();
                   }}
-                  className="hover:text-cyan-300 transition-colors">
+                  className="hover:text-cyan-300 transition-colors relative group/skip">
                   
                     <SkipForward size={22} />
+                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-gray-400 opacity-0 group-hover/skip:opacity-100 transition-opacity whitespace-nowrap">
+                      +30s
+                    </span>
                   </button>
 
                   {/* Volume */}
@@ -292,91 +474,37 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
                     <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setIsMuted(!isMuted);
+                      toggleMute();
                     }}
                     className="hover:text-cyan-300 transition-colors">
                     
-                      {isMuted ? <VolumeX size={22} /> : <Volume2 size={22} />}
+                      {isMuted || volume === 0 ?
+                    <VolumeX size={22} /> :
+
+                    <Volume2 size={22} />
+                    }
                     </button>
-                    <div className="w-0 group-hover/vol:w-24 overflow-hidden transition-all duration-300">
+                    <div className="w-0 group-hover/vol:w-28 overflow-hidden transition-all duration-300">
                       <input
                       type="range"
                       min="0"
                       max="100"
                       value={isMuted ? 0 : volume}
                       onChange={(e) => {
-                        setVolume(Number(e.target.value));
-                        setIsMuted(false);
+                        e.stopPropagation();
+                        handleVolumeChange(Number(e.target.value));
                       }}
                       onClick={(e) => e.stopPropagation()}
-                      className="w-24 h-1 appearance-none bg-white/20 rounded-full cursor-pointer accent-cyan-400" />
+                      className="w-28 h-1 appearance-none bg-white/20 rounded-full cursor-pointer accent-cyan-400" />
                     
                     </div>
+                    <span className="text-[10px] text-gray-500 w-8 text-right opacity-0 group-hover/vol:opacity-100 transition-opacity">
+                      {isMuted ? 0 : volume}%
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-6">
-                  <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                  className="hover:text-cyan-300 transition-colors">
-                  
-                    <Subtitles size={22} />
-                  </button>
-
-                  {/* Quality Selector */}
-                  <div className="relative">
-                    <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowQuality(!showQuality);
-                    }}
-                    className="hover:text-cyan-300 transition-colors flex items-center gap-1">
-                    
-                      <Settings size={22} />
-                    </button>
-                    <AnimatePresence>
-                      {showQuality &&
-                    <motion.div
-                      className="absolute bottom-full right-0 mb-4 bg-[#08080f]/95 backdrop-blur-xl border border-white/10 rounded-lg overflow-hidden min-w-[160px]"
-                      initial={{
-                        opacity: 0,
-                        y: 10
-                      }}
-                      animate={{
-                        opacity: 1,
-                        y: 0
-                      }}
-                      exit={{
-                        opacity: 0,
-                        y: 10
-                      }}
-                      onClick={(e) => e.stopPropagation()}>
-                      
-                          <div className="p-2 text-xs uppercase tracking-widest text-gray-500 px-4">
-                            Quality
-                          </div>
-                          {['4K', '1080p', '720p', 'Auto'].map((q) =>
-                      <button
-                        key={q}
-                        onClick={() => {
-                          setQuality(q);
-                          setShowQuality(false);
-                        }}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-white/10 transition-colors flex items-center justify-between ${quality === q ? 'text-cyan-300' : 'text-gray-300'}`}>
-                        
-                              {q}
-                              {quality === q &&
-                        <div className="w-2 h-2 bg-cyan-400 rounded-full" />
-                        }
-                            </button>
-                      )}
-                        </motion.div>
-                    }
-                    </AnimatePresence>
-                  </div>
-
                   <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -425,10 +553,10 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
               </button>
             </div>
 
-            <div className="p-4 space-y-4 overflow-y-auto h-[calc(100%-72px)]">
+            <div className="p-4 space-y-3 overflow-y-auto h-[calc(100%-72px)]">
               {upNextItems.map((item, i) =>
             <motion.div
-              key={item.title}
+              key={item.id}
               className="group flex gap-4 p-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
               initial={{
                 opacity: 0,
@@ -439,14 +567,14 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
                 x: 0
               }}
               transition={{
-                delay: i * 0.1
+                delay: i * 0.08
               }}>
               
                   <div className="w-28 h-16 bg-gray-800 rounded overflow-hidden flex-shrink-0 relative">
                     <div
                   className="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-500"
                   style={{
-                    backgroundImage: `url(${item.image})`
+                    backgroundImage: `url(${getYouTubeThumbnail(item.videoId, 'mq')})`
                   }} />
                 
                     <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -458,6 +586,9 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
                       {item.title}
                     </div>
                     <div className="text-xs text-gray-500">{item.duration}</div>
+                    <div className="text-xs text-cyan-400/60 mt-1">
+                      {item.genre}
+                    </div>
                   </div>
                 </motion.div>
             )}

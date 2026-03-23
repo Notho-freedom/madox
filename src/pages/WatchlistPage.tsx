@@ -2,42 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { MovieCard } from '../components/MovieCard';
 import { Bookmark, Trash2 } from 'lucide-react';
-const watchlist = [
-{
-  title: 'Interstellar',
-  year: '2014',
-  rating: '8.7',
-  color: '#0f766e',
-  image:
-  'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop'
-},
-{
-  title: 'Dark',
-  year: '2017',
-  rating: '8.8',
-  color: '#ca8a04',
-  image:
-  'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop'
-},
-{
-  title: 'Arrival',
-  year: '2016',
-  rating: '7.9',
-  color: '#1d4ed8',
-  image:
-  'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop'
-},
-{
-  title: 'Blade Runner 2049',
-  year: '2017',
-  rating: '8.0',
-  color: '#b91c1c',
-  image:
-  'https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=2576&auto=format&fit=crop'
-}];
-
+import { movies, series, type MovieData } from '../data/movies';
+const watchlist = [movies[3], series[1], movies[4], movies[0]];
 interface WatchlistPageProps {
-  onMovieClick: (movie: any) => void;
+  onMovieClick: (movie: MovieData) => void;
 }
 export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
   return (
@@ -68,7 +36,7 @@ export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
             My Watchlist
           </h1>
           <span className="px-3 py-1 bg-white/5 rounded-full text-sm text-gray-400 border border-white/10">
-            4 items
+            {watchlist.length} items
           </span>
         </div>
 
@@ -77,32 +45,22 @@ export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
         </button>
       </div>
 
-      {watchlist.length > 0 ?
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {watchlist.map((item, index) =>
-        <div key={index} className="relative group">
-              <div className="flex justify-center">
-                <MovieCard
+        {watchlist.map((item, index) =>
+        <div key={item.id} className="relative group">
+            <div className="flex justify-center">
+              <MovieCard
               {...item}
               delay={index * 0.05}
               onClick={() => onMovieClick(item)} />
             
-              </div>
-              <button className="absolute top-4 right-8 z-20 p-2 bg-black/50 backdrop-blur-md rounded-full text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 border border-red-500/30">
-                <Trash2 size={16} />
-              </button>
             </div>
+            <button className="absolute top-4 right-8 z-20 p-2 bg-black/50 backdrop-blur-md rounded-full text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 border border-red-500/30">
+              <Trash2 size={16} />
+            </button>
+          </div>
         )}
-        </div> :
-
-      <div className="flex flex-col items-center justify-center py-32 text-gray-500">
-          <Bookmark size={64} className="mb-6 opacity-20" />
-          <p className="text-xl font-light">Your watchlist is empty.</p>
-          <button className="mt-6 px-6 py-2 bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20 transition-colors uppercase tracking-widest text-sm">
-            Browse Movies
-          </button>
-        </div>
-      }
+      </div>
     </motion.div>);
 
 }

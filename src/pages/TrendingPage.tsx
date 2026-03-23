@@ -1,52 +1,28 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, ArrowUp, ArrowDown, Minus } from 'lucide-react';
-const trendingItems = [
-{
-  rank: 1,
-  title: 'Dune: Part Two',
-  views: '2.4M',
-  change: 'up',
-  image:
-  'https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=2576&auto=format&fit=crop'
-},
-{
-  rank: 2,
-  title: 'Severance',
-  views: '1.8M',
-  change: 'up',
-  image:
-  'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop'
-},
-{
-  rank: 3,
-  title: 'Oppenheimer',
-  views: '1.5M',
-  change: 'down',
-  image:
-  'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?q=80&w=800&auto=format&fit=crop'
-},
-{
-  rank: 4,
-  title: 'The Batman',
-  views: '1.2M',
-  change: 'same',
-  image:
-  'https://images.unsplash.com/photo-1509347528160-9a9e33742cd4?q=80&w=800&auto=format&fit=crop'
-},
-{
-  rank: 5,
-  title: 'Arcane',
-  views: '1.1M',
-  change: 'up',
-  image:
-  'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop'
-}];
-
-export function TrendingPage() {
+import { TrendingUp, ArrowUp, ArrowDown, Minus, Star, Play } from 'lucide-react';
+import {
+  movies,
+  series,
+  getYouTubeThumbnail,
+  type MovieData } from
+'../data/movies';
+const trendingData = [...movies, ...series].
+sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating)).
+slice(0, 10).
+map((item, i) => ({
+  ...item,
+  rank: i + 1,
+  views: `${(Math.random() * 3 + 0.5).toFixed(1)}M`,
+  change: i < 3 ? 'up' : i < 6 ? 'same' : 'down'
+}));
+interface TrendingPageProps {
+  onMovieClick?: (movie: MovieData) => void;
+}
+export function TrendingPage({ onMovieClick }: TrendingPageProps) {
   return (
     <motion.div
-      className="px-16 py-12 pb-32"
+      className="px-16 py-12 pb-32 pt-8"
       initial={{
         opacity: 0,
         y: 20
@@ -78,9 +54,9 @@ export function TrendingPage() {
       </div>
 
       <div className="space-y-4">
-        {trendingItems.map((item, index) =>
+        {trendingData.map((item, index) =>
         <motion.div
-          key={item.rank}
+          key={item.id}
           initial={{
             opacity: 0,
             x: -20
@@ -90,13 +66,14 @@ export function TrendingPage() {
             x: 0
           }}
           transition={{
-            delay: index * 0.1
+            delay: index * 0.06
           }}
-          className="group relative flex items-center gap-8 p-6 bg-white/5 border border-white/5 hover:bg-white/10 transition-colors overflow-hidden"
+          className="group relative flex items-center gap-8 p-6 bg-white/5 border border-white/5 hover:bg-white/10 transition-colors overflow-hidden cursor-pointer"
           style={{
             clipPath:
             'polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)'
-          }}>
+          }}
+          onClick={() => onMovieClick?.(item)}>
           
             {/* Rank Number */}
             <div className="text-6xl font-bold text-white/10 font-['Advent_Pro'] w-24 text-center group-hover:text-cyan-500/20 transition-colors">
@@ -104,50 +81,60 @@ export function TrendingPage() {
             </div>
 
             {/* Thumbnail */}
-            <div className="w-48 h-28 bg-gray-800 relative overflow-hidden">
+            <div className="w-48 h-28 bg-gray-800 relative overflow-hidden rounded">
               <div
               className="absolute inset-0 bg-cover bg-center opacity-80 group-hover:scale-110 transition-transform duration-500"
               style={{
-                backgroundImage: `url(${item.image})`
+                backgroundImage: `url(${getYouTubeThumbnail(item.videoId, 'mq')})`
               }} />
             
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Play size={24} fill="white" className="text-white" />
+              </div>
             </div>
 
             {/* Info */}
             <div className="flex-1">
-              <h3 className="text-2xl font-bold text-white mb-2">
+              <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-cyan-200 transition-colors">
                 {item.title}
               </h3>
               <div className="flex items-center gap-4 text-sm text-gray-400">
                 <span>{item.views} views</span>
                 <span className="w-1 h-1 bg-gray-600 rounded-full" />
-                <span className="text-cyan-400">Sci-Fi</span>
+                <span className="text-cyan-400">{item.genre}</span>
+                <span className="w-1 h-1 bg-gray-600 rounded-full" />
+                <span>{item.year}</span>
               </div>
             </div>
 
+            {/* Rating */}
+            <div className="flex items-center gap-2">
+              <Star size={16} fill="currentColor" className="text-yellow-500" />
+              <span className="text-white font-bold">{item.rating}</span>
+            </div>
+
             {/* Trend Indicator */}
-            <div className="pr-8">
+            <div className="pr-8 w-28">
               {item.change === 'up' &&
             <div className="flex items-center gap-2 text-green-400">
-                  <ArrowUp size={20} />{' '}
+                  <ArrowUp size={20} />
                   <span className="text-sm font-bold">RISING</span>
                 </div>
             }
               {item.change === 'down' &&
             <div className="flex items-center gap-2 text-red-400">
-                  <ArrowDown size={20} />{' '}
+                  <ArrowDown size={20} />
                   <span className="text-sm font-bold">FALLING</span>
                 </div>
             }
               {item.change === 'same' &&
             <div className="flex items-center gap-2 text-gray-500">
-                  <Minus size={20} />{' '}
+                  <Minus size={20} />
                   <span className="text-sm font-bold">STABLE</span>
                 </div>
             }
             </div>
 
-            {/* Hover Glow */}
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
           </motion.div>
         )}
