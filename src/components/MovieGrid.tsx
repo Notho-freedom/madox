@@ -132,7 +132,7 @@ function GridSection({ title, items, onMovieClick }: SectionProps) {
         transition={{
           duration: 0.6
         }}>
-
+        
         <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
         <h2 className="text-3xl font-bold text-white tracking-wide">{title}</h2>
         <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ml-4" />
@@ -166,22 +166,22 @@ export function MovieGrid({ onMovieClick }: MovieGridProps) {
         title="Trending Now"
         items={movies}
         onMovieClick={onMovieClick} />
-
+      
       <GridSection
         title="New Releases"
         items={[...movies].reverse()}
         onMovieClick={onMovieClick} />
-
+      
       <GridSection
         title="Top Series"
         items={series}
         onMovieClick={onMovieClick} />
-
+      
       <GridSection
         title="Critically Acclaimed"
         items={[...series].reverse()}
         onMovieClick={onMovieClick} />
-
+      
     </div>);
 
 }

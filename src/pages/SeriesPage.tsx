@@ -122,7 +122,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
       transition={{
         duration: 0.5
       }}>
-
+      
       <div className="relative w-full h-[400px] mb-16 overflow-hidden group">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -132,7 +132,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
             clipPath:
             'polygon(0 0, 100% 0, 100% 85%, 95% 100%, 5% 100%, 0 85%)'
           }} />
-
+        
         <div className="absolute inset-0 bg-gradient-to-t from-[#08080f] via-[#08080f]/40 to-transparent" />
 
         <div className="absolute bottom-0 left-0 p-12 w-full max-w-3xl">
@@ -152,7 +152,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
               clipPath:
               'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
             }}>
-
+            
             <Play size={20} fill="currentColor" /> Watch Season 2
           </button>
         </div>
@@ -174,7 +174,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
             {...series}
             delay={index * 0.05}
             onClick={() => onMovieClick(series)} />
-
+          
           </div>
         )}
       </div>

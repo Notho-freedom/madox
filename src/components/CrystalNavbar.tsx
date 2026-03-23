@@ -52,7 +52,7 @@ export function CrystalNavbar({
       transition={{
         duration: 0.5
       }}>
-
+      
       {/* Left: Logo Trigger */}
       <button
         onClick={onTogglePanel}
@@ -61,20 +61,20 @@ export function CrystalNavbar({
           clipPath:
           'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'
         }}>
-
+        
         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <span className="text-xl font-bold text-white tracking-tighter">C</span>
       </button>
 
-      {/* Center: Branding */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+      {/* Center: Branding — hidden on smaller screens to avoid overlap */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden xl:block">
         <h1 className="text-xl font-bold tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-white opacity-80 font-['Advent_Pro']">
           CRYSTALLINE
         </h1>
       </div>
 
       {/* Right: Navigation */}
-      <div className="flex items-center gap-8">
+      <div className="flex items-center gap-4 lg:gap-8">
         {navItems.map((item) => {
           const isActive = activePage === item.id;
           return (
@@ -82,14 +82,14 @@ export function CrystalNavbar({
               key={item.id}
               onClick={() => onNavigate(item.id)}
               className="relative group flex items-center gap-2 py-2">
-
+              
               <item.icon
                 size={16}
                 className={`transition-colors ${isActive ? 'text-cyan-300' : 'text-gray-400 group-hover:text-white'}`} />
-
+              
               <span
-                className={`text-sm uppercase tracking-widest transition-colors ${isActive ? 'text-cyan-300' : 'text-gray-400 group-hover:text-white'}`}>
-
+                className={`text-sm uppercase tracking-widest transition-colors hidden lg:inline ${isActive ? 'text-cyan-300' : 'text-gray-400 group-hover:text-white'}`}>
+                
                 {item.label}
               </span>
 
@@ -113,7 +113,7 @@ export function CrystalNavbar({
         <button
           onClick={() => onNavigate('settings')}
           className={`p-2 transition-colors ${activePage === 'settings' ? 'text-cyan-300' : 'text-gray-400 hover:text-white'}`}>
-
+          
           <Settings size={20} />
         </button>
       </div>

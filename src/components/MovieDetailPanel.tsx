@@ -20,7 +20,7 @@ export function MovieDetailPanel({ isOpen, onClose }: MovieDetailPanelProps) {
         damping: 30,
         stiffness: 300
       }}>
-
+      
       {/* Close Button */}
       <button
         onClick={onClose}
@@ -29,11 +29,11 @@ export function MovieDetailPanel({ isOpen, onClose }: MovieDetailPanelProps) {
           clipPath:
           'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'
         }}>
-
+        
         <X
           size={20}
           className="text-gray-400 group-hover:text-white transition-colors" />
-
+        
       </button>
 
       <div className="h-full overflow-y-auto scrollbar-hide">
@@ -46,7 +46,7 @@ export function MovieDetailPanel({ isOpen, onClose }: MovieDetailPanelProps) {
               'url(https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?q=80&w=2070&auto=format&fit=crop)',
               filter: 'brightness(0.8)'
             }} />
-
+          
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#08080f]/50 to-[#08080f]" />
 
           {/* Prismatic Overlay */}
@@ -70,7 +70,7 @@ export function MovieDetailPanel({ isOpen, onClose }: MovieDetailPanelProps) {
               transition={{
                 delay: 0.2
               }}>
-
+              
               BLADE RUNNER <br />
               <span className="text-cyan-400 text-glow">2049</span>
             </motion.h2>
@@ -98,7 +98,7 @@ export function MovieDetailPanel({ isOpen, onClose }: MovieDetailPanelProps) {
                 clipPath:
                 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
               }}>
-
+              
               <Play size={18} fill="currentColor" /> Watch
             </button>
             <button
@@ -107,7 +107,7 @@ export function MovieDetailPanel({ isOpen, onClose }: MovieDetailPanelProps) {
                 clipPath:
                 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
               }}>
-
+              
               <Plus size={18} /> List
             </button>
             <button
@@ -116,7 +116,7 @@ export function MovieDetailPanel({ isOpen, onClose }: MovieDetailPanelProps) {
                 clipPath:
                 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)'
               }}>
-
+              
               <ThumbsUp size={18} />
             </button>
           </div>
@@ -139,7 +139,7 @@ export function MovieDetailPanel({ isOpen, onClose }: MovieDetailPanelProps) {
             <span
               key={tag}
               className="px-3 py-1 bg-white/5 border border-white/10 text-xs text-cyan-200 tracking-wider">
-
+              
                 {tag}
               </span>
             )}

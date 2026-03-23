@@ -67,7 +67,7 @@ export function ContinueWatching() {
           whileHover={{
             scale: 1.02
           }}>
-
+          
             {/* Card Container */}
             <div
             className="relative aspect-video bg-[#12121a] overflow-hidden"
@@ -75,14 +75,14 @@ export function ContinueWatching() {
               clipPath:
               'polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%)'
             }}>
-
+            
               {/* Image */}
               <div
               className="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-80 transition-opacity duration-500"
               style={{
                 backgroundImage: `url(${item.image})`
               }} />
-
+            
 
               {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
@@ -110,7 +110,7 @@ export function ContinueWatching() {
                   style={{
                     width: `${item.progress}%`
                   }} />
-
+                
                 </div>
               </div>
             </div>
@@ -122,7 +122,7 @@ export function ContinueWatching() {
               clipPath:
               'polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%)'
             }} />
-
+          
           </motion.div>
         )}
       </div>

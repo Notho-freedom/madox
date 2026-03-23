@@ -13,8 +13,13 @@ import {
 interface MovieDetailPageProps {
   movie: any;
   onBack: () => void;
+  onPlay?: () => void;
 }
-export function MovieDetailPage({ movie, onBack }: MovieDetailPageProps) {
+export function MovieDetailPage({
+  movie,
+  onBack,
+  onPlay
+}: MovieDetailPageProps) {
   if (!movie) return null;
   return (
     <motion.div
@@ -34,12 +39,12 @@ export function MovieDetailPage({ movie, onBack }: MovieDetailPageProps) {
       transition={{
         duration: 0.5
       }}>
-
+      
       {/* Back Button */}
       <button
         onClick={onBack}
         className="fixed top-24 left-8 z-50 flex items-center gap-2 px-4 py-2 bg-black/50 backdrop-blur-md border border-white/10 text-white hover:bg-white/10 transition-colors rounded-full">
-
+        
         <ArrowLeft size={20} />
         <span className="uppercase tracking-widest text-sm">Back</span>
       </button>
@@ -51,7 +56,7 @@ export function MovieDetailPage({ movie, onBack }: MovieDetailPageProps) {
           style={{
             backgroundImage: `url(${movie.image})`
           }} />
-
+        
         <div className="absolute inset-0 bg-gradient-to-b from-[#08080f]/30 via-[#08080f]/60 to-[#08080f]" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#08080f]/90 via-[#08080f]/40 to-transparent" />
 
@@ -69,7 +74,7 @@ export function MovieDetailPage({ movie, onBack }: MovieDetailPageProps) {
               transition={{
                 delay: 0.2
               }}>
-
+              
               <div className="flex items-center gap-4 mb-4">
                 <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs tracking-[0.2em] uppercase backdrop-blur-md">
                   Now Streaming
@@ -108,12 +113,13 @@ export function MovieDetailPage({ movie, onBack }: MovieDetailPageProps) {
 
               <div className="flex gap-6">
                 <button
+                  onClick={onPlay}
                   className="px-8 py-4 bg-white text-black font-bold tracking-widest uppercase flex items-center gap-3 hover:bg-cyan-50 transition-colors"
                   style={{
                     clipPath:
                     'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
                   }}>
-
+                  
                   <Play size={20} fill="currentColor" /> Watch Now
                 </button>
                 <button
@@ -122,7 +128,7 @@ export function MovieDetailPage({ movie, onBack }: MovieDetailPageProps) {
                     clipPath:
                     'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
                   }}>
-
+                  
                   <Plus size={20} /> Add to List
                 </button>
                 <button className="p-4 bg-white/5 border border-white/20 text-white hover:text-cyan-300 transition-colors rounded-full">

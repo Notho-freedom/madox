@@ -43,21 +43,21 @@ export function MovieCard({
         scale: 1.02
       }}
       onClick={onClick}>
-
+      
       {/* Card Container with Clip Path */}
       <div
         className="relative h-[400px] w-full bg-[#12121a] overflow-hidden transition-all duration-500"
         style={{
           clipPath: 'polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%)'
         }}>
-
+        
         {/* Real Image Background */}
         <div
           className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
           style={{
             backgroundImage: `url(${image})`
           }} />
-
+        
 
         {/* Gradient Overlay (always visible for text readability) */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
@@ -68,7 +68,7 @@ export function MovieCard({
           style={{
             backgroundColor: color
           }} />
-
+        
 
         {/* Geometric Overlay Pattern */}
         <div
@@ -77,7 +77,7 @@ export function MovieCard({
             backgroundImage:
             'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.4) 0%, transparent 60%)'
           }} />
-
+        
 
         {/* Content Overlay */}
         <div className="absolute inset-0 p-6 flex flex-col justify-end">
@@ -114,7 +114,7 @@ export function MovieCard({
         style={{
           clipPath: 'polygon(10% 0, 100% 0, 100% 85%, 90% 100%, 0 100%, 0 15%)'
         }} />
-
+      
     </motion.div>);
 
 }

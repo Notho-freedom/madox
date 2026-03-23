@@ -122,7 +122,7 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
       transition={{
         duration: 0.5
       }}>
-
+      
       <div className="flex items-end justify-between mb-12 border-b border-white/10 pb-6">
         <div>
           <div className="flex items-center gap-4 mb-2">
@@ -143,7 +143,7 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
               clipPath:
               'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
             }}>
-
+            
             <Filter size={16} /> Filter
           </button>
           <button
@@ -152,7 +152,7 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
               clipPath:
               'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
             }}>
-
+            
             Sort By: Popular <ChevronDown size={16} />
           </button>
         </div>
@@ -165,7 +165,7 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
             {...movie}
             delay={index * 0.05}
             onClick={() => onMovieClick(movie)} />
-
+          
           </div>
         )}
       </div>

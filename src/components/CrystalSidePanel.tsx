@@ -23,7 +23,7 @@ export function CrystalSidePanel({ isOpen, onClose }: CrystalSidePanelProps) {
             opacity: 0
           }}
           onClick={onClose} />
-
+        
 
           {/* Panel */}
           <motion.div
@@ -42,7 +42,7 @@ export function CrystalSidePanel({ isOpen, onClose }: CrystalSidePanelProps) {
             damping: 30,
             stiffness: 300
           }}>
-
+          
             {/* Header */}
             <div className="p-6 flex items-center justify-between border-b border-white/10">
               <h2 className="text-xl font-bold text-white font-['Advent_Pro'] tracking-widest">
@@ -51,7 +51,7 @@ export function CrystalSidePanel({ isOpen, onClose }: CrystalSidePanelProps) {
               <button
               onClick={onClose}
               className="p-2 hover:bg-white/5 rounded-full transition-colors">
-
+              
                 <X size={20} className="text-gray-400 hover:text-white" />
               </button>
             </div>
@@ -66,17 +66,17 @@ export function CrystalSidePanel({ isOpen, onClose }: CrystalSidePanelProps) {
                   clipPath:
                   'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
                 }}>
-
+                
                   <Search
                   size={18}
                   className="text-gray-400 group-hover:text-cyan-300 transition-colors" />
-
+                
                   <input
                   type="text"
                   placeholder="Search..."
                   className="w-full bg-transparent border-none outline-none text-sm text-white placeholder-gray-500 ml-3 font-['Advent_Pro'] tracking-wide"
                   autoFocus />
-
+                
                 </div>
               </div>
             </div>
@@ -89,7 +89,7 @@ export function CrystalSidePanel({ isOpen, onClose }: CrystalSidePanelProps) {
                   src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=100&auto=format&fit=crop"
                   alt="User"
                   className="w-full h-full rounded-full object-cover border-2 border-[#08080f]" />
-
+                
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#08080f]" />
                 </div>
                 <div>

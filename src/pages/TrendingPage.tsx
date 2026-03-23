@@ -62,7 +62,7 @@ export function TrendingPage() {
       transition={{
         duration: 0.5
       }}>
-
+      
       <div className="flex items-center gap-4 mb-12">
         <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-full">
           <TrendingUp size={32} className="text-cyan-400" />
@@ -97,7 +97,7 @@ export function TrendingPage() {
             clipPath:
             'polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)'
           }}>
-
+          
             {/* Rank Number */}
             <div className="text-6xl font-bold text-white/10 font-['Advent_Pro'] w-24 text-center group-hover:text-cyan-500/20 transition-colors">
               {item.rank}
@@ -110,7 +110,7 @@ export function TrendingPage() {
               style={{
                 backgroundImage: `url(${item.image})`
               }} />
-
+            
             </div>
 
             {/* Info */}

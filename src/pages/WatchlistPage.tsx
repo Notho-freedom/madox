@@ -58,7 +58,7 @@ export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
       transition={{
         duration: 0.5
       }}>
-
+      
       <div className="flex items-center justify-between mb-12 border-b border-white/10 pb-6">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-full">
@@ -86,7 +86,7 @@ export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
               {...item}
               delay={index * 0.05}
               onClick={() => onMovieClick(item)} />
-
+            
               </div>
               <button className="absolute top-4 right-8 z-20 p-2 bg-black/50 backdrop-blur-md rounded-full text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 border border-red-500/30">
                 <Trash2 size={16} />

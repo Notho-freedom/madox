@@ -17,7 +17,7 @@ export function CrystalBackground() {
           backgroundSize: '40px 40px',
           backgroundRepeat: 'repeat'
         }} />
-
+      
 
       {/* Deep Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#08080f] via-transparent to-[#08080f] opacity-90" />
@@ -46,7 +46,7 @@ export function CrystalBackground() {
             ease: 'easeInOut'
           }
         }} />
-
+      
 
       <motion.div
         className="absolute top-[60%] right-[10%] w-96 h-96 bg-white/3 backdrop-blur-sm border border-white/5"
@@ -70,7 +70,7 @@ export function CrystalBackground() {
             ease: 'easeInOut'
           }
         }} />
-
+      
 
       <motion.div
         className="absolute bottom-[-10%] left-[20%] w-80 h-80 bg-white/2 backdrop-blur-sm border border-white/5"
@@ -93,7 +93,7 @@ export function CrystalBackground() {
             ease: 'easeInOut'
           }
         }} />
-
+      
 
       {/* Prismatic Light Leaks */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-blue-500/10 via-purple-500/5 to-transparent blur-3xl" />

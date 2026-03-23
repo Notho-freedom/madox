@@ -23,7 +23,7 @@ export function GenreFilter() {
               key={genre}
               onClick={() => setActiveGenre(genre)}
               className="relative group px-6 py-2 outline-none">
-
+              
               {isActive &&
               <motion.div
                 layoutId="activeGenre"
@@ -52,7 +52,7 @@ export function GenreFilter() {
 
               <span
                 className={`relative z-10 text-sm tracking-widest uppercase font-medium transition-colors duration-300 ${isActive ? 'text-cyan-300 text-glow' : 'text-gray-400 group-hover:text-white'}`}>
-
+                
                 {genre}
               </span>
             </button>);
