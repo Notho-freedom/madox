@@ -1,50 +1,22 @@
 import React, { useState } from 'react';
-import { Home, Film, Tv, TrendingUp, Bookmark, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
-const navItems = [
-{
-  icon: Home,
-  label: 'Home',
-  id: 'home'
-},
-{
-  icon: Film,
-  label: 'Movies',
-  id: 'movies'
-},
-{
-  icon: Tv,
-  label: 'Series',
-  id: 'series'
-},
-{
-  icon: TrendingUp,
-  label: 'Trending',
-  id: 'trending'
-},
-{
-  icon: Bookmark,
-  label: 'Watchlist',
-  id: 'watchlist'
-},
-{
-  icon: Settings,
-  label: 'Settings',
-  id: 'settings'
-}];
+import { primaryNavItems, type NavPageId } from '../navigation/primaryNav';
+import { CrystalMenuTrigger } from './CrystalMenuTrigger';
 
 interface CrystalSidebarProps {
-  activePage: string;
-  onNavigate: (page: string) => void;
+  activePage: NavPageId;
+  onNavigate: (page: NavPageId) => void;
+  onOpenMenu: () => void;
 }
 export function CrystalSidebar({
   activePage,
-  onNavigate
+  onNavigate,
+  onOpenMenu
 }: CrystalSidebarProps) {
-  const [hovered, setHovered] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<NavPageId | null>(null);
   return (
     <motion.nav
-      className="fixed left-0 top-0 bottom-0 w-24 z-50 flex flex-col items-center py-8 bg-[#08080f]/80 backdrop-blur-md border-r border-white/5"
+      className="fixed left-0 top-0 bottom-0 z-50 hidden w-24 flex-col items-center border-r border-white/5 bg-[#08080f]/80 py-8 backdrop-blur-md md:flex"
       initial={{
         x: -100
       }}
@@ -57,36 +29,25 @@ export function CrystalSidebar({
       }}>
 
       {/* Logo Area */}
-      <div
-        className="mb-12 relative group cursor-pointer"
-        onClick={() => onNavigate('home')}>
-
-        <div
-          className="w-12 h-12 bg-white/5 border border-white/20 flex items-center justify-center relative overflow-hidden"
-          style={{
-            clipPath:
-            'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)'
-          }}>
-
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <span className="text-2xl font-bold text-white tracking-tighter">
-            C
-          </span>
-        </div>
+      <div className="mb-12">
+        <CrystalMenuTrigger className="h-12 w-12 overflow-hidden" onClick={onOpenMenu} />
       </div>
 
       {/* Nav Items */}
       <div className="flex-1 flex flex-col gap-8 w-full px-2">
-        {navItems.map((item) => {
+        {primaryNavItems.map((item) => {
           const isActive = activePage === item.id;
           const isHovered = hovered === item.id;
           return (
             <button
               key={item.id}
+              type="button"
+              title={item.label}
+              aria-label={item.label}
               onClick={() => onNavigate(item.id)}
               onMouseEnter={() => setHovered(item.id)}
               onMouseLeave={() => setHovered(null)}
-              className="relative group w-full flex flex-col items-center justify-center gap-1 p-2">
+              className="relative group flex w-full items-center justify-center p-3">
 
               {/* Active/Hover Indicator Background */}
               {(isActive || isHovered) &&
@@ -112,14 +73,6 @@ export function CrystalSidebar({
               <item.icon
                 size={24}
                 className={`relative z-10 transition-all duration-300 ${isActive ? 'text-cyan-300 drop-shadow-[0_0_8px_rgba(103,232,249,0.5)]' : isHovered ? 'text-white' : 'text-gray-500'}`} />
-
-
-              {/* Label */}
-              <span
-                className={`text-[10px] uppercase tracking-widest transition-colors duration-300 ${isActive ? 'text-cyan-300' : 'text-gray-500'}`}>
-
-                {item.label}
-              </span>
 
               {/* Prismatic Edge Effect on Hover */}
               {isHovered &&

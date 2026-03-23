@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import { CrystalBackground } from './components/CrystalBackground';
-import { CrystalNavbar } from './components/CrystalNavbar';
+import { CrystalMenuTrigger } from './components/CrystalMenuTrigger';
 import { CrystalSidePanel } from './components/CrystalSidePanel';
+import { CrystalSidebar } from './components/CrystalSidebar';
 import { HeroSection } from './components/HeroSection';
 import { GenreFilter } from './components/GenreFilter';
 import { ContinueWatching } from './components/ContinueWatching';
@@ -17,8 +18,9 @@ import { PlayerPage } from './pages/PlayerPage';
 import { ViewAllPage } from './pages/ViewAllPage';
 import { type MovieData } from './data/movies';
 import { getTrailerId } from './services/tmdb';
+import { type NavPageId } from './navigation/primaryNav';
 export function App() {
-  const [activePage, setActivePage] = useState('home');
+  const [activePage, setActivePage] = useState<NavPageId>('home');
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<MovieData | null>(null);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
@@ -29,6 +31,7 @@ export function App() {
   const handleMovieClick = (movie: MovieData) => {
     setSelectedMovie(movie);
     setIsPlayerOpen(false);
+    setIsPanelOpen(false);
     setViewAllCategory(null);
     window.scrollTo({
       top: 0,
@@ -42,6 +45,7 @@ export function App() {
       // If we already have a videoId, play immediately
       if (target.videoId) {
         setSelectedMovie(target);
+        setIsPanelOpen(false);
         setIsPlayerOpen(true);
         return;
       }
@@ -57,6 +61,7 @@ export function App() {
             videoId: trailerId
           };
           setSelectedMovie(updatedMovie);
+          setIsPanelOpen(false);
           setIsPlayerOpen(true);
         }
       } catch (err) {
@@ -72,6 +77,7 @@ export function App() {
   };
   const handleViewAll = (category: CategoryData) => {
     setViewAllCategory(category);
+    setIsPanelOpen(false);
     setSelectedMovie(null);
     window.scrollTo({
       top: 0,
@@ -81,6 +87,16 @@ export function App() {
   const handleViewAllBack = () => {
     setViewAllCategory(null);
   };
+  const handleNavigate = useCallback((page: NavPageId) => {
+    setActivePage(page);
+    setIsPanelOpen(false);
+    setSelectedMovie(null);
+    setIsPlayerOpen(false);
+    setViewAllCategory(null);
+    window.scrollTo({
+      top: 0
+    });
+  }, []);
   const renderContent = () => {
     if (selectedMovie && isPlayerOpen) return null;
     if (selectedMovie && !isPlayerOpen) {
@@ -136,27 +152,27 @@ export function App() {
       <CrystalBackground />
 
       {!isPlayerOpen &&
-      <CrystalNavbar
-        activePage={activePage}
-        onNavigate={(page) => {
-          setActivePage(page);
-          setSelectedMovie(null);
-          setIsPlayerOpen(false);
-          setViewAllCategory(null);
-          window.scrollTo({
-            top: 0
-          });
-        }}
-        onTogglePanel={() => setIsPanelOpen(true)} />
-
+      <>
+          <CrystalSidebar
+          activePage={activePage}
+          onNavigate={handleNavigate}
+          onOpenMenu={() => setIsPanelOpen(true)} />
+          <div className="fixed left-6 top-6 z-50 md:hidden">
+            <CrystalMenuTrigger className="h-12 w-12 overflow-hidden" onClick={() => setIsPanelOpen(true)} />
+          </div>
+        </>
       }
 
+      {!isPlayerOpen &&
       <CrystalSidePanel
+        activePage={activePage}
         isOpen={isPanelOpen}
+        onNavigate={handleNavigate}
         onClose={() => setIsPanelOpen(false)} />
+      }
       
 
-      <main className={`relative z-10 ${!isPlayerOpen ? 'pt-16' : ''}`}>
+      <main className={`relative z-10 ${!isPlayerOpen ? 'md:pl-24' : ''}`}>
         <AnimatePresence mode="wait">{renderContent()}</AnimatePresence>
       </main>
 

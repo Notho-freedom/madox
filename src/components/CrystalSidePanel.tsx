@@ -1,11 +1,19 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Bell, X, User, LogOut, HelpCircle } from 'lucide-react';
+import { primaryNavItems, type NavPageId } from '../navigation/primaryNav';
 interface CrystalSidePanelProps {
+  activePage: NavPageId;
   isOpen: boolean;
+  onNavigate: (page: NavPageId) => void;
   onClose: () => void;
 }
-export function CrystalSidePanel({ isOpen, onClose }: CrystalSidePanelProps) {
+export function CrystalSidePanel({
+  activePage,
+  isOpen,
+  onNavigate,
+  onClose
+}: CrystalSidePanelProps) {
   return (
     <AnimatePresence>
       {isOpen &&
@@ -27,7 +35,7 @@ export function CrystalSidePanel({ isOpen, onClose }: CrystalSidePanelProps) {
 
           {/* Panel */}
           <motion.div
-          className="fixed top-0 left-0 bottom-0 w-80 z-[70] bg-[#08080f]/95 border-r border-white/10 shadow-2xl flex flex-col"
+          className="fixed top-0 left-0 bottom-0 z-[70] flex w-[calc(100vw-1rem)] max-w-sm flex-col border-r border-white/10 bg-[#08080f]/95 shadow-2xl md:w-80"
           initial={{
             x: '-100%'
           }}
@@ -54,6 +62,37 @@ export function CrystalSidePanel({ isOpen, onClose }: CrystalSidePanelProps) {
               
                 <X size={20} className="text-gray-400 hover:text-white" />
               </button>
+            </div>
+
+            {/* Primary Navigation */}
+            <div className="px-6 py-5 border-b border-white/5">
+              <div className="mb-3 text-[11px] uppercase tracking-[0.3em] text-cyan-300/70">
+                Explore
+              </div>
+              <div className="space-y-2">
+                {primaryNavItems.map((item) => {
+                  const isActive = activePage === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        onNavigate(item.id);
+                        onClose();
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors ${
+                        isActive
+                          ? 'border-cyan-400/30 bg-cyan-400/10 text-cyan-200'
+                          : 'border-white/5 bg-white/0 text-gray-400 hover:border-white/10 hover:bg-white/5 hover:text-white'
+                      }`}>
+                      <item.icon size={18} />
+                      <span className="text-sm uppercase tracking-[0.2em]">
+                        {item.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Search */}

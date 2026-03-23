@@ -71,7 +71,7 @@ export function MovieDetailPage({
       
       <button
         onClick={onBack}
-        className="fixed top-24 left-8 z-50 flex items-center gap-2 px-4 py-2 bg-black/50 backdrop-blur-md border border-white/10 text-white hover:bg-white/10 transition-colors rounded-full">
+        className="fixed left-4 top-20 z-50 flex items-center gap-2 rounded-full border border-white/10 bg-black/50 px-4 py-2 text-white backdrop-blur-md transition-colors hover:bg-white/10 md:left-32 md:top-8">
         
         <ArrowLeft size={20} />
         <span className="uppercase tracking-widest text-sm">Back</span>
