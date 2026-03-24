@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import {
@@ -143,13 +143,17 @@ export function MovieGrid({
   onViewAll
 }: MovieGridProps) {
   const activeGenreOption = getHomeGenreOption(activeGenre ?? 'all');
-  const sectionSet = getHomeSectionSet(activeGenreOption);
-  const sections = [
-    sectionSet.trending,
-    sectionSet.popularMovies,
-    sectionSet.topRated,
-    sectionSet.popularSeries
-  ];
+  const sectionSet = useMemo(() => {
+    return getHomeSectionSet(activeGenreOption);
+  }, [activeGenreOption]);
+  const sections = useMemo(() => {
+    return [
+      sectionSet.trending,
+      sectionSet.popularMovies,
+      sectionSet.topRated,
+      sectionSet.popularSeries
+    ];
+  }, [sectionSet]);
 
   return (
     <div className="relative z-10 pb-20">

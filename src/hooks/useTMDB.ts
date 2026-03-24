@@ -1,4 +1,11 @@
-import { startTransition, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react';
 import {
   discoverByGenre,
   getCredits,
@@ -20,6 +27,7 @@ import { type MovieData } from '../data/movies';
 
 const INITIAL_PAGE_BATCH = 1;
 const PAGE_BATCH_SIZE = 1;
+const EMPTY_FILTER_LABELS: string[] = [];
 const hasPoster = (item: MovieData) => Boolean(item.posterPath);
 
 interface UseTMDBResult {
@@ -337,53 +345,89 @@ export function useTMDBCatalog(
   source: TMDBCatalogSource,
   options: PaginatedQueryOptions = {}
 ): UseTMDBResult {
+  const sourceKind = source.kind;
+  const sourceType = 'type' in source ? source.type : undefined;
+  const sourceTimeWindow =
+    source.kind === 'trending' ? source.timeWindow : undefined;
+  const sourceGenreId = source.kind === 'discover' ? source.genreId : undefined;
+  const sourceSortBy = source.kind === 'discover' ? source.sortBy : undefined;
+  const sourceVoteCountGte =
+    source.kind === 'discover' ? source.voteCountGte : undefined;
+  const sourceQuery = source.kind === 'search' ? source.query.trim() : '';
+  const filterLabelsKey = (source.filterLabels ?? EMPTY_FILTER_LABELS).join('|');
+  const activeFilterLabels = useMemo(() => {
+    return filterLabelsKey ? filterLabelsKey.split('|') : EMPTY_FILTER_LABELS;
+  }, [filterLabelsKey]);
+
   const fetchPage = useCallback(
     (page: number, signal?: AbortSignal) => {
-      switch (source.kind) {
+      switch (sourceKind) {
         case 'trending':
-          return getTrending(source.type, source.timeWindow, page, { signal });
+          return getTrending(sourceType as 'movie' | 'tv' | 'all', sourceTimeWindow as 'day' | 'week', page, { signal });
         case 'popular':
-          return getPopular(source.type, page, { signal });
+          return getPopular(sourceType as 'movie' | 'tv', page, { signal });
         case 'topRated':
-          return getTopRated(source.type, page, { signal });
+          return getTopRated(sourceType as 'movie' | 'tv', page, { signal });
         case 'nowPlaying':
-          return getNowPlaying(source.type, page, { signal });
+          return getNowPlaying(sourceType as 'movie' | 'tv', page, { signal });
         case 'discover':
-          return discoverByGenre(source.type, source.genreId, {
+          return discoverByGenre(sourceType as 'movie' | 'tv', sourceGenreId as number, {
             page,
             signal,
-            sortBy: source.sortBy,
-            voteCountGte: source.voteCountGte
+            sortBy: sourceSortBy,
+            voteCountGte: sourceVoteCountGte
           });
         case 'search':
-          return search(source.query.trim(), source.type, page, { signal });
+          return search(sourceQuery, sourceType as 'movie' | 'tv' | 'multi', page, {
+            signal
+          });
       }
     },
-    [source]
+    [
+      sourceGenreId,
+      sourceKind,
+      sourceQuery,
+      sourceSortBy,
+      sourceTimeWindow,
+      sourceType,
+      sourceVoteCountGte
+    ]
   );
 
-  const activeFilterLabels = source.filterLabels ?? [];
   const optionFilter = options.filter;
-  const sourceFilter =
-    activeFilterLabels.length > 0
-      ? (item: MovieData) => matchesGenreLabels(item, activeFilterLabels)
-      : undefined;
-  const combinedFilter =
-    source.kind === 'discover' || source.kind === 'search'
-      ? (item: MovieData) =>
-          hasPoster(item) &&
-          (sourceFilter ? sourceFilter(item) : true) &&
-          (optionFilter ? optionFilter(item) : true)
-      : sourceFilter && optionFilter
-      ? (item: MovieData) => sourceFilter(item) && optionFilter(item)
-      : sourceFilter
-      ? sourceFilter
-      : optionFilter
-      ? optionFilter
-      : undefined;
+  const sourceFilter = useMemo(() => {
+    if (activeFilterLabels.length === 0) {
+      return undefined;
+    }
+
+    return (item: MovieData) => matchesGenreLabels(item, activeFilterLabels);
+  }, [activeFilterLabels]);
+
+  const combinedFilter = useMemo(() => {
+    if (sourceKind === 'discover' || sourceKind === 'search') {
+      return (item: MovieData) =>
+        hasPoster(item) &&
+        (sourceFilter ? sourceFilter(item) : true) &&
+        (optionFilter ? optionFilter(item) : true);
+    }
+
+    if (sourceFilter && optionFilter) {
+      return (item: MovieData) => sourceFilter(item) && optionFilter(item);
+    }
+
+    if (sourceFilter) {
+      return sourceFilter;
+    }
+
+    if (optionFilter) {
+      return optionFilter;
+    }
+
+    return undefined;
+  }, [optionFilter, sourceFilter, sourceKind]);
   const isEnabled =
     (options.enabled ?? true) &&
-    (source.kind !== 'search' || source.query.trim().length > 0);
+    (sourceKind !== 'search' || sourceQuery.length > 0);
 
   return usePaginatedMovieQuery(fetchPage, {
     ...options,
