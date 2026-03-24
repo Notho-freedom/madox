@@ -12,11 +12,18 @@ import {
   mapMoviePage,
   type HomeBootstrapResponse,
   type MoviePageResult,
+  type PersonMediaCredit,
+  personCreditToMediaData,
   type TMDBCast,
   type TMDBGenre,
   type TMDBMovie,
   type TMDBMovieDetails,
   type TMDBPageResult,
+  type TMDBPersonCombinedCredit,
+  type TMDBPersonDetails,
+  type TMDBPersonExternalIds,
+  type TMDBPersonImage,
+  type PersonProfileResponse,
   type TMDBVideo
 } from '../src/services/tmdbShared';
 import { canUseRemoteTasks, serverEnv } from './config';
@@ -651,6 +658,84 @@ async function getGenresPayload(type: MediaType) {
   );
 }
 
+function comparePersonCredits(
+  left: PersonMediaCredit,
+  right: PersonMediaCredit
+) {
+  return (
+    right.popularity - left.popularity ||
+    right.voteCount - left.voteCount ||
+    parseFloat(right.rating) - parseFloat(left.rating) ||
+    Number(right.year || 0) - Number(left.year || 0)
+  );
+}
+
+function normalizePersonFilmography(
+  credits: TMDBPersonCombinedCredit[]
+): PersonMediaCredit[] {
+  const deduped = new Map<string, PersonMediaCredit>();
+
+  for (const credit of credits) {
+    if (credit.media_type !== 'movie' && credit.media_type !== 'tv') {
+      continue;
+    }
+
+    const normalized = personCreditToMediaData(credit);
+    const key = `${normalized.mediaType}:${normalized.tmdbId}`;
+    const current = deduped.get(key);
+
+    if (!current || comparePersonCredits(normalized, current) < 0) {
+      deduped.set(key, normalized);
+    }
+  }
+
+  return Array.from(deduped.values()).sort(comparePersonCredits);
+}
+
+async function getPersonProfilePayload(id: number): Promise<PersonProfileResponse> {
+  const key = cacheKey('person-profile', { id });
+
+  return readThroughCache(key, DETAILS_TTL_MS, async () => {
+    const [detailsResult, imagesResult, creditsResult, externalIdsResult] =
+      await Promise.allSettled([
+        tmdbFetchJson<TMDBPersonDetails>(`/person/${id}`),
+        tmdbFetchJson<{ profiles: TMDBPersonImage[] }>(`/person/${id}/images`),
+        tmdbFetchJson<{ cast: TMDBPersonCombinedCredit[] }>(
+          `/person/${id}/combined_credits`
+        ),
+        tmdbFetchJson<TMDBPersonExternalIds>(`/person/${id}/external_ids`)
+      ]);
+
+    if (detailsResult.status !== 'fulfilled') {
+      throw detailsResult.reason;
+    }
+
+    if (creditsResult.status !== 'fulfilled') {
+      throw creditsResult.reason;
+    }
+
+    const person = detailsResult.value;
+    const filmography = normalizePersonFilmography(creditsResult.value.cast);
+    const images =
+      imagesResult.status === 'fulfilled' ? imagesResult.value.profiles : [];
+    const externalIds =
+      externalIdsResult.status === 'fulfilled' ? externalIdsResult.value : null;
+
+    return {
+      externalIds,
+      filmography,
+      images,
+      knownFor: filmography.slice(0, 6),
+      person,
+      stats: {
+        actingCredits: filmography.length,
+        movies: filmography.filter((item) => item.mediaType === 'movie').length,
+        series: filmography.filter((item) => item.mediaType === 'tv').length
+      }
+    };
+  });
+}
+
 async function searchTmdbCatalog(
   query: string,
   type: 'movie' | 'tv' | 'multi',
@@ -987,6 +1072,16 @@ export function createApiApp() {
       const mediaType = c.req.param('mediaType') as MediaType;
       const id = Number(c.req.param('id'));
       return c.json(await getVideosPayload(mediaType, id));
+    } catch (error) {
+      Sentry.captureException(error);
+      return c.json(jsonError(error), 500);
+    }
+  });
+
+  app.get('/api/person/:id/profile', async (c) => {
+    try {
+      const id = Number(c.req.param('id'));
+      return c.json(await getPersonProfilePayload(id));
     } catch (error) {
       Sentry.captureException(error);
       return c.json(jsonError(error), 500);

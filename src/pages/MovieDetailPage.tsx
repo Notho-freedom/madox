@@ -16,16 +16,18 @@ import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { MovieCard } from '../components/MovieCard';
 import { CardSkeleton } from '../components/LoadingSkeleton';
 import { useDetails, useTrailer } from '../hooks/useTMDB';
-import { backdrop, poster } from '../services/tmdb';
+import { backdrop, poster, type TMDBCast } from '../services/tmdb';
 interface MovieDetailPageProps {
   movie: MovieData;
   onBack: () => void;
+  onActorClick?: (actor: TMDBCast) => void;
   onPlay?: () => void;
   onMovieClick?: (movie: MovieData) => void;
 }
 export function MovieDetailPage({
   movie,
   onBack,
+  onActorClick,
   onPlay,
   onMovieClick
 }: MovieDetailPageProps) {
@@ -234,7 +236,11 @@ export function MovieDetailPage({
               </h3>
               <div className="grid grid-cols-4 gap-6">
                 {cast.map((c) =>
-              <div key={c.id} className="group">
+              <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => onActorClick?.(c)}
+                    className="group text-left">
                     <div className="w-full aspect-square bg-white/5 mb-3 overflow-hidden rounded-lg">
                       {c.profile_path ?
                   <img
@@ -250,7 +256,7 @@ export function MovieDetailPage({
                     </div>
                     <div className="text-white font-bold text-sm">{c.name}</div>
                     <div className="text-gray-500 text-xs">{c.character}</div>
-                  </div>
+                  </button>
               )}
               </div>
             </section>

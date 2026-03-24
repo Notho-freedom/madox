@@ -4,6 +4,7 @@ import {
   getCredits,
   getDetails,
   getNowPlaying,
+  getPersonProfile,
   getPopular,
   getSimilar,
   getTopRated,
@@ -11,6 +12,7 @@ import {
   getTrending,
   search,
   type MoviePageResult,
+  type PersonProfileResponse,
   type TMDBCast,
   type TMDBMovieDetails
 } from '../services/tmdb';
@@ -28,6 +30,13 @@ interface UseTMDBResult {
   isRefreshing: boolean;
   isLoadingMore: boolean;
   loadMore: () => void;
+  refetch: () => void;
+}
+
+interface UsePersonProfileResult {
+  data: PersonProfileResponse | null;
+  error: string | null;
+  loading: boolean;
   refetch: () => void;
 }
 
@@ -544,5 +553,71 @@ export function useDetails(
     hasMoreSimilar: similarQuery.hasMore,
     isLoadingMoreSimilar: similarQuery.isLoadingMore,
     loadMoreSimilar: similarQuery.loadMore
+  };
+}
+
+export function usePersonProfile(
+  personId: number | undefined
+): UsePersonProfileResult {
+  const [data, setData] = useState<PersonProfileResponse | null>(null);
+  const [loading, setLoading] = useState(Boolean(personId));
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    if (!personId) {
+      setData(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+
+    setLoading(true);
+    setError(null);
+
+    getPersonProfile(personId, {
+      signal: controller.signal
+    })
+      .then((response) => {
+        if (!active || controller.signal.aborted) {
+          return;
+        }
+
+        startTransition(() => {
+          setData(response);
+        });
+      })
+      .catch((err: unknown) => {
+        if (
+          !active ||
+          (err instanceof DOMException && err.name === 'AbortError')
+        ) {
+          return;
+        }
+
+        setError(getErrorMessage(err));
+      })
+      .finally(() => {
+        if (active && !controller.signal.aborted) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [personId, refreshKey]);
+
+  return {
+    data,
+    error,
+    loading,
+    refetch: () => {
+      setRefreshKey((current) => current + 1);
+    }
   };
 }

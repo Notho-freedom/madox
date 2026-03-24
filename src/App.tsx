@@ -9,6 +9,7 @@ import { type CategoryData } from './components/MovieGrid';
 import { defaultHomeGenreId, type HomeGenreId } from './data/homeGenres';
 import { type MovieData } from './data/movies';
 import { type NavPageId } from './navigation/primaryNav';
+import { ActorProfilePage } from './pages/ActorProfilePage';
 import { HomePage } from './pages/HomePage';
 import { HistoryPage } from './pages/HistoryPage';
 import { MovieDetailPage } from './pages/MovieDetailPage';
@@ -19,8 +20,20 @@ import { SettingsPage } from './pages/SettingsPage';
 import { TrendingPage } from './pages/TrendingPage';
 import { ViewAllPage } from './pages/ViewAllPage';
 import { WatchlistPage } from './pages/WatchlistPage';
-import { getTrailerId } from './services/tmdb';
+import { getTrailerId, type TMDBCast } from './services/tmdb';
 import { type WatchHistoryEntry } from './services/watchHistory';
+
+interface SelectedPersonState {
+  id: number;
+}
+
+interface PersonOriginState {
+  activeHomeGenre: HomeGenreId;
+  activePage: NavPageId;
+  isHistoryOpen: boolean;
+  selectedMovie: MovieData | null;
+  viewAllCategory: CategoryData | null;
+}
 
 export function App() {
   const [activePage, setActivePage] = useState<NavPageId>('home');
@@ -28,6 +41,11 @@ export function App() {
     useState<HomeGenreId>(defaultHomeGenreId);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<MovieData | null>(null);
+  const [selectedPerson, setSelectedPerson] =
+    useState<SelectedPersonState | null>(null);
+  const [personOrigin, setPersonOrigin] = useState<PersonOriginState | null>(
+    null
+  );
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [viewAllCategory, setViewAllCategory] = useState<CategoryData | null>(
@@ -45,6 +63,30 @@ export function App() {
       behavior: 'smooth'
     });
   };
+  const handleActorClick = useCallback(
+    (actor: TMDBCast) => {
+      setPersonOrigin({
+        activeHomeGenre,
+        activePage,
+        isHistoryOpen,
+        selectedMovie,
+        viewAllCategory
+      });
+      setSelectedPerson({
+        id: actor.id
+      });
+      setSelectedMovie(null);
+      setIsPlayerOpen(false);
+      setIsPanelOpen(false);
+      setIsHistoryOpen(false);
+      setViewAllCategory(null);
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    },
+    [activeHomeGenre, activePage, isHistoryOpen, selectedMovie, viewAllCategory]
+  );
   const handlePlay = useCallback(
     async (movie?: MovieData) => {
       const target = movie || selectedMovie;
@@ -93,6 +135,8 @@ export function App() {
     setViewAllCategory(category);
     setIsPanelOpen(false);
     setIsHistoryOpen(false);
+    setSelectedPerson(null);
+    setPersonOrigin(null);
     setSelectedMovie(null);
     window.scrollTo({
       top: 0,
@@ -107,6 +151,8 @@ export function App() {
   const handleHistoryOpen = () => {
     setIsHistoryOpen(true);
     setIsPanelOpen(false);
+    setSelectedPerson(null);
+    setPersonOrigin(null);
     setSelectedMovie(null);
     setViewAllCategory(null);
     window.scrollTo({
@@ -123,6 +169,8 @@ export function App() {
     (entry: WatchHistoryEntry) => {
       setIsHistoryOpen(false);
       setIsPanelOpen(false);
+      setSelectedPerson(null);
+      setPersonOrigin(null);
       setViewAllCategory(null);
 
       if (entry.videoId) {
@@ -140,6 +188,8 @@ export function App() {
     setActivePage(page);
     setIsPanelOpen(false);
     setIsHistoryOpen(false);
+    setSelectedPerson(null);
+    setPersonOrigin(null);
     setSelectedMovie(null);
     setIsPlayerOpen(false);
     setViewAllCategory(null);
@@ -147,6 +197,21 @@ export function App() {
       top: 0
     });
   }, []);
+
+  const handlePersonBack = useCallback(() => {
+    if (personOrigin) {
+      setActivePage(personOrigin.activePage);
+      setActiveHomeGenre(personOrigin.activeHomeGenre);
+      setIsHistoryOpen(personOrigin.isHistoryOpen);
+      setSelectedMovie(personOrigin.selectedMovie);
+      setViewAllCategory(personOrigin.viewAllCategory);
+    }
+
+    setIsPanelOpen(false);
+    setIsPlayerOpen(false);
+    setSelectedPerson(null);
+    setPersonOrigin(null);
+  }, [personOrigin]);
 
   const renderContent = () => {
     if (selectedMovie && isPlayerOpen) {
@@ -158,8 +223,19 @@ export function App() {
         <MovieDetailPage
           movie={selectedMovie}
           onBack={() => setSelectedMovie(null)}
+          onActorClick={handleActorClick}
           onPlay={() => handlePlay()}
           onMovieClick={handleMovieClick}
+        />
+      );
+    }
+
+    if (selectedPerson) {
+      return (
+        <ActorProfilePage
+          onBack={handlePersonBack}
+          onMovieClick={handleMovieClick}
+          personId={selectedPerson.id}
         />
       );
     }

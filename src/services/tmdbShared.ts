@@ -49,6 +49,70 @@ export interface TMDBCast {
   order: number;
 }
 
+export interface TMDBPersonDetails {
+  also_known_as?: string[];
+  biography: string;
+  birthday: string | null;
+  deathday: string | null;
+  gender?: number;
+  homepage?: string | null;
+  id: number;
+  imdb_id?: string | null;
+  known_for_department: string;
+  name: string;
+  place_of_birth: string | null;
+  popularity: number;
+  profile_path: string | null;
+}
+
+export interface TMDBPersonImage {
+  aspect_ratio: number;
+  file_path: string;
+  height: number;
+  vote_average: number;
+  vote_count: number;
+  width: number;
+}
+
+export interface TMDBPersonExternalIds {
+  facebook_id?: string | null;
+  imdb_id?: string | null;
+  instagram_id?: string | null;
+  tiktok_id?: string | null;
+  twitter_id?: string | null;
+  wikidata_id?: string | null;
+  youtube_id?: string | null;
+}
+
+export interface TMDBPersonCombinedCredit extends TMDBMovie {
+  character?: string;
+  episode_count?: number;
+  media_type: 'movie' | 'tv';
+}
+
+export interface PersonMediaCredit extends MovieData {
+  character: string;
+  genreIds: number[];
+  mediaType: 'movie' | 'tv';
+  popularity: number;
+  primaryGenre: string;
+  tmdbId: number;
+  voteCount: number;
+}
+
+export interface PersonProfileResponse {
+  externalIds: TMDBPersonExternalIds | null;
+  filmography: PersonMediaCredit[];
+  images: TMDBPersonImage[];
+  knownFor: PersonMediaCredit[];
+  person: TMDBPersonDetails;
+  stats: {
+    actingCredits: number;
+    movies: number;
+    series: number;
+  };
+}
+
 export interface TMDBGenre {
   id: number;
   name: string;
@@ -162,6 +226,24 @@ export function tmdbToMovieData(item: TMDBMovie): MovieData {
     tmdbId: item.id,
     mediaType: mediaType as 'movie' | 'tv',
     popularity: item.popularity,
+    voteCount: item.vote_count
+  };
+}
+
+export function personCreditToMediaData(
+  item: TMDBPersonCombinedCredit
+): PersonMediaCredit {
+  const base = tmdbToMovieData(item);
+  const primaryGenre = genreName(item.genre_ids?.[0] ?? -1);
+
+  return {
+    ...base,
+    character: item.character || '',
+    genreIds: item.genre_ids || [],
+    mediaType: item.media_type,
+    popularity: item.popularity,
+    primaryGenre,
+    tmdbId: item.id,
     voteCount: item.vote_count
   };
 }

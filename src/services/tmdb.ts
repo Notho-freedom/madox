@@ -7,9 +7,14 @@ import {
 import {
   type HomeBootstrapResponse,
   type MoviePageResult,
+  type PersonProfileResponse,
+  type PersonMediaCredit,
   type TMDBCast,
   type TMDBGenre,
   type TMDBMovieDetails,
+  type TMDBPersonDetails,
+  type TMDBPersonExternalIds,
+  type TMDBPersonImage,
   type TMDBVideo,
   genreColor,
   genreName,
@@ -30,9 +35,14 @@ export type {
   ApiCacheSnapshot,
   HomeBootstrapResponse,
   MoviePageResult,
+  PersonMediaCredit,
+  PersonProfileResponse,
   TMDBCast,
   TMDBGenre,
   TMDBMovieDetails,
+  TMDBPersonDetails,
+  TMDBPersonExternalIds,
+  TMDBPersonImage,
   TMDBVideo
 };
 
@@ -47,6 +57,14 @@ export function poster(
 export function backdrop(
   path: string | null,
   size: 'w780' | 'w1280' | 'original' = 'w1280'
+): string {
+  if (!path) return '';
+  return `${IMG_BASE}/${size}${path}`;
+}
+
+export function profile(
+  path: string | null,
+  size: 'w185' | 'h632' | 'original' = 'h632'
 ): string {
   if (!path) return '';
   return `${IMG_BASE}/${size}${path}`;
@@ -285,6 +303,20 @@ export async function getGenres(
   return apiFetch<TMDBGenre[]>(
     '/api/genres',
     { type },
+    {
+      cacheTtlMs: 60_000,
+      ...options
+    }
+  );
+}
+
+export async function getPersonProfile(
+  personId: number,
+  options: ApiRequestOptions = {}
+): Promise<PersonProfileResponse> {
+  return apiFetch<PersonProfileResponse>(
+    `/api/person/${personId}/profile`,
+    undefined,
     {
       cacheTtlMs: 60_000,
       ...options
