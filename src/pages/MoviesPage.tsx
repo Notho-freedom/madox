@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { MovieCard } from '../components/MovieCard';
 import { GridSkeleton, ErrorState } from '../components/LoadingSkeleton';
 import { Search } from 'lucide-react';
@@ -175,31 +176,36 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
       activeData.error ?
       <ErrorState message={activeData.error} onRetry={activeData.refetch} /> :
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {activeData.data.map((movie, index) =>
-        <motion.div
-          key={movie.id}
-          className="flex justify-center"
-          initial={{
-            opacity: 0,
-            y: 20
-          }}
-          animate={{
-            opacity: 1,
-            y: 0
-          }}
-          transition={{
-            delay: index * 0.03
-          }}>
-          
-              <MovieCard
-            {...movie}
-            delay={0}
-            onClick={() => onMovieClick(movie)} />
-          
-            </motion.div>
-        )}
-        </div>
+      <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {activeData.data.map((movie, index) =>
+              <motion.div
+                key={movie.id}
+                className="flex justify-center"
+                initial={{
+                  opacity: 0,
+                  y: 20
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0
+                }}
+                transition={{
+                  delay: index * 0.03
+                }}>
+                <MovieCard
+                  {...movie}
+                  delay={0}
+                  onClick={() => onMovieClick(movie)} />
+              </motion.div>
+            )}
+          </div>
+          <LoadMoreSentinel
+            canLoadMore={activeData.hasMore}
+            className="mt-10 h-10"
+            isLoadingMore={activeData.isLoadingMore}
+            onLoadMore={activeData.loadMore} />
+        </>
       }
     </motion.div>);
 

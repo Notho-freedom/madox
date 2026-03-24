@@ -5,12 +5,13 @@ import { useNowPlaying } from '../hooks/useTMDB';
 import { poster } from '../services/tmdb';
 import { type MovieData } from '../data/movies';
 import { ContinueWatchingSkeleton } from './LoadingSkeleton';
+import { LoadMoreSentinel } from './LoadMoreSentinel';
 interface ContinueWatchingProps {
   onMovieClick?: (movie: MovieData) => void;
 }
 const progressValues = [65, 30, 80, 45, 55, 15];
 export function ContinueWatching({ onMovieClick }: ContinueWatchingProps) {
-  const { data, loading } = useNowPlaying('movie');
+  const { data, loading, hasMore, isLoadingMore, loadMore } = useNowPlaying('movie');
   return (
     <div className="w-full px-16 mb-12">
       <div className="flex items-center gap-4 mb-6">
@@ -23,8 +24,9 @@ export function ContinueWatching({ onMovieClick }: ContinueWatchingProps) {
       {loading ?
       <ContinueWatchingSkeleton /> :
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          {data.slice(0, 6).map((item, index) =>
+      <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {data.map((item, index) =>
         <motion.div
           key={item.id}
           className="group relative cursor-pointer"
@@ -99,7 +101,13 @@ export function ContinueWatching({ onMovieClick }: ContinueWatchingProps) {
           
             </motion.div>
         )}
-        </div>
+          </div>
+          <LoadMoreSentinel
+          canLoadMore={hasMore}
+          className="mt-6 h-10"
+          isLoadingMore={isLoadingMore}
+          onLoadMore={loadMore} />
+        </>
       }
     </div>);
 

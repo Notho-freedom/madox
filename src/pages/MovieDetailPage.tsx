@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Play,
@@ -12,6 +12,7 @@ import {
   User } from
 'lucide-react';
 import { getYouTubeThumbnail, type MovieData } from '../data/movies';
+import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { MovieCard } from '../components/MovieCard';
 import { CardSkeleton } from '../components/LoadingSkeleton';
 import { useDetails, useTrailer } from '../hooks/useTMDB';
@@ -28,9 +29,18 @@ export function MovieDetailPage({
   onPlay,
   onMovieClick
 }: MovieDetailPageProps) {
+  const similarScrollRef = useRef<HTMLDivElement | null>(null);
   const mediaType = movie.mediaType || 'movie';
   const tmdbId = movie.tmdbId || parseInt(movie.id);
-  const { details, cast, similar, loading } = useDetails(tmdbId, mediaType);
+  const {
+    details,
+    cast,
+    similar,
+    loading,
+    hasMoreSimilar,
+    isLoadingMoreSimilar,
+    loadMoreSimilar
+  } = useDetails(tmdbId, mediaType);
   const { videoId: trailerId } = useTrailer(tmdbId, mediaType);
   // Store trailer ID on the movie for the player
   useEffect(() => {
@@ -129,7 +139,7 @@ export function MovieDetailPage({
                 <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs tracking-[0.2em] uppercase backdrop-blur-md">
                   {mediaType === 'tv' ? 'Series' : 'Movie'}
                 </span>
-                {genres.slice(0, 2).map((g) =>
+                {genres.map((g) =>
                 <span
                   key={g}
                   className="px-3 py-1 bg-white/10 border border-white/10 text-gray-300 text-xs tracking-[0.2em] uppercase backdrop-blur-md">
@@ -223,7 +233,7 @@ export function MovieDetailPage({
                 Top Cast
               </h3>
               <div className="grid grid-cols-4 gap-6">
-                {cast.slice(0, 8).map((c) =>
+                {cast.map((c) =>
               <div key={c.id} className="group">
                     <div className="w-full aspect-square bg-white/5 mb-3 overflow-hidden rounded-lg">
                       {c.profile_path ?
@@ -254,7 +264,9 @@ export function MovieDetailPage({
             {loading ?
             <CardSkeleton count={4} /> :
             similar.length > 0 ?
-            <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+            <div
+              ref={similarScrollRef}
+              className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
                 {similar.map((m, i) =>
               <MovieCard
                 key={m.id}
@@ -263,6 +275,13 @@ export function MovieDetailPage({
                 onClick={() => onMovieClick?.(m)} />
 
               )}
+                <LoadMoreSentinel
+                  canLoadMore={hasMoreSimilar}
+                  className="w-16 shrink-0"
+                  isLoadingMore={isLoadingMoreSimilar}
+                  onLoadMore={loadMoreSimilar}
+                  rootMargin="0px 320px 0px 0px"
+                  rootRef={similarScrollRef} />
               </div> :
 
             <p className="text-gray-500">No similar content found.</p>

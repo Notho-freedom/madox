@@ -10,6 +10,20 @@ const PRELOAD_ENTRY = path.join(__dirname, 'preload.mjs');
 
 let mainWindow: BrowserWindow | null = null;
 
+function getWindowState(win: BrowserWindow | null) {
+  return {
+    isMaximized: win?.isMaximized() ?? false
+  };
+}
+
+function emitWindowState(win: BrowserWindow | null) {
+  if (!win || win.isDestroyed()) {
+    return;
+  }
+
+  win.webContents.send('desktop:window-state-changed', getWindowState(win));
+}
+
 function isSafeExternalUrl(rawUrl: string): boolean {
   try {
     const url = new URL(rawUrl);
@@ -29,8 +43,11 @@ function isAppNavigation(url: string): boolean {
 
 function registerIpc() {
   ipcMain.on('desktop:get-app-info', (event) => {
+    const senderWindow = BrowserWindow.fromWebContents(event.sender) ?? mainWindow;
+
     event.returnValue = {
       appVersion: app.getVersion(),
+      isMaximized: getWindowState(senderWindow).isMaximized,
       platform: process.platform
     };
   });
@@ -42,6 +59,37 @@ function registerIpc() {
 
     await shell.openExternal(rawUrl);
   });
+
+  ipcMain.handle('desktop:minimize-window', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender) ?? mainWindow;
+    win?.minimize();
+  });
+
+  ipcMain.handle('desktop:toggle-maximize-window', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender) ?? mainWindow;
+
+    if (!win) {
+      return false;
+    }
+
+    if (win.isMaximized()) {
+      win.unmaximize();
+      return false;
+    }
+
+    win.maximize();
+    return true;
+  });
+
+  ipcMain.handle('desktop:close-window', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender) ?? mainWindow;
+    win?.close();
+  });
+
+  ipcMain.handle('desktop:is-window-maximized', (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender) ?? mainWindow;
+    return getWindowState(win).isMaximized;
+  });
 }
 
 async function createWindow() {
@@ -52,6 +100,7 @@ async function createWindow() {
     minHeight: 720,
     backgroundColor: '#08080f',
     autoHideMenuBar: true,
+    frame: false,
     show: false,
     webPreferences: {
       preload: PRELOAD_ENTRY,
@@ -83,6 +132,15 @@ async function createWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
+    emitWindowState(mainWindow);
+  });
+
+  mainWindow.on('maximize', () => {
+    emitWindowState(mainWindow);
+  });
+
+  mainWindow.on('unmaximize', () => {
+    emitWindowState(mainWindow);
   });
 
   if (DEV_SERVER_URL) {

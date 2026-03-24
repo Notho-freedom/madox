@@ -4,14 +4,15 @@ import { MovieCard } from '../components/MovieCard';
 import { Bookmark, Trash2, ListX } from 'lucide-react';
 import { type MovieData } from '../data/movies';
 import { useTopRated } from '../hooks/useTMDB';
+import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { GridSkeleton } from '../components/LoadingSkeleton';
 interface WatchlistPageProps {
   onMovieClick: (movie: MovieData) => void;
 }
 export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
-  const { data, loading } = useTopRated('movie');
+  const { data, loading, hasMore, isLoadingMore, loadMore } = useTopRated('movie');
   const [removed, setRemoved] = useState<Set<string>>(new Set());
-  const watchlist = data.slice(0, 8).filter((item) => !removed.has(item.id));
+  const watchlist = data.filter((item) => !removed.has(item.id));
   const handleRemove = (id: string) => {
     setRemoved((prev) => new Set(prev).add(id));
   };
@@ -70,39 +71,43 @@ export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
           </p>
         </div> :
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {watchlist.map((item, index) =>
-        <motion.div
-          key={item.id}
-          className="relative group"
-          initial={{
-            opacity: 0,
-            y: 20
-          }}
-          animate={{
-            opacity: 1,
-            y: 0
-          }}
-          transition={{
-            delay: index * 0.05
-          }}>
-          
-              <div className="flex justify-center">
-                <MovieCard
-              {...item}
-              delay={0}
-              onClick={() => onMovieClick(item)} />
-            
-              </div>
-              <button
-            onClick={() => handleRemove(item.id)}
-            className="absolute top-4 right-8 z-20 p-2 bg-black/50 backdrop-blur-md rounded-full text-red-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20 border border-red-500/30">
-            
-                <Trash2 size={16} />
-              </button>
-            </motion.div>
-        )}
-        </div>
+      <>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {watchlist.map((item, index) =>
+              <motion.div
+                key={item.id}
+                className="group relative"
+                initial={{
+                  opacity: 0,
+                  y: 20
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0
+                }}
+                transition={{
+                  delay: index * 0.05
+                }}>
+                <div className="flex justify-center">
+                  <MovieCard
+                    {...item}
+                    delay={0}
+                    onClick={() => onMovieClick(item)} />
+                </div>
+                <button
+                  onClick={() => handleRemove(item.id)}
+                  className="absolute right-8 top-4 z-20 rounded-full border border-red-500/30 bg-black/50 p-2 text-red-400 opacity-0 transition-opacity hover:bg-red-500/20 group-hover:opacity-100 backdrop-blur-md">
+                  <Trash2 size={16} />
+                </button>
+              </motion.div>
+            )}
+          </div>
+          <LoadMoreSentinel
+            canLoadMore={hasMore}
+            className="mt-10 h-10"
+            isLoadingMore={isLoadingMore}
+            onLoadMore={loadMore} />
+        </>
       }
     </motion.div>);
 

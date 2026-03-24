@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { MovieCard } from '../components/MovieCard';
 import { GridSkeleton, ErrorState } from '../components/LoadingSkeleton';
 import { Play, Search } from 'lucide-react';
@@ -193,27 +194,33 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
       activeData.error ?
       <ErrorState message={activeData.error} onRetry={activeData.refetch} /> :
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {activeData.data.slice(1).map((s, index) =>
-        <motion.div
-          key={s.id}
-          className="flex justify-center"
-          initial={{
-            opacity: 0,
-            y: 20
-          }}
-          animate={{
-            opacity: 1,
-            y: 0
-          }}
-          transition={{
-            delay: index * 0.03
-          }}>
-          
-              <MovieCard {...s} delay={0} onClick={() => onMovieClick(s)} />
-            </motion.div>
-        )}
-        </div>
+      <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {activeData.data.slice(1).map((s, index) =>
+              <motion.div
+                key={s.id}
+                className="flex justify-center"
+                initial={{
+                  opacity: 0,
+                  y: 20
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0
+                }}
+                transition={{
+                  delay: index * 0.03
+                }}>
+                <MovieCard {...s} delay={0} onClick={() => onMovieClick(s)} />
+              </motion.div>
+            )}
+          </div>
+          <LoadMoreSentinel
+            canLoadMore={activeData.hasMore}
+            className="mt-10 h-10"
+            isLoadingMore={activeData.isLoadingMore}
+            onLoadMore={activeData.loadMore} />
+        </>
       }
     </motion.div>);
 

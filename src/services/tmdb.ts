@@ -103,7 +103,7 @@ export interface TMDBGenre {
   name: string;
 }
 
-interface PageResult<T> {
+export interface TMDBPageResult<T> {
   page: number;
   results: T[];
   total_pages: number;
@@ -115,49 +115,50 @@ interface PageResult<T> {
 // Trending
 export async function getTrending(
 type: 'movie' | 'tv' | 'all' = 'all',
-window: 'day' | 'week' = 'week')
-: Promise<TMDBMovie[]> {
-  const data = await tmdbFetch<PageResult<TMDBMovie>>(
-    `/trending/${type}/${window}`
-  );
-  return data.results;
+window: 'day' | 'week' = 'week',
+page = 1)
+: Promise<TMDBPageResult<TMDBMovie>> {
+  return tmdbFetch<TMDBPageResult<TMDBMovie>>(`/trending/${type}/${window}`, {
+    page: String(page)
+  });
 }
 
 // Popular
 export async function getPopular(
 type: 'movie' | 'tv' = 'movie',
 page = 1)
-: Promise<TMDBMovie[]> {
-  const data = await tmdbFetch<PageResult<TMDBMovie>>(`/${type}/popular`, {
+: Promise<TMDBPageResult<TMDBMovie>> {
+  return tmdbFetch<TMDBPageResult<TMDBMovie>>(`/${type}/popular`, {
     page: String(page)
   });
-  return data.results;
 }
 
 // Top Rated
 export async function getTopRated(
 type: 'movie' | 'tv' = 'movie',
 page = 1)
-: Promise<TMDBMovie[]> {
-  const data = await tmdbFetch<PageResult<TMDBMovie>>(`/${type}/top_rated`, {
+: Promise<TMDBPageResult<TMDBMovie>> {
+  return tmdbFetch<TMDBPageResult<TMDBMovie>>(`/${type}/top_rated`, {
     page: String(page)
   });
-  return data.results;
 }
 
 // Now Playing (movies) / On The Air (tv)
 export async function getNowPlaying(
-type: 'movie' | 'tv' = 'movie')
-: Promise<TMDBMovie[]> {
+type: 'movie' | 'tv' = 'movie',
+page = 1)
+: Promise<TMDBPageResult<TMDBMovie>> {
   const endpoint = type === 'movie' ? '/movie/now_playing' : '/tv/on_the_air';
-  const data = await tmdbFetch<PageResult<TMDBMovie>>(endpoint);
-  return data.results;
+  return tmdbFetch<TMDBPageResult<TMDBMovie>>(endpoint, {
+    page: String(page)
+  });
 }
 
 // Upcoming
-export async function getUpcoming(): Promise<TMDBMovie[]> {
-  const data = await tmdbFetch<PageResult<TMDBMovie>>('/movie/upcoming');
-  return data.results;
+export async function getUpcoming(page = 1): Promise<TMDBPageResult<TMDBMovie>> {
+  return tmdbFetch<TMDBPageResult<TMDBMovie>>('/movie/upcoming', {
+    page: String(page)
+  });
 }
 
 // Search
@@ -165,12 +166,11 @@ export async function search(
 query: string,
 type: 'movie' | 'tv' | 'multi' = 'multi',
 page = 1)
-: Promise<TMDBMovie[]> {
-  const data = await tmdbFetch<PageResult<TMDBMovie>>(`/search/${type}`, {
+: Promise<TMDBPageResult<TMDBMovie>> {
+  return tmdbFetch<TMDBPageResult<TMDBMovie>>(`/search/${type}`, {
     query,
     page: String(page)
   });
-  return data.results;
 }
 
 // Discover by genre
@@ -178,13 +178,12 @@ export async function discoverByGenre(
 type: 'movie' | 'tv',
 genreId: number,
 page = 1)
-: Promise<TMDBMovie[]> {
-  const data = await tmdbFetch<PageResult<TMDBMovie>>(`/discover/${type}`, {
+: Promise<TMDBPageResult<TMDBMovie>> {
+  return tmdbFetch<TMDBPageResult<TMDBMovie>>(`/discover/${type}`, {
     with_genres: String(genreId),
     sort_by: 'popularity.desc',
     page: String(page)
   });
-  return data.results;
 }
 
 // Details
@@ -235,10 +234,12 @@ id: number)
 // Similar
 export async function getSimilar(
 type: 'movie' | 'tv',
-id: number)
-: Promise<TMDBMovie[]> {
-  const data = await tmdbFetch<PageResult<TMDBMovie>>(`/${type}/${id}/similar`);
-  return data.results;
+id: number,
+page = 1)
+: Promise<TMDBPageResult<TMDBMovie>> {
+  return tmdbFetch<TMDBPageResult<TMDBMovie>>(`/${type}/${id}/similar`, {
+    page: String(page)
+  });
 }
 
 // Genre list
@@ -287,7 +288,6 @@ export function genreName(id: number): string {
 export function genreNames(ids: number[]): string {
   return (
     ids.
-    slice(0, 2).
     map((id) => GENRE_MAP[id] || '').
     filter(Boolean).
     join(' / ') || 'Entertainment');

@@ -36,7 +36,7 @@ export function CrystalSidePanel({
 
           {/* Panel */}
           <motion.div
-          className="fixed top-0 left-0 bottom-0 z-[90] flex w-[calc(100vw-1rem)] max-w-sm flex-col border-r border-white/10 bg-[#08080f]/95 shadow-2xl backdrop-blur-xl md:hidden"
+          className="fixed top-0 left-0 bottom-0 z-[90] flex w-[calc(100vw-1rem)] max-w-sm flex-col bg-[#08080f]/95 shadow-2xl backdrop-blur-xl md:hidden"
           initial={{
             x: '-100%'
           }}
@@ -61,10 +61,8 @@ export function CrystalSidePanel({
             <CrystalSidebarMenuContent
               activePage={activePage}
               layout="mobile"
-              onNavigate={(page) => {
-                onNavigate(page);
-                onClose();
-              }}
+              onItemSelect={onClose}
+              onNavigate={onNavigate}
               searchAutoFocus
             />
           </motion.div>

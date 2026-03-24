@@ -18,3 +18,38 @@ export function getDesktopRuntimeInfo() {
     appVersion: window.desktop?.appVersion ?? 'web'
   };
 }
+
+export async function minimizeDesktopWindow(): Promise<void> {
+  if (window.desktop?.minimizeWindow) {
+    await window.desktop.minimizeWindow();
+  }
+}
+
+export async function toggleDesktopWindowMaximize(): Promise<boolean> {
+  if (window.desktop?.toggleMaximizeWindow) {
+    return window.desktop.toggleMaximizeWindow();
+  }
+
+  return false;
+}
+
+export async function closeDesktopWindow(): Promise<void> {
+  if (window.desktop?.closeWindow) {
+    await window.desktop.closeWindow();
+  }
+}
+
+export function isDesktopWindowMaximized(): boolean {
+  return window.desktop?.isWindowMaximized?.() ?? false;
+}
+
+export function onDesktopWindowStateChange(
+  callback: (isMaximized: boolean) => void
+): () => void {
+  return (
+    window.desktop?.onWindowStateChange?.(callback) ??
+    (() => {
+      return undefined;
+    })
+  );
+}

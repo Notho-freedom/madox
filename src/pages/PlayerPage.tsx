@@ -19,6 +19,7 @@ import {
 import YouTube from 'react-youtube';
 import type { YouTubeEvent, YouTubePlayer } from 'react-youtube';
 import { getYouTubeThumbnail, type MovieData } from '../data/movies';
+import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { useTrending } from '../hooks/useTMDB';
 import { isDesktopApp, openExternal } from '../utils/desktop';
 interface PlayerPageProps {
@@ -61,8 +62,14 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
   const startupTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasPlayerLoaded = useRef(false);
   const progressRef = useRef<HTMLDivElement>(null);
-  const { data: upNextData } = useTrending('all', 'week');
-  const upNextItems = upNextData.filter((m) => m.id !== movie.id).slice(0, 5);
+  const upNextScrollRef = useRef<HTMLDivElement>(null);
+  const {
+    data: upNextData,
+    hasMore: hasMoreUpNext,
+    isLoadingMore: isLoadingMoreUpNext,
+    loadMore: loadMoreUpNext
+  } = useTrending('all', 'week');
+  const upNextItems = upNextData.filter((m) => m.id !== movie.id);
   const isDesktop = isDesktopApp();
   const playerOrigin = getPlayerOrigin();
   const trailerUrl = movie.videoId ?
@@ -487,7 +494,7 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
           }}>
           
             {/* Top Bar */}
-            <div className="absolute top-0 left-0 right-0 p-6 flex items-center justify-between pointer-events-auto bg-gradient-to-b from-black/80 via-black/40 to-transparent pb-24">
+            <div className="absolute top-0 left-0 right-0 p-6 pr-28 md:pr-36 flex items-center justify-between pointer-events-auto bg-gradient-to-b from-black/80 via-black/40 to-transparent pb-24">
               <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -705,7 +712,9 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
               </button>
             </div>
 
-            <div className="p-4 space-y-3 overflow-y-auto h-[calc(100%-72px)]">
+            <div
+              ref={upNextScrollRef}
+              className="p-4 space-y-3 overflow-y-auto h-[calc(100%-72px)]">
               {upNextItems.map((item, i) =>
             <motion.div
               key={item.id}
@@ -744,6 +753,12 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
                   </div>
                 </motion.div>
             )}
+              <LoadMoreSentinel
+                canLoadMore={hasMoreUpNext}
+                className="h-10"
+                isLoadingMore={isLoadingMoreUpNext}
+                onLoadMore={loadMoreUpNext}
+                rootRef={upNextScrollRef} />
             </div>
           </motion.div>
         }

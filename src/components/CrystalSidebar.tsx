@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { primaryNavItems, type NavPageId } from '../navigation/primaryNav';
+import {
+  sidebarFooterAction,
+  sidebarProfile,
+  sidebarUtilityActions
+} from '../navigation/sidebarUtilities';
 import { CrystalMenuTrigger } from './CrystalMenuTrigger';
-import { CrystalSidebarMenuContent } from './CrystalSidebarMenuContent';
 
 interface CrystalSidebarProps {
   activePage: NavPageId;
@@ -12,24 +16,37 @@ export function CrystalSidebar({
   activePage,
   onNavigate
 }: CrystalSidebarProps) {
-  const [hovered, setHovered] = useState<NavPageId | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const rowClipPath =
+    'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)';
+  const iconClipPath =
+    'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)';
+
+  const handleSelect = (page?: NavPageId) => {
+    if (page) {
+      onNavigate(page);
+    }
+
+    setIsExpanded(false);
+  };
+
   return (
     <motion.aside
-      className="fixed left-0 top-0 bottom-0 z-[70] hidden md:flex"
+      className="fixed left-0 top-0 bottom-0 z-[70] hidden overflow-hidden md:block"
       initial={{
         x: -100
       }}
       animate={{
-        x: 0
+        x: 0,
+        width: isExpanded ? 420 : 96
       }}
       transition={{
-        duration: 0.8,
+        duration: 0.28,
         ease: 'easeOut'
       }}>
-      <div className="flex h-full">
-        <div className="flex h-full w-24 shrink-0 flex-col border-r border-white/5 bg-[#08080f]/88 backdrop-blur-xl">
-          <div className="flex h-24 items-center justify-center px-4">
+      <div className="flex h-full flex-col bg-[#08080f]/92 backdrop-blur-2xl shadow-[0_0_70px_rgba(6,16,30,0.42)]">
+        <div className="grid min-h-24 grid-cols-[96px_minmax(0,1fr)] items-center">
+          <div className="flex items-center justify-center">
             <CrystalMenuTrigger
               ariaExpanded={isExpanded}
               ariaLabel={isExpanded ? 'Close menu' : 'Open menu'}
@@ -37,116 +54,269 @@ export function CrystalSidebar({
               onClick={() => setIsExpanded((current) => !current)}
             />
           </div>
-
-          <div className="flex flex-1 flex-col px-2 pt-6">
-            <div className="space-y-4">
-              {primaryNavItems.map((item) => {
-                const isActive = activePage === item.id;
-                const isHovered = hovered === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    title={item.label}
-                    aria-label={item.label}
-                    onClick={() => onNavigate(item.id)}
-                    onMouseEnter={() => setHovered(item.id)}
-                    onMouseLeave={() => setHovered(null)}
-                    className="relative flex h-12 w-full items-center justify-center rounded-xl"
-                  >
-                    {(isActive || isHovered) && (
-                      <motion.div
-                        layoutId="nav-bg"
-                        className="absolute inset-0 border-l-2 border-l-cyan-400/50 bg-white/5"
-                        style={{
-                          clipPath: 'polygon(0 0, 100% 10%, 100% 90%, 0 100%)'
-                        }}
-                        initial={{
-                          opacity: 0
-                        }}
-                        animate={{
-                          opacity: 1
-                        }}
-                        exit={{
-                          opacity: 0
-                        }}
-                      />
-                    )}
-
-                    <item.icon
-                      size={24}
-                      className={`relative z-10 transition-all duration-300 ${
-                        isActive
-                          ? 'text-cyan-300 drop-shadow-[0_0_8px_rgba(103,232,249,0.5)]'
-                          : isHovered
-                            ? 'text-white'
-                            : 'text-gray-500'
-                      }`}
-                    />
-
-                    {isHovered && (
-                      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                        <div className="absolute top-0 left-0 h-full w-[2px] bg-gradient-to-b from-transparent via-blue-400 to-transparent opacity-60 blur-[1px]" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mt-auto flex justify-center pb-6">
-              <div className="h-16 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
+          <div className="overflow-hidden pr-6">
+            <div
+              className={`transition-all duration-200 ${
+                isExpanded ? 'translate-x-0 opacity-100' : 'translate-x-3 opacity-0'
+              }`}>
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400/15 to-blue-400/15 blur-xl" />
+                <div
+                  className="relative flex min-h-[58px] items-center px-5"
+                  style={{
+                    clipPath:
+                      'polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px)'
+                  }}>
+                  <input
+                    type="text"
+                    placeholder="Search for anything..."
+                    className="w-full bg-transparent text-sm tracking-[0.18em] text-white outline-none placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <AnimatePresence initial={false}>
-          {isExpanded && (
-            <motion.div
-              className="h-full w-[304px] overflow-hidden border-r border-white/10 bg-[#090910]/96 shadow-[24px_0_80px_rgba(5,10,30,0.45)] backdrop-blur-xl"
-              initial={{
-                width: 0,
-                opacity: 0
-              }}
-              animate={{
-                width: 304,
-                opacity: 1
-              }}
-              exit={{
-                width: 0,
-                opacity: 0
-              }}
-              transition={{
-                duration: 0.28,
-                ease: 'easeInOut'
+        <div className="flex min-h-0 flex-1 flex-col justify-between pb-5">
+          <div className="space-y-3 pt-4">
+            {primaryNavItems.map((item) => {
+              const isActive = activePage === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  title={item.label}
+                  aria-label={item.label}
+                  onClick={() => handleSelect(item.id)}
+                  className="group relative grid h-12 w-full grid-cols-[96px_minmax(0,1fr)] items-center overflow-hidden text-left"
+                  style={{
+                    clipPath: rowClipPath
+                  }}>
+                  <div
+                    className={`pointer-events-none absolute inset-y-[2px] left-3 right-4 transition-all duration-300 ${
+                      isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    }`}
+                    style={{
+                      clipPath: rowClipPath
+                    }}>
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/12 via-white/[0.04] to-transparent" />
+                    <div
+                      className="absolute inset-0 prism-border"
+                      style={{
+                        clipPath: rowClipPath
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <div
+                      className={`relative flex h-12 w-12 items-center justify-center overflow-hidden transition-all duration-300 ${
+                        isActive ?
+                          'bg-cyan-500/10 shadow-[0_0_22px_rgba(34,211,238,0.16)]' :
+                          'bg-white/[0.03] group-hover:bg-white/[0.06]'
+                      }`}
+                      style={{
+                        clipPath: iconClipPath
+                      }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-cyan-400/10" />
+                      <div
+                        className={`absolute inset-0 prism-border transition-opacity duration-300 ${
+                          isActive ? 'opacity-90' : 'opacity-45 group-hover:opacity-80'
+                        }`}
+                        style={{
+                          clipPath: iconClipPath
+                        }}
+                      />
+                      <item.icon
+                        size={22}
+                        className={`relative z-10 transition-all duration-200 ${
+                          isActive ?
+                            'text-cyan-300 drop-shadow-[0_0_10px_rgba(103,232,249,0.45)]' :
+                            'text-gray-500 group-hover:text-white'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                  <div className="relative z-10 overflow-hidden pr-6">
+                    <span
+                      className={`block whitespace-nowrap text-sm uppercase tracking-[0.24em] transition-all duration-200 ${
+                        isExpanded ? 'translate-x-0 opacity-100' : 'translate-x-3 opacity-0'
+                      } ${
+                        isActive ? 'text-cyan-300' : 'text-gray-500 group-hover:text-white'
+                      }`}>
+                      {item.label}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+
+            <div className="pt-2">
+              {sidebarUtilityActions.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleSelect()}
+                  className="group relative grid h-12 w-full grid-cols-[96px_minmax(0,1fr)] items-center overflow-hidden text-left"
+                  style={{
+                    clipPath: rowClipPath
+                  }}>
+                  <div
+                    className="pointer-events-none absolute inset-y-[2px] left-3 right-4 opacity-0 transition-all duration-300 group-hover:opacity-100"
+                    style={{
+                      clipPath: rowClipPath
+                    }}>
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-white/[0.04] to-transparent" />
+                    <div
+                      className="absolute inset-0 prism-border"
+                      style={{
+                        clipPath: rowClipPath
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <div
+                      className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-white/[0.03] transition-all duration-300 group-hover:bg-white/[0.06]"
+                      style={{
+                        clipPath: iconClipPath
+                      }}>
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-cyan-400/10" />
+                      <div
+                        className="absolute inset-0 prism-border opacity-45 transition-opacity duration-300 group-hover:opacity-80"
+                        style={{
+                          clipPath: iconClipPath
+                        }}
+                      />
+                      <item.icon
+                        size={20}
+                        className="relative z-10 text-gray-500 transition-colors duration-200 group-hover:text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="relative z-10 overflow-hidden pr-6">
+                    <div
+                      className={`flex items-center gap-3 whitespace-nowrap text-sm uppercase tracking-[0.2em] transition-all duration-200 ${
+                        isExpanded ? 'translate-x-0 opacity-100' : 'translate-x-3 opacity-0'
+                      } text-gray-500 group-hover:text-white`}>
+                      <span>{item.label}</span>
+                      {item.hasIndicator && (
+                        <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                      )}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => handleSelect()}
+              className="group relative grid h-14 w-full grid-cols-[96px_minmax(0,1fr)] items-center overflow-hidden text-left"
+              style={{
+                clipPath: rowClipPath
               }}>
-              <motion.div
-                className="h-full"
-                initial={{
-                  opacity: 0,
-                  x: -12
-                }}
-                animate={{
-                  opacity: 1,
-                  x: 0
-                }}
-                exit={{
-                  opacity: 0,
-                  x: -10
-                }}
-                transition={{
-                  duration: 0.18,
-                  delay: 0.05
+              <div
+                className="pointer-events-none absolute inset-y-[2px] left-3 right-4 opacity-0 transition-all duration-300 group-hover:opacity-100"
+                style={{
+                  clipPath: rowClipPath
                 }}>
-                <CrystalSidebarMenuContent
-                  activePage={activePage}
-                  layout="desktop"
-                  onNavigate={onNavigate}
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-white/[0.04] to-transparent" />
+                <div
+                  className="absolute inset-0 prism-border"
+                  style={{
+                    clipPath: rowClipPath
+                  }}
                 />
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </div>
+              <div className="flex items-center justify-center">
+                <div
+                  className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-white/[0.03]"
+                  style={{
+                    clipPath: iconClipPath
+                  }}>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-cyan-400/10" />
+                  <div
+                    className="absolute inset-0 prism-border opacity-55 transition-opacity duration-300 group-hover:opacity-80"
+                    style={{
+                      clipPath: iconClipPath
+                    }}
+                  />
+                  <div className="relative h-10 w-10 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 p-[2px]">
+                    <img
+                      src={sidebarProfile.avatarUrl}
+                      alt="User"
+                      className="h-full w-full rounded-full border-2 border-[#08080f] object-cover"
+                    />
+                    <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#08080f] bg-green-500" />
+                  </div>
+                </div>
+              </div>
+              <div className="relative z-10 overflow-hidden pr-6">
+                <div
+                  className={`transition-all duration-200 ${
+                    isExpanded ? 'translate-x-0 opacity-100' : 'translate-x-3 opacity-0'
+                  }`}>
+                  <div className="truncate text-sm font-medium text-white group-hover:text-cyan-200">
+                    {sidebarProfile.name}
+                  </div>
+                  <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-400/80">
+                    {sidebarProfile.membership}
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSelect()}
+              className="group relative grid h-12 w-full grid-cols-[96px_minmax(0,1fr)] items-center overflow-hidden text-left"
+              style={{
+                clipPath: rowClipPath
+              }}>
+              <div
+                className="pointer-events-none absolute inset-y-[2px] left-3 right-4 opacity-0 transition-all duration-300 group-hover:opacity-100"
+                style={{
+                  clipPath: rowClipPath
+                }}>
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 via-white/[0.04] to-transparent" />
+                <div
+                  className="absolute inset-0 prism-border"
+                  style={{
+                    clipPath: rowClipPath
+                  }}
+                />
+              </div>
+              <div className="flex items-center justify-center">
+                <div
+                  className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-white/[0.03] transition-all duration-300 group-hover:bg-red-500/[0.08]"
+                  style={{
+                    clipPath: iconClipPath
+                  }}>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-red-400/10" />
+                  <div
+                    className="absolute inset-0 prism-border opacity-45 transition-opacity duration-300 group-hover:opacity-80"
+                    style={{
+                      clipPath: iconClipPath
+                    }}
+                  />
+                  <sidebarFooterAction.icon
+                    size={20}
+                    className="relative z-10 text-red-400 transition-colors duration-200 group-hover:text-red-300" />
+                </div>
+              </div>
+              <div className="relative z-10 overflow-hidden pr-6">
+                <span
+                  className={`block whitespace-nowrap text-sm uppercase tracking-[0.2em] text-red-400 transition-all duration-200 group-hover:text-red-300 ${
+                    isExpanded ? 'translate-x-0 opacity-100' : 'translate-x-3 opacity-0'
+                  }`}>
+                  {sidebarFooterAction.label}
+                </span>
+              </div>
+            </button>
+          </div>
+        </div>
       </div>
     </motion.aside>
   );

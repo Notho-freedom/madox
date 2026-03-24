@@ -3,6 +3,7 @@ import { CrystalBackground } from './components/CrystalBackground';
 import { CrystalMenuTrigger } from './components/CrystalMenuTrigger';
 import { CrystalSidePanel } from './components/CrystalSidePanel';
 import { CrystalSidebar } from './components/CrystalSidebar';
+import { DesktopWindowControls } from './components/DesktopWindowControls';
 import { HeroSection } from './components/HeroSection';
 import { GenreFilter } from './components/GenreFilter';
 import { ContinueWatching } from './components/ContinueWatching';
@@ -114,7 +115,7 @@ export function App() {
         <ViewAllPage
           title={viewAllCategory.title}
           description={viewAllCategory.description}
-          items={viewAllCategory.items}
+          source={viewAllCategory.source}
           onBack={handleViewAllBack}
           onMovieClick={handleMovieClick} />);
 
@@ -150,6 +151,7 @@ export function App() {
   return (
     <div className="min-h-screen w-full text-white selection:bg-cyan-500/30 selection:text-cyan-100">
       <CrystalBackground />
+      <DesktopWindowControls />
 
       {!isPlayerOpen &&
       <>

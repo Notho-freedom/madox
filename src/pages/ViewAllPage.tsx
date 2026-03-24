@@ -11,20 +11,22 @@ import {
   SortAsc } from
 'lucide-react';
 import { MovieCard } from '../components/MovieCard';
+import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { getYouTubeThumbnail, type MovieData } from '../data/movies';
+import { useTMDBCatalog, type TMDBCatalogSource } from '../hooks/useTMDB';
 type SortOption = 'popular' | 'rating' | 'year-new' | 'year-old' | 'title';
 type ViewMode = 'grid' | 'list';
 interface ViewAllPageProps {
-  title: string;
   description: string;
-  items: MovieData[];
+  source: TMDBCatalogSource;
+  title: string;
   onBack: () => void;
   onMovieClick: (movie: MovieData) => void;
 }
 export function ViewAllPage({
-  title,
   description,
-  items,
+  source,
+  title,
   onBack,
   onMovieClick
 }: ViewAllPageProps) {
@@ -32,6 +34,7 @@ export function ViewAllPage({
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [activeGenre, setActiveGenre] = useState('All');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const { data: items, hasMore, isLoadingMore, loadMore } = useTMDBCatalog(source);
   const genres = useMemo(() => {
     const g = new Set(items.map((m) => m.genre).filter(Boolean));
     return ['All', ...Array.from(g)] as string[];
@@ -314,6 +317,11 @@ export function ViewAllPage({
         )}
         </div>
       }
+      <LoadMoreSentinel
+        canLoadMore={hasMore}
+        className="mt-10 h-10"
+        isLoadingMore={isLoadingMore}
+        onLoadMore={loadMore} />
     </motion.div>);
 
 }

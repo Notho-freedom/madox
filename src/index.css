@@ -21,6 +21,12 @@ body {
   color: #f0f0f5;
   overflow-x: hidden;
 }
+.app-drag {
+  -webkit-app-region: drag;
+}
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

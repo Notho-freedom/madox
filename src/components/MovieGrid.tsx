@@ -3,15 +3,17 @@ import { motion, useInView } from 'framer-motion';
 import { MovieCard } from './MovieCard';
 import { ChevronRight } from 'lucide-react';
 import { CardSkeleton, ErrorState } from './LoadingSkeleton';
+import { LoadMoreSentinel } from './LoadMoreSentinel';
 import {
   useTrending,
   usePopular,
-  useTopRated,
-  useNowPlaying } from
+  useTopRated } from
 '../hooks/useTMDB';
+import { type TMDBCatalogSource } from '../hooks/useTMDB';
 import { type MovieData } from '../data/movies';
 export interface CategoryData {
   id: string;
+  source: TMDBCatalogSource;
   title: string;
   description: string;
   items: MovieData[];
@@ -21,6 +23,9 @@ interface SectionProps {
   data: MovieData[];
   loading: boolean;
   error: string | null;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  onLoadMore: () => void;
   onRetry: () => void;
   onMovieClick: (movie: MovieData) => void;
   onViewAll?: () => void;
@@ -30,17 +35,21 @@ function GridSection({
   data,
   loading,
   error,
+  hasMore,
+  isLoadingMore,
+  onLoadMore,
   onRetry,
   onMovieClick,
   onViewAll
 }: SectionProps) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, {
+  const sectionRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const isInView = useInView(sectionRef, {
     once: true,
     margin: '-50px'
   });
   return (
-    <div ref={ref} className="mb-16 pl-16">
+    <div ref={sectionRef} className="mb-16 pl-16">
       <motion.div
         className="flex items-center gap-4 mb-8"
         initial={{
@@ -81,9 +90,9 @@ function GridSection({
       error ?
       <ErrorState message={error} onRetry={onRetry} /> :
 
-      <div className="overflow-x-auto pb-12 scrollbar-hide">
+      <div ref={scrollRef} className="overflow-x-auto pb-12 scrollbar-hide">
           <div className="flex gap-6 pr-16 min-w-max">
-            {data.slice(0, 10).map((movie, index) =>
+            {data.map((movie, index) =>
           <MovieCard
             key={movie.id}
             {...movie}
@@ -91,6 +100,13 @@ function GridSection({
             onClick={() => onMovieClick(movie)} />
 
           )}
+            <LoadMoreSentinel
+              canLoadMore={hasMore}
+              className="w-16 shrink-0"
+              isLoadingMore={isLoadingMore}
+              onLoadMore={onLoadMore}
+              rootMargin="0px 320px 0px 0px"
+              rootRef={scrollRef} />
           </div>
         </div>
       }
@@ -111,24 +127,41 @@ export function MovieGrid({ onMovieClick, onViewAll }: MovieGridProps) {
     id: 'trending',
     title: 'Trending Now',
     desc: 'The most popular content this week.',
+    source: {
+      kind: 'trending',
+      type: 'all',
+      timeWindow: 'week'
+    } as const,
     ...trending
   },
   {
     id: 'popular-movies',
     title: 'Popular Movies',
     desc: 'Movies everyone is watching right now.',
+    source: {
+      kind: 'popular',
+      type: 'movie'
+    } as const,
     ...popularMovies
   },
   {
     id: 'top-rated',
     title: 'Top Rated',
     desc: 'The highest rated movies of all time.',
+    source: {
+      kind: 'topRated',
+      type: 'movie'
+    } as const,
     ...topRated
   },
   {
     id: 'popular-tv',
     title: 'Popular Series',
     desc: 'Binge-worthy series everyone is talking about.',
+    source: {
+      kind: 'popular',
+      type: 'tv'
+    } as const,
     ...popularTV
   }];
 
@@ -141,11 +174,15 @@ export function MovieGrid({ onMovieClick, onViewAll }: MovieGridProps) {
         data={s.data}
         loading={s.loading}
         error={s.error}
+        hasMore={s.hasMore}
+        isLoadingMore={s.isLoadingMore}
+        onLoadMore={s.loadMore}
         onRetry={s.refetch}
         onMovieClick={onMovieClick}
         onViewAll={() =>
         onViewAll?.({
           id: s.id,
+          source: s.source,
           title: s.title,
           description: s.desc,
           items: s.data
