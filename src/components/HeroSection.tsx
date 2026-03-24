@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { Play, Plus, Star, Sparkles } from 'lucide-react';
 import { type MovieData } from '../data/movies';
 import {
@@ -7,8 +7,6 @@ import {
   getHomeGenreOption,
   type HomeGenreId
 } from '../data/homeGenres';
-import { getHeroSource } from '../data/homeContent';
-import { useTMDBCatalog } from '../hooks/useTMDB';
 import { backdrop } from '../services/tmdb';
 import { HeroSkeleton } from './LoadingSkeleton';
 
@@ -16,6 +14,7 @@ interface HeroSectionProps {
   activeGenre?: HomeGenreId;
   bootstrapCandidates?: MovieData[];
   bootstrapLoading?: boolean;
+  isRefreshing?: boolean;
   onMovieClick?: (movie: MovieData) => void;
   onPlay?: (movie: MovieData) => void;
 }
@@ -34,61 +33,26 @@ export function HeroSection({
   activeGenre = defaultHomeGenreId,
   bootstrapCandidates,
   bootstrapLoading = false,
+  isRefreshing = false,
   onMovieClick,
   onPlay
 }: HeroSectionProps) {
+  const sectionRef = useRef<HTMLElement | null>(null);
   const activeGenreOption = getHomeGenreOption(activeGenre);
-  const shouldUseBootstrap = Boolean(bootstrapCandidates && bootstrapCandidates.length > 0);
-  const primarySource = useTMDBCatalog(getHeroSource(activeGenreOption), {
-    enabled: !shouldUseBootstrap,
-    initialPageBatch: 1,
-    pageBatchSize: 1
+  const isInView = useInView(sectionRef, {
+    amount: 0.35
   });
-  const shouldLoadFallback =
-    !shouldUseBootstrap &&
-    activeGenreOption.id !== 'all' &&
-    !primarySource.loading &&
-    primarySource.data.length < 4;
-  const fallbackSource = useTMDBCatalog({
-    kind: 'trending',
-    timeWindow: 'day',
-    type: 'all'
-  }, {
-    enabled: shouldLoadFallback,
-    initialPageBatch: 1,
-    pageBatchSize: 1
-  });
-  const [selectedFeaturedId, setSelectedFeaturedId] = useState<string | null>(null);
-  const [lastReadyCandidates, setLastReadyCandidates] = useState<MovieData[]>([]);
+  const prefersReducedMotion = useReducedMotion();
+  const [selectedFeaturedId, setSelectedFeaturedId] = useState<string | null>(
+    null
+  );
+  const [lastReadyCandidates, setLastReadyCandidates] = useState<MovieData[]>(
+    []
+  );
 
   const candidates = useMemo(() => {
-    if (shouldUseBootstrap) {
-      return bootstrapCandidates ?? [];
-    }
-
-    const primaryCandidates = primarySource.data;
-
-    if (activeGenreOption.id === 'all' || primaryCandidates.length >= 4) {
-      return primaryCandidates;
-    }
-
-    const merged = new Map<string, MovieData>();
-    for (const item of primaryCandidates) {
-      merged.set(item.id, item);
-    }
-    for (const item of fallbackSource.data) {
-      if (!merged.has(item.id)) {
-        merged.set(item.id, item);
-      }
-    }
-    return Array.from(merged.values());
-  }, [
-    activeGenreOption.id,
-    bootstrapCandidates,
-    fallbackSource.data,
-    primarySource.data,
-    shouldUseBootstrap
-  ]);
+    return bootstrapCandidates ?? [];
+  }, [bootstrapCandidates]);
 
   useEffect(() => {
     if (candidates.length > 0) {
@@ -96,7 +60,8 @@ export function HeroSection({
     }
   }, [candidates]);
 
-  const displayCandidates = candidates.length > 0 ? candidates : lastReadyCandidates;
+  const displayCandidates =
+    candidates.length > 0 ? candidates : lastReadyCandidates;
 
   useEffect(() => {
     if (displayCandidates.length === 0) {
@@ -121,19 +86,33 @@ export function HeroSection({
       return [];
     }
 
-    return displayCandidates.filter((item) => item.id !== featured.id).slice(0, 3);
+    return displayCandidates
+      .filter((item) => item.id !== featured.id)
+      .slice(0, 3);
   }, [displayCandidates, featured]);
 
-  if (((bootstrapLoading || primarySource.loading) && displayCandidates.length === 0) || !featured) {
+  const shouldAnimateAmbient =
+    !prefersReducedMotion && isInView && !isRefreshing;
+
+  if (bootstrapLoading && displayCandidates.length === 0) {
     return <HeroSkeleton />;
+  }
+
+  if (!featured) {
+    return null;
   }
 
   const heroImage = backdrop(featured.backdropPath);
   const heroLabel =
-    activeGenreOption.id === 'all' ? 'Trending Spotlight' : `${activeGenreOption.label} Spotlight`;
+    activeGenreOption.id === 'all'
+      ? 'Trending Spotlight'
+      : `${activeGenreOption.label} Spotlight`;
 
   return (
-    <section className="relative flex min-h-[88vh] w-full items-center overflow-hidden px-16 py-20">
+    <section
+      ref={sectionRef}
+      className="relative flex min-h-[88vh] w-full items-center overflow-hidden px-16 py-20"
+    >
       <div className="relative z-10 max-w-2xl">
         <motion.div
           initial={{
@@ -147,16 +126,17 @@ export function HeroSection({
           transition={{
             duration: 0.9,
             ease: 'easeOut'
-          }}>
+          }}
+        >
           <div className="mb-4 flex items-center gap-4">
             <span className="clip-facet-btn border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.2em] text-cyan-200 backdrop-blur-md">
               {heroLabel}
             </span>
-            {featured.mediaType &&
+            {featured.mediaType && (
               <span className="border border-cyan-500/30 bg-cyan-500/20 px-2 py-0.5 text-[10px] uppercase tracking-widest text-cyan-300">
                 {featured.mediaType === 'tv' ? 'Series' : 'Movie'}
               </span>
-            }
+            )}
           </div>
 
           <h1 className="mb-6 line-clamp-3 font-['Advent_Pro'] text-5xl font-bold leading-[0.95] tracking-tight text-white md:text-7xl">
@@ -175,7 +155,8 @@ export function HeroSection({
           </div>
 
           <p className="mb-10 max-w-lg border-l-2 border-cyan-500/30 pl-6 text-lg leading-relaxed text-gray-400 line-clamp-3">
-            {featured.description || 'Discover the most exciting content available right now.'}
+            {featured.description ||
+              'Discover the most exciting content available right now.'}
           </p>
 
           <div className="flex gap-6">
@@ -187,7 +168,8 @@ export function HeroSection({
                 scale: 0.95
               }}
               onClick={() => onPlay?.(featured)}
-              className="group clip-facet-btn relative flex items-center gap-3 overflow-hidden bg-white px-8 py-4 font-bold uppercase tracking-widest text-black">
+              className="group clip-facet-btn relative flex items-center gap-3 overflow-hidden bg-white px-8 py-4 font-bold uppercase tracking-widest text-black"
+            >
               <div className="absolute inset-0 bg-gradient-to-r from-cyan-200 via-white to-cyan-100 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
               <Play size={20} fill="currentColor" className="relative z-10" />
               <span className="relative z-10">Watch Now</span>
@@ -201,7 +183,8 @@ export function HeroSection({
                 scale: 0.95
               }}
               onClick={() => onMovieClick?.(featured)}
-              className="group clip-facet-btn flex items-center gap-3 border border-white/20 bg-white/5 px-8 py-4 font-bold uppercase tracking-widest text-white backdrop-blur-sm transition-colors hover:bg-white/10">
+              className="group clip-facet-btn flex items-center gap-3 border border-white/20 bg-white/5 px-8 py-4 font-bold uppercase tracking-widest text-white backdrop-blur-sm transition-colors hover:bg-white/10"
+            >
               <Plus
                 size={20}
                 className="transition-transform duration-300 group-hover:rotate-90"
@@ -228,14 +211,16 @@ export function HeroSection({
           duration: 1.15,
           delay: 0.2,
           ease: 'easeOut'
-        }}>
+        }}
+      >
         <div className="relative h-full w-full">
           <div
             className="absolute inset-0 overflow-hidden"
             style={{
               clipPath:
                 'polygon(20% 0%, 90% 0%, 100% 30%, 100% 85%, 80% 100%, 10% 100%, 0% 70%, 0% 15%)'
-            }}>
+            }}
+          >
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{
@@ -244,21 +229,31 @@ export function HeroSection({
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-l from-transparent via-black/20 to-black/80" />
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
-              animate={{
-                x: ['-100%', '100%']
-              }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: 'linear',
-                repeatDelay: 5
-              }}
-            />
+            {shouldAnimateAmbient && (
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
+                animate={{
+                  x: ['-100%', '100%']
+                }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: 'linear',
+                  repeatDelay: 5
+                }}
+              />
+            )}
           </div>
-          <div className="absolute -right-1 -top-1 h-32 w-32 bg-gradient-to-bl from-cyan-400/30 to-transparent blur-2xl" />
-          <div className="absolute -bottom-1 -left-1 h-32 w-32 bg-gradient-to-tr from-orange-400/30 to-transparent blur-2xl" />
+          <div
+            className={`absolute -right-1 -top-1 h-32 w-32 bg-gradient-to-bl from-cyan-400/30 to-transparent blur-2xl transition-opacity duration-300 ${
+              shouldAnimateAmbient ? 'opacity-100' : 'opacity-50'
+            }`}
+          />
+          <div
+            className={`absolute -bottom-1 -left-1 h-32 w-32 bg-gradient-to-tr from-orange-400/30 to-transparent blur-2xl transition-opacity duration-300 ${
+              shouldAnimateAmbient ? 'opacity-100' : 'opacity-45'
+            }`}
+          />
         </div>
       </motion.div>
 
@@ -270,19 +265,19 @@ export function HeroSection({
           </div>
 
           <div className="space-y-3">
-            {secondaryPicks.map((item) =>
+            {secondaryPicks.map((item) => (
               <button
                 key={item.id}
                 type="button"
                 onClick={() => setSelectedFeaturedId(item.id)}
-                className="group relative grid w-full grid-cols-[84px_minmax(0,1fr)] gap-3 overflow-hidden rounded-[20px] border border-white/10 bg-white/[0.03] p-3 text-left transition-colors hover:bg-white/[0.06]">
+                className="group relative grid w-full grid-cols-[84px_minmax(0,1fr)] gap-3 overflow-hidden rounded-[20px] border border-white/10 bg-white/[0.03] p-3 text-left transition-colors hover:bg-white/[0.06]"
+              >
                 <div
                   className="h-20 overflow-hidden rounded-[16px] bg-cover bg-center"
                   style={{
-                    backgroundImage:
-                      item.backdropPath ?
-                        `url(https://image.tmdb.org/t/p/w500${item.backdropPath})` :
-                        'none'
+                    backgroundImage: item.backdropPath
+                      ? `url(https://image.tmdb.org/t/p/w500${item.backdropPath})`
+                      : 'none'
                   }}
                 />
                 <div className="min-w-0">
@@ -293,12 +288,16 @@ export function HeroSection({
                     {item.genre || 'Entertainment'}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <Star size={12} fill="currentColor" className="text-yellow-500" />
+                    <Star
+                      size={12}
+                      fill="currentColor"
+                      className="text-yellow-500"
+                    />
                     <span>{item.rating}</span>
                   </div>
                 </div>
               </button>
-            )}
+            ))}
           </div>
         </div>
       </div>

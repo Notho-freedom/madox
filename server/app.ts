@@ -315,7 +315,11 @@ async function tmdbFetchJson<T>(
     throw new Error('Missing TMDB_API_TOKEN for backend requests.');
   }
 
-  const url = new URL(endpoint, serverEnv.tmdbApiBaseUrl);
+  const normalizedBaseUrl = serverEnv.tmdbApiBaseUrl.endsWith('/')
+    ? serverEnv.tmdbApiBaseUrl
+    : `${serverEnv.tmdbApiBaseUrl}/`;
+  const normalizedEndpoint = endpoint.replace(/^\/+/, '');
+  const url = new URL(normalizedEndpoint, normalizedBaseUrl);
   url.searchParams.set('language', serverEnv.tmdbLanguage);
 
   for (const [key, value] of Object.entries(params)) {

@@ -45,6 +45,7 @@ export function HomePage({
         activeGenre={activeGenre}
         bootstrapCandidates={bootstrap.data?.heroCandidates}
         bootstrapLoading={bootstrap.loading}
+        isRefreshing={bootstrap.isRefreshing}
         onMovieClick={onMovieClick}
         onPlay={onPlay}
       />

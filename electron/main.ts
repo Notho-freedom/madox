@@ -149,6 +149,9 @@ async function createWindow() {
   });
 
   mainWindow.once('ready-to-show', () => {
+    mainWindow?.webContents.openDevTools({
+      mode: 'detach'
+    });
     mainWindow?.show();
     emitWindowState(mainWindow);
   });

@@ -25,6 +25,7 @@ interface UseTMDBResult {
   loading: boolean;
   error: string | null;
   hasMore: boolean;
+  isRefreshing: boolean;
   isLoadingMore: boolean;
   loadMore: () => void;
   refetch: () => void;
@@ -108,7 +109,7 @@ interface PaginatedQueryOptions {
 }
 
 function usePaginatedMovieQuery(
-  fetchPage: (page: number) => Promise<MoviePageResult>,
+  fetchPage: (page: number, signal?: AbortSignal) => Promise<MoviePageResult>,
   options: PaginatedQueryOptions = {}
 ): UseTMDBResult {
   const {
@@ -126,10 +127,18 @@ function usePaginatedMovieQuery(
   const [hasMore, setHasMore] = useState(() =>
     initialPageData ? initialPageData.page < initialPageData.total_pages : false
   );
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const dataRef = useRef(data);
   const loadedPageRef = useRef(initialPageData?.page ?? 0);
   const totalPagesRef = useRef(initialPageData?.total_pages ?? 1);
   const generationRef = useRef(0);
+  const initAbortRef = useRef<AbortController | null>(null);
+  const loadMoreAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   useEffect(() => {
     if (!initialPageData) {
@@ -151,25 +160,34 @@ function usePaginatedMovieQuery(
     generationRef.current += 1;
     const generation = generationRef.current;
 
+    initAbortRef.current?.abort();
+    const controller = new AbortController();
+    initAbortRef.current = controller;
+
     if (!enabled) {
+      controller.abort();
       loadedPageRef.current = 0;
       totalPagesRef.current = 1;
       setData([]);
       setLoading(false);
       setError(null);
       setHasMore(false);
+      setIsRefreshing(false);
       setIsLoadingMore(false);
       return;
     }
 
     setError(null);
     setIsLoadingMore(false);
-    setLoading((currentLoading) => data.length === 0 || currentLoading);
+
+    const hasExistingData = dataRef.current.length > 0;
+    setLoading(!hasExistingData);
+    setIsRefreshing(hasExistingData);
 
     try {
-      const firstPage = await fetchPage(1);
+      const firstPage = await fetchPage(1, controller.signal);
 
-      if (generation !== generationRef.current) {
+      if (generation !== generationRef.current || controller.signal.aborted) {
         return;
       }
 
@@ -179,12 +197,12 @@ function usePaginatedMovieQuery(
         finalInitialPage > 1
           ? await Promise.all(
               Array.from({ length: finalInitialPage - 1 }, (_unused, index) =>
-                fetchPage(index + 2)
+                fetchPage(index + 2, controller.signal)
               )
             )
           : [];
 
-      if (generation !== generationRef.current) {
+      if (generation !== generationRef.current || controller.signal.aborted) {
         return;
       }
 
@@ -196,30 +214,41 @@ function usePaginatedMovieQuery(
         setHasMore(finalInitialPage < totalPagesRef.current);
       });
     } catch (err: unknown) {
-      if (generation !== generationRef.current) {
+      if (
+        generation !== generationRef.current ||
+        (err instanceof DOMException && err.name === 'AbortError')
+      ) {
         return;
       }
 
       setError(getErrorMessage(err));
-      if (data.length === 0) {
+      if (!hasExistingData) {
         setData([]);
         setHasMore(false);
       }
     } finally {
-      if (generation === generationRef.current) {
+      if (generation === generationRef.current && !controller.signal.aborted) {
         setLoading(false);
+        setIsRefreshing(false);
       }
     }
-  }, [data.length, enabled, fetchPage, filter, initialPageBatch]);
+  }, [enabled, fetchPage, filter, initialPageBatch]);
 
   useEffect(() => {
     void initialize();
+
+    return () => {
+      generationRef.current += 1;
+      initAbortRef.current?.abort();
+      loadMoreAbortRef.current?.abort();
+    };
   }, [initialize]);
 
   const loadMore = useCallback(async () => {
     if (
       !enabled ||
       loading ||
+      isRefreshing ||
       isLoadingMore ||
       loadedPageRef.current >= totalPagesRef.current
     ) {
@@ -227,48 +256,66 @@ function usePaginatedMovieQuery(
     }
 
     const generation = generationRef.current;
+    loadMoreAbortRef.current?.abort();
+    const controller = new AbortController();
+    loadMoreAbortRef.current = controller;
     const startPage = loadedPageRef.current + 1;
     const endPage = Math.min(
       loadedPageRef.current + pageBatchSize,
       totalPagesRef.current
     );
+
     setIsLoadingMore(true);
     setError(null);
 
     try {
       const nextPages = await Promise.all(
         Array.from({ length: endPage - startPage + 1 }, (_unused, index) =>
-          fetchPage(startPage + index)
+          fetchPage(startPage + index, controller.signal)
         )
       );
 
-      if (generation !== generationRef.current) {
+      if (generation !== generationRef.current || controller.signal.aborted) {
         return;
       }
 
       loadedPageRef.current = endPage;
       startTransition(() => {
-        setData((current) => mergeUniqueMovies(current, toMovieBatch(nextPages, filter)));
+        setData((current) =>
+          mergeUniqueMovies(current, toMovieBatch(nextPages, filter))
+        );
         setHasMore(endPage < totalPagesRef.current);
       });
     } catch (err: unknown) {
-      if (generation !== generationRef.current) {
+      if (
+        generation !== generationRef.current ||
+        (err instanceof DOMException && err.name === 'AbortError')
+      ) {
         return;
       }
 
       setError(getErrorMessage(err));
     } finally {
-      if (generation === generationRef.current) {
+      if (generation === generationRef.current && !controller.signal.aborted) {
         setIsLoadingMore(false);
       }
     }
-  }, [enabled, fetchPage, filter, isLoadingMore, loading, pageBatchSize]);
+  }, [
+    enabled,
+    fetchPage,
+    filter,
+    isLoadingMore,
+    isRefreshing,
+    loading,
+    pageBatchSize
+  ]);
 
   return {
     data,
     loading,
     error,
     hasMore,
+    isRefreshing,
     isLoadingMore,
     loadMore,
     refetch: () => {
@@ -282,24 +329,25 @@ export function useTMDBCatalog(
   options: PaginatedQueryOptions = {}
 ): UseTMDBResult {
   const fetchPage = useCallback(
-    (page: number) => {
+    (page: number, signal?: AbortSignal) => {
       switch (source.kind) {
         case 'trending':
-          return getTrending(source.type, source.timeWindow, page);
+          return getTrending(source.type, source.timeWindow, page, { signal });
         case 'popular':
-          return getPopular(source.type, page);
+          return getPopular(source.type, page, { signal });
         case 'topRated':
-          return getTopRated(source.type, page);
+          return getTopRated(source.type, page, { signal });
         case 'nowPlaying':
-          return getNowPlaying(source.type, page);
+          return getNowPlaying(source.type, page, { signal });
         case 'discover':
           return discoverByGenre(source.type, source.genreId, {
             page,
+            signal,
             sortBy: source.sortBy,
             voteCountGte: source.voteCountGte
           });
         case 'search':
-          return search(source.query.trim(), source.type, page);
+          return search(source.query.trim(), source.type, page, { signal });
       }
     },
     [source]
@@ -318,12 +366,12 @@ export function useTMDBCatalog(
           (sourceFilter ? sourceFilter(item) : true) &&
           (optionFilter ? optionFilter(item) : true)
       : sourceFilter && optionFilter
-        ? (item: MovieData) => sourceFilter(item) && optionFilter(item)
-        : sourceFilter
-          ? sourceFilter
-          : optionFilter
-            ? optionFilter
-            : undefined;
+      ? (item: MovieData) => sourceFilter(item) && optionFilter(item)
+      : sourceFilter
+      ? sourceFilter
+      : optionFilter
+      ? optionFilter
+      : undefined;
   const isEnabled =
     (options.enabled ?? true) &&
     (source.kind !== 'search' || source.query.trim().length > 0);
@@ -340,7 +388,8 @@ export function useTrending(
   window: 'day' | 'week' = 'week'
 ): UseTMDBResult {
   const fetchPage = useCallback(
-    (page: number) => getTrending(type, window, page),
+    (page: number, signal?: AbortSignal) =>
+      getTrending(type, window, page, { signal }),
     [type, window]
   );
 
@@ -348,19 +397,29 @@ export function useTrending(
 }
 
 export function usePopular(type: 'movie' | 'tv' = 'movie'): UseTMDBResult {
-  const fetchPage = useCallback((page: number) => getPopular(type, page), [type]);
+  const fetchPage = useCallback(
+    (page: number, signal?: AbortSignal) => getPopular(type, page, { signal }),
+    [type]
+  );
 
   return usePaginatedMovieQuery(fetchPage);
 }
 
 export function useTopRated(type: 'movie' | 'tv' = 'movie'): UseTMDBResult {
-  const fetchPage = useCallback((page: number) => getTopRated(type, page), [type]);
+  const fetchPage = useCallback(
+    (page: number, signal?: AbortSignal) => getTopRated(type, page, { signal }),
+    [type]
+  );
 
   return usePaginatedMovieQuery(fetchPage);
 }
 
 export function useNowPlaying(type: 'movie' | 'tv' = 'movie'): UseTMDBResult {
-  const fetchPage = useCallback((page: number) => getNowPlaying(type, page), [type]);
+  const fetchPage = useCallback(
+    (page: number, signal?: AbortSignal) =>
+      getNowPlaying(type, page, { signal }),
+    [type]
+  );
 
   return usePaginatedMovieQuery(fetchPage);
 }
@@ -371,7 +430,8 @@ export function useTMDBSearch(
 ): UseTMDBResult {
   const trimmedQuery = query.trim();
   const fetchPage = useCallback(
-    (page: number) => search(trimmedQuery, type, page),
+    (page: number, signal?: AbortSignal) =>
+      search(trimmedQuery, type, page, { signal }),
     [trimmedQuery, type]
   );
 
@@ -383,7 +443,11 @@ export function useTMDBSearch(
 
 export function useDiscover(type: 'movie' | 'tv', genreId: number): UseTMDBResult {
   const fetchPage = useCallback(
-    (page: number) => discoverByGenre(type, genreId, { page }),
+    (page: number, signal?: AbortSignal) =>
+      discoverByGenre(type, genreId, {
+        page,
+        signal
+      }),
     [genreId, type]
   );
 
@@ -420,9 +484,9 @@ export function useDetails(
   const [loadingDetails, setLoadingDetails] = useState(true);
   const similarQuery = usePaginatedMovieQuery(
     useCallback(
-      (page: number) =>
+      (page: number, signal?: AbortSignal) =>
         tmdbId
-          ? getSimilar(mediaType, tmdbId, page)
+          ? getSimilar(mediaType, tmdbId, page, { signal })
           : Promise.reject(new Error('Missing TMDB id.')),
       [mediaType, tmdbId]
     ),
@@ -482,4 +546,3 @@ export function useDetails(
     loadMoreSimilar: similarQuery.loadMore
   };
 }
-

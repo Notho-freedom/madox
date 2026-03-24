@@ -50,6 +50,7 @@ function GridSection({
     data,
     error,
     hasMore,
+    isRefreshing,
     isLoadingMore,
     loading,
     loadMore,
@@ -101,9 +102,9 @@ function GridSection({
 
       {!isVisible ?
         <div className="h-[290px]" /> :
-      loading ?
+      loading && data.length === 0 ?
         <CardSkeleton count={6} /> :
-      error ?
+      error && data.length === 0 ?
         <ErrorState message={error} onRetry={refetch} /> :
         <div ref={scrollRef} className="overflow-x-auto pb-12 scrollbar-hide">
           <div className="flex min-w-max gap-6 pr-16">
@@ -117,7 +118,7 @@ function GridSection({
             <LoadMoreSentinel
               canLoadMore={hasMore}
               className="w-16 shrink-0"
-              isLoadingMore={isLoadingMore}
+              isLoadingMore={isLoadingMore || isRefreshing}
               onLoadMore={loadMore}
               rootMargin="0px 320px 0px 0px"
               rootRef={scrollRef} />

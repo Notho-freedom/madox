@@ -6,7 +6,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
   ],
-  ignorePatterns: ['dist', 'dist-electron', 'release', '.eslintrc.cjs'],
+  ignorePatterns: ['dist', 'dist-electron', 'dist-server', 'release', '.eslintrc.cjs'],
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh'],
   overrides: [
@@ -16,6 +16,10 @@ module.exports = {
     },
     {
       files: ['electron/**/*.ts'],
+      env: { node: true, es2020: true },
+    },
+    {
+      files: ['server/**/*.ts'],
       env: { node: true, es2020: true },
     },
   ],
