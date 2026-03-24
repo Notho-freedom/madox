@@ -1,13 +1,13 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Calendar,
   ChevronRight,
-  ExternalLink,
   Film,
   Images,
   MapPin,
+  Search,
   Sparkles,
   Star,
   Tv,
@@ -18,10 +18,8 @@ import { type MovieData } from '../data/movies';
 import { usePersonProfile } from '../hooks/useTMDB';
 import { profile } from '../services/tmdb';
 import { type PersonMediaCredit } from '../services/tmdbShared';
-import { openExternal } from '../utils/desktop';
 
 type FilmographyTypeFilter = 'all' | 'movie' | 'tv';
-type FilmographySortOption = 'popular' | 'rating' | 'year-new' | 'year-old';
 
 interface ActorProfilePageProps {
   onBack: () => void;
@@ -109,76 +107,13 @@ function getAge(birthday: string | null, deathday?: string | null): number | nul
   return age >= 0 ? age : null;
 }
 
-function buildExternalLinks(
-  imdbId: string | null | undefined,
-  externalIds: {
-    facebook_id?: string | null;
-    instagram_id?: string | null;
-    twitter_id?: string | null;
-  } | null,
-  homepage?: string | null
-) {
-  return [
-    homepage
-      ? {
-          label: 'Official Site',
-          url: homepage
-        }
-      : null,
-    imdbId
-      ? {
-          label: 'IMDb',
-          url: `https://www.imdb.com/name/${imdbId}/`
-        }
-      : null,
-    externalIds?.instagram_id
-      ? {
-          label: 'Instagram',
-          url: `https://www.instagram.com/${externalIds.instagram_id}/`
-        }
-      : null,
-    externalIds?.twitter_id
-      ? {
-          label: 'X / Twitter',
-          url: `https://x.com/${externalIds.twitter_id}`
-        }
-      : null,
-    externalIds?.facebook_id
-      ? {
-          label: 'Facebook',
-          url: `https://www.facebook.com/${externalIds.facebook_id}`
-        }
-      : null
-  ].filter((item): item is { label: string; url: string } => Boolean(item));
-}
-
 function sortCredits(
-  items: PersonMediaCredit[],
-  sortBy: FilmographySortOption
+  items: PersonMediaCredit[]
 ): PersonMediaCredit[] {
   const nextItems = [...items];
-
-  switch (sortBy) {
-    case 'rating':
-      nextItems.sort((left, right) => {
-        return (
-          parseFloat(right.rating) - parseFloat(left.rating) ||
-          right.voteCount - left.voteCount
-        );
-      });
-      break;
-    case 'year-new':
-      nextItems.sort((left, right) => Number(right.year || 0) - Number(left.year || 0));
-      break;
-    case 'year-old':
-      nextItems.sort((left, right) => Number(left.year || 0) - Number(right.year || 0));
-      break;
-    default:
-      nextItems.sort((left, right) => {
-        return right.popularity - left.popularity || right.voteCount - left.voteCount;
-      });
-      break;
-  }
+  nextItems.sort((left, right) => {
+    return right.popularity - left.popularity || right.voteCount - left.voteCount;
+  });
 
   return nextItems;
 }
@@ -189,9 +124,10 @@ export function ActorProfilePage({
   personId
 }: ActorProfilePageProps) {
   const [activeType, setActiveType] = useState<FilmographyTypeFilter>('all');
-  const [activeGenre, setActiveGenre] = useState('All');
+  const [activeGenres, setActiveGenres] = useState<string[]>([]);
   const [bioExpanded, setBioExpanded] = useState(false);
-  const [sortBy, setSortBy] = useState<FilmographySortOption>('popular');
+  const [searchInput, setSearchInput] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const { data, error, loading, refetch } = usePersonProfile(personId);
   const filmographySectionRef = useRef<HTMLElement | null>(null);
 
@@ -253,32 +189,42 @@ export function ActorProfilePage({
         ? filmography
         : filmography.filter((item) => item.mediaType === activeType);
     const byGenre =
-      activeGenre === 'All'
+      activeGenres.length === 0
         ? byType
-        : byType.filter((item) => (item.genre ?? '').includes(activeGenre));
+        : byType.filter((item) =>
+            activeGenres.some((genre) => (item.genre ?? '').includes(genre))
+          );
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    const bySearch =
+      normalizedSearch.length === 0
+        ? byGenre
+        : byGenre.filter((item) => {
+            const haystack = [
+              item.title,
+              item.genre,
+              item.character,
+              item.year,
+              item.mediaType === 'movie' ? 'movie' : 'series'
+            ]
+              .filter(Boolean)
+              .join(' ')
+              .toLowerCase();
 
-    return sortCredits(byGenre, sortBy);
-  }, [activeGenre, activeType, filmography, sortBy]);
+            return haystack.includes(normalizedSearch);
+          });
+
+    return sortCredits(bySearch);
+  }, [activeGenres, activeType, filmography, searchQuery]);
 
   const biography = person?.biography?.trim() || '';
-  const biographyNeedsClamp = biography.length > 420;
+  const biographyNeedsClamp = biography.length > 1200;
   const displayedBiography =
-    biographyNeedsClamp && !bioExpanded ? `${biography.slice(0, 420).trim()}...` : biography;
+    biographyNeedsClamp && !bioExpanded ? `${biography.slice(0, 1200).trim()}...` : biography;
   const portraitPath = galleryImages[0] ?? null;
   const portraitImage = profile(portraitPath, 'h632');
   const backgroundImage = profile(galleryImages[1] ?? portraitPath, 'h632');
   const bornOn = formatDate(person?.birthday);
   const age = person ? getAge(person.birthday, person.deathday) : null;
-  const externalLinks = person
-    ? buildExternalLinks(person.imdb_id, data?.externalIds ?? null, person.homepage)
-    : [];
-
-  const sortLabels: Record<FilmographySortOption, string> = {
-    popular: 'Popularité',
-    rating: 'Mieux notés',
-    'year-new': 'Plus récents',
-    'year-old': 'Plus anciens'
-  };
 
   const typeLabels: Record<FilmographyTypeFilter, string> = {
     all: 'All',
@@ -292,6 +238,27 @@ export function ActorProfilePage({
       block: 'start'
     });
   };
+
+  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSearchQuery(searchInput.trim());
+  };
+
+  const handleGenreSelection = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const values = Array.from(event.target.selectedOptions, (option) => option.value);
+    setActiveGenres(values);
+  };
+
+  const filterSelectClassName =
+    "w-full rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-cyan-400/45 focus:bg-white/[0.06]";
+
+  useEffect(() => {
+    setActiveType('all');
+    setActiveGenres([]);
+    setBioExpanded(false);
+    setSearchInput('');
+    setSearchQuery('');
+  }, [personId]);
 
   if (loading && !data) {
     return (
@@ -359,7 +326,7 @@ export function ActorProfilePage({
 
   return (
     <motion.div
-      className="relative z-40 min-h-screen bg-[#08080f] pb-24"
+      className="relative z-40 min-h-screen overflow-x-hidden bg-[#08080f] pb-24"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 30 }}
@@ -383,7 +350,7 @@ export function ActorProfilePage({
         <div className="absolute inset-0 bg-gradient-to-b from-[#090b14]/70 via-[#08080f]/70 to-[#08080f]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.18),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(249,115,22,0.14),transparent_28%)]" />
 
-        <div className="relative z-10 grid gap-10 lg:grid-cols-[1.2fr_0.85fr] lg:items-end">
+        <div className="relative z-10 mx-auto grid max-w-[1600px] gap-10 lg:grid-cols-[1.2fr_0.85fr] lg:items-end">
           <div className="max-w-3xl">
             <div className="mb-4 flex flex-wrap items-center gap-3">
               <span className="clip-facet-btn border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.22em] text-cyan-200">
@@ -455,23 +422,6 @@ export function ActorProfilePage({
               </div>
             </div>
 
-            {externalLinks.length > 0 && (
-              <div className="flex flex-wrap gap-3">
-                {externalLinks.map((link) => (
-                  <button
-                    key={link.label}
-                    type="button"
-                    onClick={() => {
-                      void openExternal(link.url);
-                    }}
-                    className="clip-facet-btn flex items-center gap-2 border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-medium text-gray-200 transition-colors hover:bg-white/[0.08] hover:text-white"
-                  >
-                    <ExternalLink size={14} />
-                    {link.label}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className="justify-self-center lg:justify-self-end">
@@ -502,33 +452,126 @@ export function ActorProfilePage({
         </div>
       </section>
 
-      <div className="grid gap-10 px-6 md:px-16 lg:grid-cols-[1.4fr_0.92fr]">
-        <div className="space-y-10">
-          <FacetPanel contentClassName="p-7 md:p-8">
-            <div className="mb-5 flex items-center gap-4">
-              <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_16px_rgba(34,211,238,0.55)]" />
-              <h2 className="font-['Advent_Pro'] text-3xl font-bold text-white">
-                Biography
-              </h2>
-              <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-            </div>
+      <div className="mx-auto w-full max-w-[1600px] px-6 md:px-16">
+        <div className="grid gap-10 lg:grid-cols-[1.35fr_0.95fr] lg:items-start">
+          <div className="min-w-0">
+            <FacetPanel contentClassName="p-7 md:p-8">
+              <div className="mb-5 flex items-center gap-4">
+                <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_16px_rgba(34,211,238,0.55)]" />
+                <h2 className="font-['Advent_Pro'] text-3xl font-bold text-white">
+                  Biography
+                </h2>
+                <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+              </div>
 
-            <p className="text-base leading-8 text-gray-300">
-              {displayedBiography ||
-                'No biography is available yet for this actor, but the filmography below already maps out the most visible chapters of the career.'}
-            </p>
+              <p className="break-words text-base leading-8 text-gray-300">
+                {displayedBiography ||
+                  'No biography is available yet for this actor, but the filmography below already maps out the most visible chapters of the career.'}
+              </p>
 
-            {biographyNeedsClamp && (
-              <button
-                onClick={() => setBioExpanded((current) => !current)}
-                className="mt-6 text-sm font-medium uppercase tracking-[0.22em] text-cyan-300 transition-colors hover:text-cyan-200"
-              >
-                {bioExpanded ? 'Show Less' : 'Read More'}
-              </button>
-            )}
-          </FacetPanel>
+              {biographyNeedsClamp && (
+                <button
+                  onClick={() => setBioExpanded((current) => !current)}
+                  className="mt-6 text-sm font-medium uppercase tracking-[0.22em] text-cyan-300 transition-colors hover:text-cyan-200"
+                >
+                  {bioExpanded ? 'Show Less' : 'Read More'}
+                </button>
+              )}
+            </FacetPanel>
+          </div>
 
-          <section>
+          <div className="min-w-0 space-y-8">
+            <FacetPanel contentClassName="p-7">
+              <div className="mb-5 flex items-center gap-3">
+                <Star size={18} className="text-cyan-300" />
+                <h2 className="font-['Advent_Pro'] text-2xl font-bold text-white">
+                  Profile Highlights
+                </h2>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
+                    Known For Department
+                  </div>
+                  <div className="mt-1 text-white">{person.known_for_department}</div>
+                </div>
+                {bornOn && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
+                      Born
+                    </div>
+                    <div className="mt-1 text-white">{bornOn}</div>
+                  </div>
+                )}
+                {person.place_of_birth && (
+                  <div>
+                    <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
+                      Place of Birth
+                    </div>
+                    <div className="mt-1 text-white">{person.place_of_birth}</div>
+                  </div>
+                )}
+                {person.also_known_as && person.also_known_as.length > 0 && (
+                  <div>
+                    <div className="mb-2 text-[11px] uppercase tracking-[0.22em] text-gray-500">
+                      Also Known As
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {person.also_known_as.slice(0, 6).map((alias) => (
+                        <span
+                          key={alias}
+                          className="clip-facet-btn border border-white/8 bg-white/[0.04] px-3 py-2 text-xs uppercase tracking-[0.16em] text-gray-300"
+                        >
+                          {alias}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </FacetPanel>
+
+            <FacetPanel contentClassName="p-7">
+              <div className="mb-5 flex items-center gap-3">
+                <Images size={18} className="text-cyan-300" />
+                <h2 className="font-['Advent_Pro'] text-2xl font-bold text-white">
+                  Photo Gallery
+                </h2>
+              </div>
+
+              {galleryImages.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {galleryImages.slice(0, 8).map((imagePath, index) => (
+                    <motion.div
+                      key={imagePath}
+                      className={`overflow-hidden rounded-[22px] bg-white/[0.04] ${
+                        index === 0 ? 'col-span-2 aspect-[1.45]' : 'aspect-[0.82]'
+                      }`}
+                      initial={{ opacity: 0, y: 16 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '-40px' }}
+                      transition={{ duration: 0.4, delay: index * 0.04 }}
+                    >
+                      <img
+                        src={profile(imagePath, index === 0 ? 'original' : 'h632')}
+                        alt={`${person.name} portrait ${index + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-400">
+                  No additional photos are available for this actor yet.
+                </div>
+              )}
+            </FacetPanel>
+          </div>
+        </div>
+
+        <div className="mt-10 space-y-10">
+          <section className="min-w-0">
             <div className="mb-6 flex items-center gap-4">
               <Sparkles size={18} className="text-cyan-300" />
               <h2 className="font-['Advent_Pro'] text-3xl font-bold text-white">
@@ -578,7 +621,7 @@ export function ActorProfilePage({
             )}
           </section>
 
-          <section ref={filmographySectionRef}>
+          <section ref={filmographySectionRef} className="min-w-0">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
               <div>
                 <div className="mb-3 flex items-center gap-4">
@@ -594,141 +637,76 @@ export function ActorProfilePage({
                   Full acting catalog with instant local filters
                 </p>
               </div>
-
-              <div className="flex flex-wrap gap-3">
-                {(Object.keys(sortLabels) as FilmographySortOption[]).map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => setSortBy(option)}
-                    className={`relative overflow-hidden px-5 py-2 text-sm uppercase tracking-widest transition-all ${
-                      sortBy === option
-                        ? 'text-cyan-300'
-                        : 'text-gray-400 hover:text-white'
-                    }`}
-                    style={{
-                      clipPath:
-                        'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                    }}
-                  >
-                    {sortBy === option ? (
-                      <motion.div
-                        layoutId="actor-filmography-sort"
-                        className="absolute inset-0 bg-white/10 prism-border"
-                        style={{
-                          clipPath:
-                            'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                        }}
-                        transition={{
-                          type: 'spring',
-                          stiffness: 300,
-                          damping: 30
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className="absolute inset-0 bg-white/5 transition-colors duration-300 hover:bg-white/10"
-                        style={{
-                          clipPath:
-                            'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                        }}
-                      />
-                    )}
-                    <span className="relative z-10">{sortLabels[option]}</span>
-                  </button>
-                ))}
-              </div>
             </div>
 
-            <div className="mb-4 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {(Object.keys(typeLabels) as FilmographyTypeFilter[]).map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setActiveType(type)}
-                  className={`relative overflow-hidden whitespace-nowrap px-5 py-2 text-sm uppercase tracking-widest transition-all ${
-                    activeType === type
-                      ? 'text-cyan-300'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                  style={{
-                    clipPath:
-                      'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                  }}
-                >
-                  {activeType === type ? (
-                    <motion.div
-                      layoutId="actor-filmography-type"
-                      className="absolute inset-0 bg-white/10 prism-border"
-                      style={{
-                        clipPath:
-                          'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                      }}
-                      transition={{
-                        type: 'spring',
-                        stiffness: 300,
-                        damping: 30
-                      }}
+            <FacetPanel className="mb-8" contentClassName="p-5 md:p-6">
+              <div className="flex flex-col gap-4">
+                <form onSubmit={handleSearchSubmit} className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row">
+                  <div className="relative min-w-0 flex-1">
+                    <Search
+                      size={16}
+                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
                     />
-                  ) : (
-                    <div
-                      className="absolute inset-0 bg-white/5 transition-colors duration-300 hover:bg-white/10"
-                      style={{
-                        clipPath:
-                          'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                      }}
+                    <input
+                      type="text"
+                      value={searchInput}
+                      onChange={(event) => setSearchInput(event.target.value)}
+                      placeholder="Search filmography..."
+                      className="w-full rounded-[18px] border border-white/10 bg-white/[0.04] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-gray-500 focus:border-cyan-400/45 focus:bg-white/[0.06]"
                     />
-                  )}
-                  <span className="relative z-10">{typeLabels[type]}</span>
-                </button>
-              ))}
-            </div>
-
-            {genreOptions.length > 1 && (
-              <div className="mb-8 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                {genreOptions.map((genre) => (
+                  </div>
                   <button
-                    key={genre}
-                    type="button"
-                    onClick={() => setActiveGenre(genre)}
-                    className={`relative overflow-hidden whitespace-nowrap px-5 py-2 text-sm uppercase tracking-widest transition-all ${
-                      activeGenre === genre
-                        ? 'text-cyan-300'
-                        : 'text-gray-400 hover:text-white'
-                    }`}
-                    style={{
-                      clipPath:
-                        'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                    }}
+                    type="submit"
+                    className="clip-facet-btn border border-cyan-500/30 bg-cyan-500/12 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300 transition-colors hover:bg-cyan-500/18"
                   >
-                    {activeGenre === genre ? (
-                      <motion.div
-                        layoutId="actor-filmography-genre"
-                        className="absolute inset-0 bg-white/10 prism-border"
-                        style={{
-                          clipPath:
-                            'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                        }}
-                        transition={{
-                          type: 'spring',
-                          stiffness: 300,
-                          damping: 30
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className="absolute inset-0 bg-white/5 transition-colors duration-300 hover:bg-white/10"
-                        style={{
-                          clipPath:
-                            'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                        }}
-                      />
-                    )}
-                    <span className="relative z-10">{genre}</span>
+                    Search
                   </button>
-                ))}
+                </form>
+
+                <div className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)]">
+                  <div>
+                    <label className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-gray-500">
+                      Type
+                    </label>
+                    <select
+                      value={activeType}
+                      onChange={(event) => setActiveType(event.target.value as FilmographyTypeFilter)}
+                      className={filterSelectClassName}
+                    >
+                      {(Object.keys(typeLabels) as FilmographyTypeFilter[]).map((type) => (
+                        <option key={type} value={type} className="bg-[#0b0d16]">
+                          {typeLabels[type]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-gray-500">
+                      Genres
+                    </label>
+                    <select
+                      multiple
+                      value={activeGenres}
+                      onChange={handleGenreSelection}
+                      disabled={genreOptions.length <= 1}
+                      className={`${filterSelectClassName} min-h-[148px] pr-2`}
+                    >
+                      {genreOptions.filter((genre) => genre !== 'All').map((genre) => (
+                        <option key={genre} value={genre} className="bg-[#0b0d16] py-1">
+                          {genre}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-2 text-xs text-gray-500">
+                      {genreOptions.length > 1
+                        ? 'Leave empty to show every genre.'
+                        : 'No genre tags are available for this filmography yet.'}
+                    </p>
+                  </div>
+                </div>
               </div>
-            )}
+            </FacetPanel>
 
             {filteredFilmography.length > 0 ? (
               <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
@@ -764,95 +742,6 @@ export function ActorProfilePage({
               </FacetPanel>
             )}
           </section>
-        </div>
-
-        <div className="space-y-8">
-          <FacetPanel contentClassName="p-7">
-            <div className="mb-5 flex items-center gap-3">
-              <Star size={18} className="text-cyan-300" />
-              <h2 className="font-['Advent_Pro'] text-2xl font-bold text-white">
-                Profile Highlights
-              </h2>
-            </div>
-
-            <div className="space-y-5">
-              <div>
-                <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
-                  Known For Department
-                </div>
-                <div className="mt-1 text-white">{person.known_for_department}</div>
-              </div>
-              {bornOn && (
-                <div>
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
-                    Born
-                  </div>
-                  <div className="mt-1 text-white">{bornOn}</div>
-                </div>
-              )}
-              {person.place_of_birth && (
-                <div>
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
-                    Place of Birth
-                  </div>
-                  <div className="mt-1 text-white">{person.place_of_birth}</div>
-                </div>
-              )}
-              {person.also_known_as && person.also_known_as.length > 0 && (
-                <div>
-                  <div className="mb-2 text-[11px] uppercase tracking-[0.22em] text-gray-500">
-                    Also Known As
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {person.also_known_as.slice(0, 6).map((alias) => (
-                      <span
-                        key={alias}
-                        className="clip-facet-btn border border-white/8 bg-white/[0.04] px-3 py-2 text-xs uppercase tracking-[0.16em] text-gray-300"
-                      >
-                        {alias}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </FacetPanel>
-
-          <FacetPanel contentClassName="p-7">
-            <div className="mb-5 flex items-center gap-3">
-              <Images size={18} className="text-cyan-300" />
-              <h2 className="font-['Advent_Pro'] text-2xl font-bold text-white">
-                Photo Gallery
-              </h2>
-            </div>
-
-            {galleryImages.length > 0 ? (
-              <div className="grid grid-cols-2 gap-4">
-                {galleryImages.slice(0, 8).map((imagePath, index) => (
-                  <motion.div
-                    key={imagePath}
-                    className={`overflow-hidden rounded-[22px] bg-white/[0.04] ${
-                      index === 0 ? 'col-span-2 aspect-[1.45]' : 'aspect-[0.82]'
-                    }`}
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-40px' }}
-                    transition={{ duration: 0.4, delay: index * 0.04 }}
-                  >
-                    <img
-                      src={profile(imagePath, index === 0 ? 'original' : 'h632')}
-                      alt={`${person.name} portrait ${index + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-gray-400">
-                No additional photos are available for this actor yet.
-              </div>
-            )}
-          </FacetPanel>
         </div>
       </div>
     </motion.div>
