@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Calendar,
+  ChevronRight,
   ExternalLink,
   Film,
   Images,
@@ -29,6 +30,39 @@ interface ActorProfilePageProps {
 }
 
 const EMPTY_CREDITS: PersonMediaCredit[] = [];
+const PANEL_CLIP_PATH =
+  'polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px)';
+
+function FacetPanel({
+  children,
+  className = '',
+  contentClassName = ''
+}: {
+  children: React.ReactNode;
+  className?: string;
+  contentClassName?: string;
+}) {
+  return (
+    <div
+      className={`relative overflow-hidden ${className}`}
+      style={{
+        clipPath: PANEL_CLIP_PATH
+      }}
+    >
+      <div className="absolute inset-0 bg-[#0b0d16]/86 backdrop-blur-xl" />
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(34,211,238,0.08),transparent_30%,transparent_72%,rgba(249,115,22,0.08))]" />
+      <div
+        className="absolute inset-0 prism-border opacity-35"
+        style={{
+          clipPath: PANEL_CLIP_PATH
+        }}
+      />
+      <div className="absolute -left-10 top-0 h-28 w-28 bg-cyan-500/12 blur-3xl" />
+      <div className="absolute -bottom-12 right-0 h-32 w-32 bg-orange-500/10 blur-3xl" />
+      <div className={`relative z-10 ${contentClassName}`}>{children}</div>
+    </div>
+  );
+}
 
 function formatDate(value: string | null | undefined): string | null {
   if (!value) {
@@ -159,11 +193,13 @@ export function ActorProfilePage({
   const [bioExpanded, setBioExpanded] = useState(false);
   const [sortBy, setSortBy] = useState<FilmographySortOption>('popular');
   const { data, error, loading, refetch } = usePersonProfile(personId);
+  const filmographySectionRef = useRef<HTMLElement | null>(null);
 
   const person = data?.person;
   const filmography = useMemo(() => data?.filmography ?? EMPTY_CREDITS, [data]);
   const knownFor = useMemo(() => data?.knownFor ?? EMPTY_CREDITS, [data]);
   const stats = data?.stats;
+  const knownForPreview = useMemo(() => knownFor.slice(0, 5), [knownFor]);
 
   const galleryImages = useMemo(() => {
     if (!data || !person) {
@@ -248,6 +284,13 @@ export function ActorProfilePage({
     all: 'All',
     movie: 'Movies',
     tv: 'Series'
+  };
+
+  const handleViewMoreTitles = () => {
+    filmographySectionRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
   };
 
   if (loading && !data) {
@@ -461,12 +504,13 @@ export function ActorProfilePage({
 
       <div className="grid gap-10 px-6 md:px-16 lg:grid-cols-[1.4fr_0.92fr]">
         <div className="space-y-10">
-          <section className="rounded-[28px] border border-white/8 bg-white/[0.03] p-7 backdrop-blur-md">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_16px_rgba(34,211,238,0.5)]" />
+          <FacetPanel contentClassName="p-7 md:p-8">
+            <div className="mb-5 flex items-center gap-4">
+              <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_16px_rgba(34,211,238,0.55)]" />
               <h2 className="font-['Advent_Pro'] text-3xl font-bold text-white">
                 Biography
               </h2>
+              <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
             </div>
 
             <p className="text-base leading-8 text-gray-300">
@@ -477,90 +521,165 @@ export function ActorProfilePage({
             {biographyNeedsClamp && (
               <button
                 onClick={() => setBioExpanded((current) => !current)}
-                className="mt-5 text-sm font-medium uppercase tracking-[0.22em] text-cyan-300 transition-colors hover:text-cyan-200"
+                className="mt-6 text-sm font-medium uppercase tracking-[0.22em] text-cyan-300 transition-colors hover:text-cyan-200"
               >
                 {bioExpanded ? 'Show Less' : 'Read More'}
               </button>
             )}
-          </section>
+          </FacetPanel>
 
           <section>
-            <div className="mb-5 flex items-center gap-3">
+            <div className="mb-6 flex items-center gap-4">
               <Sparkles size={18} className="text-cyan-300" />
               <h2 className="font-['Advent_Pro'] text-3xl font-bold text-white">
                 Known For
               </h2>
+              <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+              {knownFor.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleViewMoreTitles}
+                  className="group flex items-center gap-1 text-sm uppercase tracking-widest text-cyan-400 transition-colors hover:text-cyan-300"
+                >
+                  View More
+                  <ChevronRight
+                    size={16}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                </button>
+              )}
             </div>
 
             {knownFor.length > 0 ? (
-              <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
-                {knownFor.map((credit, index) => (
-                  <div key={`${credit.mediaType}-${credit.tmdbId}`} className="space-y-3">
-                    <MovieCard
-                      {...credit}
-                      delay={index * 0.04}
-                      onClick={() => onMovieClick(credit)}
-                    />
-                    {credit.character && (
-                      <div className="px-2 text-sm text-gray-400">
-                        as <span className="text-cyan-200">{credit.character}</span>
-                      </div>
-                    )}
-                  </div>
-                ))}
+              <div className="overflow-x-auto pb-6 scrollbar-hide">
+                <div className="flex min-w-max gap-6 pr-4">
+                  {knownForPreview.map((credit, index) => (
+                    <div key={`${credit.mediaType}-${credit.tmdbId}`} className="space-y-3">
+                      <MovieCard
+                        {...credit}
+                        delay={index * 0.04}
+                        onClick={() => onMovieClick(credit)}
+                      />
+                      {credit.character && (
+                        <div className="px-2 text-sm text-gray-500">
+                          as <span className="text-cyan-200">{credit.character}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
-              <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-6 text-gray-400">
-                No highlighted titles are available yet for this profile.
-              </div>
+              <FacetPanel contentClassName="p-6">
+                <div className="text-gray-400">
+                  No highlighted titles are available yet for this profile.
+                </div>
+              </FacetPanel>
             )}
           </section>
 
-          <section>
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+          <section ref={filmographySectionRef}>
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
               <div>
-                <div className="mb-2 flex items-center gap-3">
-                  <Film size={18} className="text-cyan-300" />
+                <div className="mb-3 flex items-center gap-4">
+                  <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_16px_rgba(34,211,238,0.55)]" />
                   <h2 className="font-['Advent_Pro'] text-3xl font-bold text-white">
                     Filmography
                   </h2>
+                  <span className="rounded-full bg-white/5 px-3 py-1 text-sm text-gray-400 prism-border">
+                    {filteredFilmography.length} titles
+                  </span>
                 </div>
-                <p className="text-sm uppercase tracking-[0.22em] text-gray-500">
-                  {filteredFilmography.length} titles after filters
+                <p className="ml-5 text-sm uppercase tracking-[0.22em] text-gray-500">
+                  Full acting catalog with instant local filters
                 </p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {(Object.keys(sortLabels) as FilmographySortOption[]).map((option) => (
                   <button
                     key={option}
                     type="button"
                     onClick={() => setSortBy(option)}
-                    className={`clip-facet-btn px-4 py-2 text-sm uppercase tracking-[0.18em] transition-colors ${
+                    className={`relative overflow-hidden px-5 py-2 text-sm uppercase tracking-widest transition-all ${
                       sortBy === option
-                        ? 'border border-cyan-500/30 bg-cyan-500/12 text-cyan-200'
-                        : 'border border-white/8 bg-white/[0.03] text-gray-400 hover:text-white'
+                        ? 'text-cyan-300'
+                        : 'text-gray-400 hover:text-white'
                     }`}
+                    style={{
+                      clipPath:
+                        'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                    }}
                   >
-                    {sortLabels[option]}
+                    {sortBy === option ? (
+                      <motion.div
+                        layoutId="actor-filmography-sort"
+                        className="absolute inset-0 bg-white/10 prism-border"
+                        style={{
+                          clipPath:
+                            'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                        }}
+                        transition={{
+                          type: 'spring',
+                          stiffness: 300,
+                          damping: 30
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="absolute inset-0 bg-white/5 transition-colors duration-300 hover:bg-white/10"
+                        style={{
+                          clipPath:
+                            'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                        }}
+                      />
+                    )}
+                    <span className="relative z-10">{sortLabels[option]}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="mb-4 flex flex-wrap gap-2">
+            <div className="mb-4 flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
               {(Object.keys(typeLabels) as FilmographyTypeFilter[]).map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => setActiveType(type)}
-                  className={`clip-facet-btn px-4 py-2 text-sm uppercase tracking-[0.22em] transition-colors ${
+                  className={`relative overflow-hidden whitespace-nowrap px-5 py-2 text-sm uppercase tracking-widest transition-all ${
                     activeType === type
-                      ? 'border border-cyan-500/30 bg-cyan-500/12 text-cyan-200'
-                      : 'border border-white/8 bg-white/[0.03] text-gray-400 hover:text-white'
+                      ? 'text-cyan-300'
+                      : 'text-gray-400 hover:text-white'
                   }`}
+                  style={{
+                    clipPath:
+                      'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                  }}
                 >
-                  {typeLabels[type]}
+                  {activeType === type ? (
+                    <motion.div
+                      layoutId="actor-filmography-type"
+                      className="absolute inset-0 bg-white/10 prism-border"
+                      style={{
+                        clipPath:
+                          'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                      }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 300,
+                        damping: 30
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="absolute inset-0 bg-white/5 transition-colors duration-300 hover:bg-white/10"
+                      style={{
+                        clipPath:
+                          'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                      }}
+                    />
+                  )}
+                  <span className="relative z-10">{typeLabels[type]}</span>
                 </button>
               ))}
             </div>
@@ -572,57 +691,83 @@ export function ActorProfilePage({
                     key={genre}
                     type="button"
                     onClick={() => setActiveGenre(genre)}
-                    className={`clip-facet-btn whitespace-nowrap px-4 py-2 text-sm uppercase tracking-[0.18em] transition-colors ${
+                    className={`relative overflow-hidden whitespace-nowrap px-5 py-2 text-sm uppercase tracking-widest transition-all ${
                       activeGenre === genre
-                        ? 'border border-cyan-500/30 bg-cyan-500/12 text-cyan-200'
-                        : 'border border-white/8 bg-white/[0.03] text-gray-400 hover:text-white'
+                        ? 'text-cyan-300'
+                        : 'text-gray-400 hover:text-white'
                     }`}
+                    style={{
+                      clipPath:
+                        'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                    }}
                   >
-                    {genre}
+                    {activeGenre === genre ? (
+                      <motion.div
+                        layoutId="actor-filmography-genre"
+                        className="absolute inset-0 bg-white/10 prism-border"
+                        style={{
+                          clipPath:
+                            'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                        }}
+                        transition={{
+                          type: 'spring',
+                          stiffness: 300,
+                          damping: 30
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="absolute inset-0 bg-white/5 transition-colors duration-300 hover:bg-white/10"
+                        style={{
+                          clipPath:
+                            'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                        }}
+                      />
+                    )}
+                    <span className="relative z-10">{genre}</span>
                   </button>
                 ))}
               </div>
             )}
 
             {filteredFilmography.length > 0 ? (
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                 {filteredFilmography.map((credit, index) => (
-                  <div key={`${credit.mediaType}-${credit.tmdbId}`} className="space-y-3">
-                    <div className="flex justify-center">
-                      <MovieCard
-                        {...credit}
-                        delay={index * 0.02}
-                        onClick={() => onMovieClick(credit)}
-                      />
-                    </div>
-                    <div className="rounded-[18px] border border-white/8 bg-white/[0.03] px-4 py-3">
-                      <div className="mb-1 flex items-center justify-between gap-3">
-                        <span className="text-xs uppercase tracking-[0.2em] text-gray-500">
-                          {credit.mediaType === 'tv' ? 'Series' : 'Movie'}
-                        </span>
-                        <span className="text-xs uppercase tracking-[0.2em] text-cyan-300">
-                          {credit.primaryGenre}
-                        </span>
-                      </div>
-                      <div className="line-clamp-2 text-sm text-gray-300">
-                        {credit.character
-                          ? `as ${credit.character}`
-                          : 'Character details unavailable'}
-                      </div>
-                    </div>
-                  </div>
+                  <motion.div
+                    key={`${credit.mediaType}-${credit.tmdbId}`}
+                    className="flex justify-center"
+                    initial={{
+                      opacity: 0,
+                      y: 20
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0
+                    }}
+                    transition={{
+                      delay: index * 0.02
+                    }}
+                  >
+                    <MovieCard
+                      {...credit}
+                      delay={0}
+                      onClick={() => onMovieClick(credit)}
+                    />
+                  </motion.div>
                 ))}
               </div>
             ) : (
-              <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-6 text-gray-400">
-                No filmography entries match the current filters.
-              </div>
+              <FacetPanel contentClassName="p-6">
+                <div className="text-gray-400">
+                  No filmography entries match the current filters.
+                </div>
+              </FacetPanel>
             )}
           </section>
         </div>
 
         <div className="space-y-8">
-          <section className="rounded-[28px] border border-white/8 bg-white/[0.03] p-7 backdrop-blur-md">
+          <FacetPanel contentClassName="p-7">
             <div className="mb-5 flex items-center gap-3">
               <Star size={18} className="text-cyan-300" />
               <h2 className="font-['Advent_Pro'] text-2xl font-bold text-white">
@@ -671,9 +816,9 @@ export function ActorProfilePage({
                 </div>
               )}
             </div>
-          </section>
+          </FacetPanel>
 
-          <section className="rounded-[28px] border border-white/8 bg-white/[0.03] p-7 backdrop-blur-md">
+          <FacetPanel contentClassName="p-7">
             <div className="mb-5 flex items-center gap-3">
               <Images size={18} className="text-cyan-300" />
               <h2 className="font-['Advent_Pro'] text-2xl font-bold text-white">
@@ -703,11 +848,11 @@ export function ActorProfilePage({
                 ))}
               </div>
             ) : (
-              <div className="rounded-[22px] border border-white/8 bg-white/[0.03] p-6 text-gray-400">
+              <div className="text-gray-400">
                 No additional photos are available for this actor yet.
               </div>
             )}
-          </section>
+          </FacetPanel>
         </div>
       </div>
     </motion.div>
