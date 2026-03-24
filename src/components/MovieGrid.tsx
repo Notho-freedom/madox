@@ -14,6 +14,7 @@ import {
   type TMDBCatalogSource,
   useTMDBCatalog
 } from '../hooks/useTMDB';
+import { type MoviePageResult } from '../services/tmdb';
 import { CardSkeleton, ErrorState } from './LoadingSkeleton';
 import { LoadMoreSentinel } from './LoadMoreSentinel';
 import { MovieCard } from './MovieCard';
@@ -28,34 +29,36 @@ export interface CategoryData {
 
 interface SectionProps {
   config: HomeSectionConfig;
-  data: MovieData[];
-  error: string | null;
-  hasMore: boolean;
-  isLoadingMore: boolean;
-  loading: boolean;
-  onLoadMore: () => void;
-  onRetry: () => void;
+  initialPageData?: MoviePageResult | null;
   onMovieClick: (movie: MovieData) => void;
   onViewAll?: () => void;
 }
 
 function GridSection({
   config,
-  data,
-  error,
-  hasMore,
-  isLoadingMore,
-  loading,
-  onLoadMore,
-  onRetry,
+  initialPageData,
   onMovieClick,
   onViewAll
 }: SectionProps) {
   const sectionRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const isInView = useInView(sectionRef, {
+  const isVisible = useInView(sectionRef, {
     once: true,
-    margin: '-50px'
+    margin: '320px 0px'
+  });
+  const {
+    data,
+    error,
+    hasMore,
+    isLoadingMore,
+    loading,
+    loadMore,
+    refetch
+  } = useTMDBCatalog(config.source, {
+    enabled: isVisible || Boolean(initialPageData),
+    initialPageBatch: initialPageData?.page ?? 1,
+    initialPageData,
+    pageBatchSize: 1
   });
 
   return (
@@ -67,7 +70,7 @@ function GridSection({
           x: -20
         }}
         animate={
-          isInView ?
+          isVisible ?
             {
               opacity: 1,
               x: 0
@@ -96,10 +99,12 @@ function GridSection({
         }
       </motion.div>
 
-      {loading ?
+      {!isVisible ?
+        <div className="h-[290px]" /> :
+      loading ?
         <CardSkeleton count={6} /> :
       error ?
-        <ErrorState message={error} onRetry={onRetry} /> :
+        <ErrorState message={error} onRetry={refetch} /> :
         <div ref={scrollRef} className="overflow-x-auto pb-12 scrollbar-hide">
           <div className="flex min-w-max gap-6 pr-16">
             {data.map((movie, index) =>
@@ -113,7 +118,7 @@ function GridSection({
               canLoadMore={hasMore}
               className="w-16 shrink-0"
               isLoadingMore={isLoadingMore}
-              onLoadMore={onLoadMore}
+              onLoadMore={loadMore}
               rootMargin="0px 320px 0px 0px"
               rootRef={scrollRef} />
           </div>
@@ -125,38 +130,24 @@ function GridSection({
 
 interface MovieGridProps {
   activeGenre?: HomeGenreId;
+  initialPageDataBySection?: Partial<Record<string, MoviePageResult>>;
   onMovieClick: (movie: MovieData) => void;
   onViewAll?: (category: CategoryData) => void;
 }
 
 export function MovieGrid({
   activeGenre,
+  initialPageDataBySection,
   onMovieClick,
   onViewAll
 }: MovieGridProps) {
   const activeGenreOption = getHomeGenreOption(activeGenre ?? 'all');
   const sectionSet = getHomeSectionSet(activeGenreOption);
-  const trending = useTMDBCatalog(sectionSet.trending.source);
-  const popularMovies = useTMDBCatalog(sectionSet.popularMovies.source);
-  const topRated = useTMDBCatalog(sectionSet.topRated.source);
-  const popularSeries = useTMDBCatalog(sectionSet.popularSeries.source);
   const sections = [
-    {
-      ...sectionSet.trending,
-      ...trending
-    },
-    {
-      ...sectionSet.popularMovies,
-      ...popularMovies
-    },
-    {
-      ...sectionSet.topRated,
-      ...topRated
-    },
-    {
-      ...sectionSet.popularSeries,
-      ...popularSeries
-    }
+    sectionSet.trending,
+    sectionSet.popularMovies,
+    sectionSet.topRated,
+    sectionSet.popularSeries
   ];
 
   return (
@@ -165,13 +156,7 @@ export function MovieGrid({
         <GridSection
           key={section.id}
           config={section}
-          data={section.data}
-          error={section.error}
-          hasMore={section.hasMore}
-          isLoadingMore={section.isLoadingMore}
-          loading={section.loading}
-          onLoadMore={section.loadMore}
-          onRetry={section.refetch}
+          initialPageData={initialPageDataBySection?.[section.id] ?? null}
           onMovieClick={onMovieClick}
           onViewAll={() =>
             onViewAll?.({

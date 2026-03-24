@@ -1,53 +1,24 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { startTransition, useCallback, useEffect, useRef, useState } from 'react';
 import {
-  getTrending,
-  getPopular,
-  getTopRated,
-  getNowPlaying,
-  search,
   discoverByGenre,
-  getDetails,
-  getTrailerId,
   getCredits,
+  getDetails,
+  getNowPlaying,
+  getPopular,
   getSimilar,
-  genreNames,
-  genreColor,
-  type TMDBPageResult,
-  type TMDBMovie,
-  type TMDBMovieDetails,
-  type TMDBCast } from
-'../services/tmdb';
+  getTopRated,
+  getTrailerId,
+  getTrending,
+  search,
+  type MoviePageResult,
+  type TMDBCast,
+  type TMDBMovieDetails
+} from '../services/tmdb';
 import { type MovieData } from '../data/movies';
 
-const INITIAL_PAGE_BATCH = 3;
-const PAGE_BATCH_SIZE = 2;
-const hasPoster = (item: TMDBMovie) => Boolean(item.poster_path);
-
-// Convert TMDB movie to our MovieData format
-export function tmdbToMovieData(item: TMDBMovie): MovieData {
-  const title = item.title || item.name || '';
-  const year = (item.release_date || item.first_air_date || '').slice(0, 4);
-  const genre = genreNames(item.genre_ids || []);
-  const mediaType = item.media_type || (item.first_air_date ? 'tv' : 'movie');
-
-  return {
-    id: String(item.id),
-    title,
-    year,
-    rating: item.vote_average.toFixed(1),
-    color: genreColor(genre.split(' / ')[0]),
-    videoId: '', // Will be fetched on demand
-    genre,
-    duration: '',
-    description: item.overview,
-    posterPath: item.poster_path,
-    backdropPath: item.backdrop_path,
-    tmdbId: item.id,
-    mediaType: mediaType as 'movie' | 'tv',
-    popularity: item.popularity,
-    voteCount: item.vote_count
-  };
-}
+const INITIAL_PAGE_BATCH = 1;
+const PAGE_BATCH_SIZE = 1;
+const hasPoster = (item: MovieData) => Boolean(item.posterPath);
 
 interface UseTMDBResult {
   data: MovieData[];
@@ -96,8 +67,8 @@ export type TMDBCatalogSource =
       type: 'movie' | 'tv' | 'multi';
     };
 
-function matchesGenreLabels(item: TMDBMovie, labels: string[]): boolean {
-  const itemGenres = genreNames(item.genre_ids || []);
+function matchesGenreLabels(item: MovieData, labels: string[]): boolean {
+  const itemGenres = item.genre ?? '';
   return labels.some((label) => itemGenres.includes(label));
 }
 
@@ -116,52 +87,73 @@ function mergeUniqueMovies(current: MovieData[], incoming: MovieData[]): MovieDa
 }
 
 function toMovieBatch(
-  pages: TMDBPageResult<TMDBMovie>[],
-  filter?: (item: TMDBMovie) => boolean
+  pages: MoviePageResult[],
+  filter?: (item: MovieData) => boolean
 ): MovieData[] {
   return pages
     .flatMap((page) => page.results)
-    .filter((item) => (filter ? filter(item) : true))
-    .map(tmdbToMovieData);
+    .filter((item) => (filter ? filter(item) : true));
 }
 
 function getErrorMessage(err: unknown): string {
-  return err instanceof Error ? err.message : 'Unknown TMDB error.';
+  return err instanceof Error ? err.message : 'Unknown catalog error.';
 }
 
 interface PaginatedQueryOptions {
   enabled?: boolean;
-  filter?: (item: TMDBMovie) => boolean;
+  filter?: (item: MovieData) => boolean;
   initialPageBatch?: number;
+  initialPageData?: MoviePageResult | null;
   pageBatchSize?: number;
 }
 
 function usePaginatedMovieQuery(
-  fetchPage: (page: number) => Promise<TMDBPageResult<TMDBMovie>>,
+  fetchPage: (page: number) => Promise<MoviePageResult>,
   options: PaginatedQueryOptions = {}
 ): UseTMDBResult {
   const {
     enabled = true,
     filter,
     initialPageBatch = INITIAL_PAGE_BATCH,
+    initialPageData,
     pageBatchSize = PAGE_BATCH_SIZE
   } = options;
-  const [data, setData] = useState<MovieData[]>([]);
-  const [loading, setLoading] = useState(enabled);
+  const [data, setData] = useState<MovieData[]>(() =>
+    initialPageData ? toMovieBatch([initialPageData], filter) : []
+  );
+  const [loading, setLoading] = useState(enabled && !initialPageData);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
+  const [hasMore, setHasMore] = useState(() =>
+    initialPageData ? initialPageData.page < initialPageData.total_pages : false
+  );
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const loadedPageRef = useRef(0);
-  const totalPagesRef = useRef(1);
+  const loadedPageRef = useRef(initialPageData?.page ?? 0);
+  const totalPagesRef = useRef(initialPageData?.total_pages ?? 1);
   const generationRef = useRef(0);
+
+  useEffect(() => {
+    if (!initialPageData) {
+      return;
+    }
+
+    loadedPageRef.current = initialPageData.page;
+    totalPagesRef.current = Math.max(initialPageData.total_pages, 1);
+    setHasMore(initialPageData.page < initialPageData.total_pages);
+
+    startTransition(() => {
+      setData(toMovieBatch([initialPageData], filter));
+      setLoading(false);
+      setError(null);
+    });
+  }, [filter, initialPageData]);
 
   const initialize = useCallback(async () => {
     generationRef.current += 1;
     const generation = generationRef.current;
-    loadedPageRef.current = 0;
-    totalPagesRef.current = 1;
 
     if (!enabled) {
+      loadedPageRef.current = 0;
+      totalPagesRef.current = 1;
       setData([]);
       setLoading(false);
       setError(null);
@@ -170,10 +162,9 @@ function usePaginatedMovieQuery(
       return;
     }
 
-    setLoading(true);
     setError(null);
-    setHasMore(false);
     setIsLoadingMore(false);
+    setLoading((currentLoading) => data.length === 0 || currentLoading);
 
     try {
       const firstPage = await fetchPage(1);
@@ -185,36 +176,41 @@ function usePaginatedMovieQuery(
       totalPagesRef.current = Math.max(firstPage.total_pages, 1);
       const finalInitialPage = Math.min(initialPageBatch, totalPagesRef.current);
       const extraPages =
-        finalInitialPage > 1 ?
-          await Promise.all(
-            Array.from(
-              { length: finalInitialPage - 1 },
-              (_unused, index) => fetchPage(index + 2)
+        finalInitialPage > 1
+          ? await Promise.all(
+              Array.from({ length: finalInitialPage - 1 }, (_unused, index) =>
+                fetchPage(index + 2)
+              )
             )
-          ) :
-          [];
+          : [];
 
       if (generation !== generationRef.current) {
         return;
       }
 
       loadedPageRef.current = finalInitialPage;
-      setData(toMovieBatch([firstPage, ...extraPages], filter));
-      setHasMore(finalInitialPage < totalPagesRef.current);
+      const nextData = toMovieBatch([firstPage, ...extraPages], filter);
+
+      startTransition(() => {
+        setData(nextData);
+        setHasMore(finalInitialPage < totalPagesRef.current);
+      });
     } catch (err: unknown) {
       if (generation !== generationRef.current) {
         return;
       }
 
       setError(getErrorMessage(err));
-      setData([]);
-      setHasMore(false);
+      if (data.length === 0) {
+        setData([]);
+        setHasMore(false);
+      }
     } finally {
       if (generation === generationRef.current) {
         setLoading(false);
       }
     }
-  }, [enabled, fetchPage, filter, initialPageBatch]);
+  }, [data.length, enabled, fetchPage, filter, initialPageBatch]);
 
   useEffect(() => {
     void initialize();
@@ -241,9 +237,8 @@ function usePaginatedMovieQuery(
 
     try {
       const nextPages = await Promise.all(
-        Array.from(
-          { length: endPage - startPage + 1 },
-          (_unused, index) => fetchPage(startPage + index)
+        Array.from({ length: endPage - startPage + 1 }, (_unused, index) =>
+          fetchPage(startPage + index)
         )
       );
 
@@ -252,10 +247,10 @@ function usePaginatedMovieQuery(
       }
 
       loadedPageRef.current = endPage;
-      setData((current) =>
-        mergeUniqueMovies(current, toMovieBatch(nextPages, filter))
-      );
-      setHasMore(endPage < totalPagesRef.current);
+      startTransition(() => {
+        setData((current) => mergeUniqueMovies(current, toMovieBatch(nextPages, filter)));
+        setHasMore(endPage < totalPagesRef.current);
+      });
     } catch (err: unknown) {
       if (generation !== generationRef.current) {
         return;
@@ -282,7 +277,10 @@ function usePaginatedMovieQuery(
   };
 }
 
-export function useTMDBCatalog(source: TMDBCatalogSource): UseTMDBResult {
+export function useTMDBCatalog(
+  source: TMDBCatalogSource,
+  options: PaginatedQueryOptions = {}
+): UseTMDBResult {
   const fetchPage = useCallback(
     (page: number) => {
       switch (source.kind) {
@@ -308,27 +306,39 @@ export function useTMDBCatalog(source: TMDBCatalogSource): UseTMDBResult {
   );
 
   const activeFilterLabels = source.filterLabels ?? [];
+  const optionFilter = options.filter;
   const sourceFilter =
-    activeFilterLabels.length > 0 ?
-      (item: TMDBMovie) => matchesGenreLabels(item, activeFilterLabels) :
-      undefined;
+    activeFilterLabels.length > 0
+      ? (item: MovieData) => matchesGenreLabels(item, activeFilterLabels)
+      : undefined;
+  const combinedFilter =
+    source.kind === 'discover' || source.kind === 'search'
+      ? (item: MovieData) =>
+          hasPoster(item) &&
+          (sourceFilter ? sourceFilter(item) : true) &&
+          (optionFilter ? optionFilter(item) : true)
+      : sourceFilter && optionFilter
+        ? (item: MovieData) => sourceFilter(item) && optionFilter(item)
+        : sourceFilter
+          ? sourceFilter
+          : optionFilter
+            ? optionFilter
+            : undefined;
+  const isEnabled =
+    (options.enabled ?? true) &&
+    (source.kind !== 'search' || source.query.trim().length > 0);
 
   return usePaginatedMovieQuery(fetchPage, {
-    enabled: source.kind !== 'search' || source.query.trim().length > 0,
-    filter:
-      source.kind === 'discover' || source.kind === 'search' ?
-        (item) => hasPoster(item) && (sourceFilter ? sourceFilter(item) : true) :
-      sourceFilter ?
-        sourceFilter :
-        undefined
+    ...options,
+    enabled: isEnabled,
+    filter: combinedFilter
   });
 }
 
-// Hook: Trending
 export function useTrending(
-type: 'movie' | 'tv' | 'all' = 'all',
-window: 'day' | 'week' = 'week')
-: UseTMDBResult {
+  type: 'movie' | 'tv' | 'all' = 'all',
+  window: 'day' | 'week' = 'week'
+): UseTMDBResult {
   const fetchPage = useCallback(
     (page: number) => getTrending(type, window, page),
     [type, window]
@@ -337,32 +347,28 @@ window: 'day' | 'week' = 'week')
   return usePaginatedMovieQuery(fetchPage);
 }
 
-// Hook: Popular
 export function usePopular(type: 'movie' | 'tv' = 'movie'): UseTMDBResult {
   const fetchPage = useCallback((page: number) => getPopular(type, page), [type]);
 
   return usePaginatedMovieQuery(fetchPage);
 }
 
-// Hook: Top Rated
 export function useTopRated(type: 'movie' | 'tv' = 'movie'): UseTMDBResult {
   const fetchPage = useCallback((page: number) => getTopRated(type, page), [type]);
 
   return usePaginatedMovieQuery(fetchPage);
 }
 
-// Hook: Now Playing
 export function useNowPlaying(type: 'movie' | 'tv' = 'movie'): UseTMDBResult {
   const fetchPage = useCallback((page: number) => getNowPlaying(type, page), [type]);
 
   return usePaginatedMovieQuery(fetchPage);
 }
 
-// Hook: Search
 export function useTMDBSearch(
-query: string,
-type: 'movie' | 'tv' | 'multi' = 'multi')
-: UseTMDBResult {
+  query: string,
+  type: 'movie' | 'tv' | 'multi' = 'multi'
+): UseTMDBResult {
   const trimmedQuery = query.trim();
   const fetchPage = useCallback(
     (page: number) => search(trimmedQuery, type, page),
@@ -375,11 +381,7 @@ type: 'movie' | 'tv' | 'multi' = 'multi')
   });
 }
 
-// Hook: Discover by genre
-export function useDiscover(
-type: 'movie' | 'tv',
-genreId: number)
-: UseTMDBResult {
+export function useDiscover(type: 'movie' | 'tv', genreId: number): UseTMDBResult {
   const fetchPage = useCallback(
     (page: number) => discoverByGenre(type, genreId, { page }),
     [genreId, type]
@@ -390,38 +392,38 @@ genreId: number)
   });
 }
 
-// Hook: Get trailer videoId for a movie
 export function useTrailer(
-tmdbId: number | undefined,
-mediaType: 'movie' | 'tv' = 'movie')
-{
+  tmdbId: number | undefined,
+  mediaType: 'movie' | 'tv' = 'movie'
+) {
   const [videoId, setVideoId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!tmdbId) return;
     setLoading(true);
-    getTrailerId(mediaType, tmdbId).
-    then(setVideoId).
-    catch(() => setVideoId(null)).
-    finally(() => setLoading(false));
+    getTrailerId(mediaType, tmdbId)
+      .then(setVideoId)
+      .catch(() => setVideoId(null))
+      .finally(() => setLoading(false));
   }, [tmdbId, mediaType]);
 
   return { videoId, loading };
 }
 
-// Hook: Movie/TV details with cast and similar
 export function useDetails(
-tmdbId: number | undefined,
-mediaType: 'movie' | 'tv' = 'movie')
-{
+  tmdbId: number | undefined,
+  mediaType: 'movie' | 'tv' = 'movie'
+) {
   const [details, setDetails] = useState<TMDBMovieDetails | null>(null);
   const [cast, setCast] = useState<TMDBCast[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(true);
   const similarQuery = usePaginatedMovieQuery(
     useCallback(
       (page: number) =>
-        tmdbId ? getSimilar(mediaType, tmdbId, page) : Promise.reject(new Error('Missing TMDB id.')),
+        tmdbId
+          ? getSimilar(mediaType, tmdbId, page)
+          : Promise.reject(new Error('Missing TMDB id.')),
       [mediaType, tmdbId]
     ),
     {
@@ -441,13 +443,15 @@ mediaType: 'movie' | 'tv' = 'movie')
     let active = true;
     setLoadingDetails(true);
     Promise.all([getDetails(mediaType, tmdbId), getCredits(mediaType, tmdbId)])
-      .then(([d, c]) => {
+      .then(([nextDetails, nextCast]) => {
         if (!active) {
           return;
         }
 
-        setDetails(d);
-        setCast(c);
+        startTransition(() => {
+          setDetails(nextDetails);
+          setCast(nextCast);
+        });
       })
       .catch(() => {
         if (!active) {
@@ -478,3 +482,4 @@ mediaType: 'movie' | 'tv' = 'movie')
     loadMoreSimilar: similarQuery.loadMore
   };
 }
+

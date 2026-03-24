@@ -14,6 +14,8 @@ import { HeroSkeleton } from './LoadingSkeleton';
 
 interface HeroSectionProps {
   activeGenre?: HomeGenreId;
+  bootstrapCandidates?: MovieData[];
+  bootstrapLoading?: boolean;
   onMovieClick?: (movie: MovieData) => void;
   onPlay?: (movie: MovieData) => void;
 }
@@ -30,19 +32,40 @@ function getGenreHash(input: string): number {
 
 export function HeroSection({
   activeGenre = defaultHomeGenreId,
+  bootstrapCandidates,
+  bootstrapLoading = false,
   onMovieClick,
   onPlay
 }: HeroSectionProps) {
   const activeGenreOption = getHomeGenreOption(activeGenre);
-  const primarySource = useTMDBCatalog(getHeroSource(activeGenreOption));
+  const shouldUseBootstrap = Boolean(bootstrapCandidates && bootstrapCandidates.length > 0);
+  const primarySource = useTMDBCatalog(getHeroSource(activeGenreOption), {
+    enabled: !shouldUseBootstrap,
+    initialPageBatch: 1,
+    pageBatchSize: 1
+  });
+  const shouldLoadFallback =
+    !shouldUseBootstrap &&
+    activeGenreOption.id !== 'all' &&
+    !primarySource.loading &&
+    primarySource.data.length < 4;
   const fallbackSource = useTMDBCatalog({
     kind: 'trending',
     timeWindow: 'day',
     type: 'all'
+  }, {
+    enabled: shouldLoadFallback,
+    initialPageBatch: 1,
+    pageBatchSize: 1
   });
   const [selectedFeaturedId, setSelectedFeaturedId] = useState<string | null>(null);
+  const [lastReadyCandidates, setLastReadyCandidates] = useState<MovieData[]>([]);
 
   const candidates = useMemo(() => {
+    if (shouldUseBootstrap) {
+      return bootstrapCandidates ?? [];
+    }
+
     const primaryCandidates = primarySource.data;
 
     if (activeGenreOption.id === 'all' || primaryCandidates.length >= 4) {
@@ -59,33 +82,49 @@ export function HeroSection({
       }
     }
     return Array.from(merged.values());
-  }, [activeGenreOption.id, fallbackSource.data, primarySource.data]);
+  }, [
+    activeGenreOption.id,
+    bootstrapCandidates,
+    fallbackSource.data,
+    primarySource.data,
+    shouldUseBootstrap
+  ]);
 
   useEffect(() => {
-    if (candidates.length === 0) {
-      setSelectedFeaturedId(null);
+    if (candidates.length > 0) {
+      setLastReadyCandidates(candidates);
+    }
+  }, [candidates]);
+
+  const displayCandidates = candidates.length > 0 ? candidates : lastReadyCandidates;
+
+  useEffect(() => {
+    if (displayCandidates.length === 0) {
       return;
     }
 
     const initialIndex =
       (getDaySeed() + getGenreHash(activeGenreOption.id)) %
-      Math.min(candidates.length, 6);
+      Math.min(displayCandidates.length, 6);
 
-    setSelectedFeaturedId(candidates[initialIndex]?.id ?? candidates[0].id);
-  }, [activeGenreOption.id, candidates]);
+    setSelectedFeaturedId(
+      displayCandidates[initialIndex]?.id ?? displayCandidates[0].id
+    );
+  }, [activeGenreOption.id, displayCandidates]);
 
   const featured =
-    candidates.find((item) => item.id === selectedFeaturedId) ?? candidates[0];
+    displayCandidates.find((item) => item.id === selectedFeaturedId) ??
+    displayCandidates[0];
 
   const secondaryPicks = useMemo(() => {
     if (!featured) {
       return [];
     }
 
-    return candidates.filter((item) => item.id !== featured.id).slice(0, 3);
-  }, [candidates, featured]);
+    return displayCandidates.filter((item) => item.id !== featured.id).slice(0, 3);
+  }, [displayCandidates, featured]);
 
-  if ((primarySource.loading && fallbackSource.loading) || !featured) {
+  if (((bootstrapLoading || primarySource.loading) && displayCandidates.length === 0) || !featured) {
     return <HeroSkeleton />;
   }
 

@@ -1,6 +1,9 @@
+import 'dotenv/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import * as Sentry from '@sentry/node';
+import { startApiServer, stopApiServer } from '../server/app';
 
 const APP_PROTOCOL = 'file:';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -9,6 +12,21 @@ const RENDERER_ENTRY = path.join(__dirname, '../dist/index.html');
 const PRELOAD_ENTRY = path.join(__dirname, 'preload.mjs');
 
 let mainWindow: BrowserWindow | null = null;
+let apiServerStarted = false;
+
+function initMainTelemetry() {
+  const dsn = process.env.SENTRY_DSN?.trim() || process.env.VITE_SENTRY_DSN?.trim();
+
+  if (!dsn || Sentry.isInitialized()) {
+    return;
+  }
+
+  Sentry.init({
+    dsn,
+    environment: process.env.NODE_ENV || 'development',
+    tracesSampleRate: 0.15
+  });
+}
 
 function getWindowState(win: BrowserWindow | null) {
   return {
@@ -152,6 +170,13 @@ async function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  initMainTelemetry();
+
+  if (!apiServerStarted) {
+    startApiServer();
+    apiServerStarted = true;
+  }
+
   registerIpc();
   await createWindow();
 
@@ -166,4 +191,13 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+app.on('before-quit', () => {
+  if (!apiServerStarted) {
+    return;
+  }
+
+  void stopApiServer();
+  apiServerStarted = false;
 });

@@ -32,10 +32,10 @@ export function DesktopWindowControls() {
 
   return (
     <div className="fixed inset-x-0 top-0 z-[60] hidden md:block">
-      <div className="app-drag h-10 border-b border-white/6 bg-gradient-to-b from-[#0b0c13]/78 via-[#0b0c13]/55 to-transparent backdrop-blur-xl" />
+      <div className="app-drag h-10 bg-gradient-to-b from-[#0b0c13]/58 via-[#0b0c13]/38 to-transparent backdrop-blur-xl" />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 flex h-10 items-center justify-end px-3">
-        <div className="app-no-drag pointer-events-auto flex h-8 items-center gap-0.5 rounded-full border border-white/8 bg-[#090a10]/72 px-1.5 shadow-[0_12px_32px_rgba(4,8,15,0.38)] backdrop-blur-xl">
+        <div className="app-no-drag pointer-events-auto flex h-8 items-center gap-0.5 rounded-full bg-[#090a10]/56 px-1.5 shadow-[0_12px_32px_rgba(4,8,15,0.28)] backdrop-blur-xl">
           <button
             type="button"
             aria-label="Minimize window"
