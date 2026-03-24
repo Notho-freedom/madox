@@ -13,6 +13,9 @@ export interface MovieData {
   tmdbId?: number;
   mediaType?: 'movie' | 'tv';
   popularity?: number;
+  progressPercent?: number;
+  resumeTime?: number;
+  updatedAt?: number;
   voteCount?: number;
   views?: string;
   channelTitle?: string;

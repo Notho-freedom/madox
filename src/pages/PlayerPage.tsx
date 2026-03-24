@@ -21,6 +21,10 @@ import type { YouTubeEvent, YouTubePlayer } from 'react-youtube';
 import { getYouTubeThumbnail, type MovieData } from '../data/movies';
 import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { useTrending } from '../hooks/useTMDB';
+import {
+  saveWatchHistoryEntry,
+  type WatchHistoryEntry
+} from '../services/watchHistory';
 import { isDesktopApp, openExternal } from '../utils/desktop';
 interface PlayerPageProps {
   movie: MovieData;
@@ -61,6 +65,7 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
   const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const startupTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasPlayerLoaded = useRef(false);
+  const lastPersistBucket = useRef(-1);
   const progressRef = useRef<HTMLDivElement>(null);
   const upNextScrollRef = useRef<HTMLDivElement>(null);
   const {
@@ -83,8 +88,41 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
     }
   }, []);
 
+  const persistWatchProgress = useCallback(
+    async (
+      override?: Partial<Pick<WatchHistoryEntry, 'currentTime' | 'durationSeconds' | 'progressPercent'>>
+    ) => {
+      const tmdbId = movie.tmdbId ?? parseInt(movie.id, 10);
+      const mediaType = movie.mediaType ?? 'movie';
+      const durationSeconds = override?.durationSeconds ?? duration;
+      const currentPosition = override?.currentTime ?? currentTime;
+
+      if (!tmdbId || currentPosition <= 0) {
+        return;
+      }
+
+      const progressPercent =
+        override?.progressPercent ??
+        (durationSeconds > 0 ? currentPosition / durationSeconds * 100 : 0);
+
+      await saveWatchHistoryEntry({
+        ...movie,
+        currentTime: currentPosition,
+        durationSeconds,
+        id: `${mediaType}-${tmdbId}`,
+        mediaType,
+        progressPercent,
+        tmdbId,
+        updatedAt: Date.now(),
+        resumeTime: currentPosition
+      });
+    },
+    [currentTime, duration, movie]
+  );
+
   useEffect(() => {
     hasPlayerLoaded.current = false;
+    lastPersistBucket.current = -1;
     setPlayer(null);
     setIsPlaying(false);
     setIsBuffering(true);
@@ -192,6 +230,13 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
     setPlayer(p);
     setPlayerError(null);
     p.setVolume(volume);
+    const resumeTime = movie.resumeTime;
+    if (resumeTime && resumeTime > 0) {
+      window.setTimeout(() => {
+        p.seekTo(resumeTime, true);
+        setCurrentTime(resumeTime);
+      }, 220);
+    }
     const dur = p.getDuration();
     if (dur > 0) setDuration(dur);
     setIsBuffering(false);
@@ -218,6 +263,11 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
         // ended
         setIsPlaying(false);
         setIsBuffering(false);
+        void persistWatchProgress({
+          currentTime: duration,
+          durationSeconds: duration,
+          progressPercent: 100
+        });
         break;
     }
   };
@@ -303,6 +353,27 @@ export function PlayerPage({ movie, onBack }: PlayerPageProps) {
   };
 
   const progress = duration > 0 ? currentTime / duration * 100 : 0;
+
+  useEffect(() => {
+    if (currentTime <= 0 || duration <= 0) {
+      return;
+    }
+
+    const nextBucket = Math.floor(currentTime / 8);
+    if (nextBucket === lastPersistBucket.current) {
+      return;
+    }
+
+    lastPersistBucket.current = nextBucket;
+    void persistWatchProgress();
+  }, [currentTime, duration, persistWatchProgress]);
+
+  useEffect(() => {
+    return () => {
+      void persistWatchProgress();
+    };
+  }, [persistWatchProgress]);
+
   return (
     <motion.div
       className="fixed inset-0 z-[100] bg-black"

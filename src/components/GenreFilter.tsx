@@ -1,27 +1,25 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-const genres = [
-'All',
-'Sci-Fi',
-'Thriller',
-'Drama',
-'Action',
-'Horror',
-'Animation',
-'Documentary',
-'Fantasy'];
+import {
+  homeGenreOptions,
+  type HomeGenreId
+} from '../data/homeGenres';
 
-export function GenreFilter() {
-  const [activeGenre, setActiveGenre] = useState('All');
+interface GenreFilterProps {
+  activeGenre: HomeGenreId;
+  onChange: (genreId: HomeGenreId) => void;
+}
+
+export function GenreFilter({ activeGenre, onChange }: GenreFilterProps) {
   return (
     <div className="w-full px-16 py-8 overflow-x-auto scrollbar-hide">
       <div className="flex items-center gap-4 min-w-max">
-        {genres.map((genre) => {
-          const isActive = activeGenre === genre;
+        {homeGenreOptions.map((genre) => {
+          const isActive = activeGenre === genre.id;
           return (
             <button
-              key={genre}
-              onClick={() => setActiveGenre(genre)}
+              key={genre.id}
+              onClick={() => onChange(genre.id)}
               className="relative group px-6 py-2 outline-none">
               
               {isActive &&
@@ -53,7 +51,7 @@ export function GenreFilter() {
               <span
                 className={`relative z-10 text-sm tracking-widest uppercase font-medium transition-colors duration-300 ${isActive ? 'text-cyan-300 text-glow' : 'text-gray-400 group-hover:text-white'}`}>
                 
-                {genre}
+                {genre.label}
               </span>
             </button>);
 

@@ -17,14 +17,19 @@ import { SettingsPage } from './pages/SettingsPage';
 import { MovieDetailPage } from './pages/MovieDetailPage';
 import { PlayerPage } from './pages/PlayerPage';
 import { ViewAllPage } from './pages/ViewAllPage';
+import { HistoryPage } from './pages/HistoryPage';
 import { type MovieData } from './data/movies';
+import { defaultHomeGenreId, type HomeGenreId } from './data/homeGenres';
 import { getTrailerId } from './services/tmdb';
 import { type NavPageId } from './navigation/primaryNav';
+import { type WatchHistoryEntry } from './services/watchHistory';
 export function App() {
   const [activePage, setActivePage] = useState<NavPageId>('home');
+  const [activeHomeGenre, setActiveHomeGenre] = useState<HomeGenreId>(defaultHomeGenreId);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedMovie, setSelectedMovie] = useState<MovieData | null>(null);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [viewAllCategory, setViewAllCategory] = useState<CategoryData | null>(
     null
   );
@@ -33,6 +38,7 @@ export function App() {
     setSelectedMovie(movie);
     setIsPlayerOpen(false);
     setIsPanelOpen(false);
+    setIsHistoryOpen(false);
     setViewAllCategory(null);
     window.scrollTo({
       top: 0,
@@ -47,6 +53,7 @@ export function App() {
       if (target.videoId) {
         setSelectedMovie(target);
         setIsPanelOpen(false);
+        setIsHistoryOpen(false);
         setIsPlayerOpen(true);
         return;
       }
@@ -63,6 +70,7 @@ export function App() {
           };
           setSelectedMovie(updatedMovie);
           setIsPanelOpen(false);
+          setIsHistoryOpen(false);
           setIsPlayerOpen(true);
         }
       } catch (err) {
@@ -79,6 +87,7 @@ export function App() {
   const handleViewAll = (category: CategoryData) => {
     setViewAllCategory(category);
     setIsPanelOpen(false);
+    setIsHistoryOpen(false);
     setSelectedMovie(null);
     window.scrollTo({
       top: 0,
@@ -88,9 +97,39 @@ export function App() {
   const handleViewAllBack = () => {
     setViewAllCategory(null);
   };
+  const handleHistoryOpen = () => {
+    setIsHistoryOpen(true);
+    setIsPanelOpen(false);
+    setSelectedMovie(null);
+    setViewAllCategory(null);
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+  const handleHistoryBack = () => {
+    setIsHistoryOpen(false);
+  };
+  const handleResumeHistoryItem = useCallback(
+    (entry: WatchHistoryEntry) => {
+      setIsHistoryOpen(false);
+      setIsPanelOpen(false);
+      setViewAllCategory(null);
+
+      if (entry.videoId) {
+        setSelectedMovie(entry);
+        setIsPlayerOpen(true);
+        return;
+      }
+
+      void handlePlay(entry);
+    },
+    [handlePlay]
+  );
   const handleNavigate = useCallback((page: NavPageId) => {
     setActivePage(page);
     setIsPanelOpen(false);
+    setIsHistoryOpen(false);
     setSelectedMovie(null);
     setIsPlayerOpen(false);
     setViewAllCategory(null);
@@ -110,6 +149,15 @@ export function App() {
 
 
     }
+    if (isHistoryOpen) {
+      return (
+        <HistoryPage
+          onBack={handleHistoryBack}
+          onMovieClick={handleMovieClick}
+          onResume={handleResumeHistoryItem} />);
+
+
+    }
     if (viewAllCategory) {
       return (
         <ViewAllPage
@@ -125,10 +173,18 @@ export function App() {
       case 'home':
         return (
           <>
-            <HeroSection onMovieClick={handleMovieClick} onPlay={handlePlay} />
-            <GenreFilter />
-            <ContinueWatching onMovieClick={handleMovieClick} />
+            <HeroSection
+              activeGenre={activeHomeGenre}
+              onMovieClick={handleMovieClick}
+              onPlay={handlePlay} />
+            <GenreFilter
+              activeGenre={activeHomeGenre}
+              onChange={setActiveHomeGenre} />
+            <ContinueWatching
+              onResumeMovie={handleResumeHistoryItem}
+              onViewAll={handleHistoryOpen} />
             <MovieGrid
+              activeGenre={activeHomeGenre}
               onMovieClick={handleMovieClick}
               onViewAll={handleViewAll} />
             

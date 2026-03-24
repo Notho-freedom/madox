@@ -61,32 +61,45 @@ interface UseTMDBResult {
 
 export type TMDBCatalogSource =
   | {
+      filterLabels?: string[];
       kind: 'trending';
       timeWindow: 'day' | 'week';
       type: 'movie' | 'tv' | 'all';
     }
   | {
+      filterLabels?: string[];
       kind: 'popular';
       type: 'movie' | 'tv';
     }
   | {
+      filterLabels?: string[];
       kind: 'topRated';
       type: 'movie' | 'tv';
     }
   | {
+      filterLabels?: string[];
       kind: 'nowPlaying';
       type: 'movie' | 'tv';
     }
   | {
+      filterLabels?: string[];
       kind: 'discover';
       genreId: number;
+      sortBy?: 'popularity.desc' | 'vote_average.desc';
       type: 'movie' | 'tv';
+      voteCountGte?: number;
     }
   | {
+      filterLabels?: string[];
       kind: 'search';
       query: string;
       type: 'movie' | 'tv' | 'multi';
     };
+
+function matchesGenreLabels(item: TMDBMovie, labels: string[]): boolean {
+  const itemGenres = genreNames(item.genre_ids || []);
+  return labels.some((label) => itemGenres.includes(label));
+}
 
 function mergeUniqueMovies(current: MovieData[], incoming: MovieData[]): MovieData[] {
   const merged = new Map<string, MovieData>();
@@ -282,7 +295,11 @@ export function useTMDBCatalog(source: TMDBCatalogSource): UseTMDBResult {
         case 'nowPlaying':
           return getNowPlaying(source.type, page);
         case 'discover':
-          return discoverByGenre(source.type, source.genreId, page);
+          return discoverByGenre(source.type, source.genreId, {
+            page,
+            sortBy: source.sortBy,
+            voteCountGte: source.voteCountGte
+          });
         case 'search':
           return search(source.query.trim(), source.type, page);
       }
@@ -290,10 +307,20 @@ export function useTMDBCatalog(source: TMDBCatalogSource): UseTMDBResult {
     [source]
   );
 
+  const activeFilterLabels = source.filterLabels ?? [];
+  const sourceFilter =
+    activeFilterLabels.length > 0 ?
+      (item: TMDBMovie) => matchesGenreLabels(item, activeFilterLabels) :
+      undefined;
+
   return usePaginatedMovieQuery(fetchPage, {
     enabled: source.kind !== 'search' || source.query.trim().length > 0,
     filter:
-      source.kind === 'discover' || source.kind === 'search' ? hasPoster : undefined
+      source.kind === 'discover' || source.kind === 'search' ?
+        (item) => hasPoster(item) && (sourceFilter ? sourceFilter(item) : true) :
+      sourceFilter ?
+        sourceFilter :
+        undefined
   });
 }
 
@@ -354,7 +381,7 @@ type: 'movie' | 'tv',
 genreId: number)
 : UseTMDBResult {
   const fetchPage = useCallback(
-    (page: number) => discoverByGenre(type, genreId, page),
+    (page: number) => discoverByGenre(type, genreId, { page }),
     [genreId, type]
   );
 

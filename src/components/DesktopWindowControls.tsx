@@ -31,39 +31,45 @@ export function DesktopWindowControls() {
   }
 
   return (
-    <div className="app-drag fixed right-3 top-3 z-[160] flex items-center gap-1 rounded-full bg-[#08080f]/72 p-1.5 shadow-[0_12px_28px_rgba(5,10,18,0.42)] backdrop-blur-xl">
-      <button
-        type="button"
-        aria-label="Minimize window"
-        className="app-no-drag flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-white/8 hover:text-white"
-        onClick={() => {
-          void minimizeDesktopWindow();
-        }}>
-        <Minus size={16} />
-      </button>
+    <div className="fixed inset-x-0 top-0 z-[60] hidden md:block">
+      <div className="app-drag h-10 border-b border-white/6 bg-gradient-to-b from-[#0b0c13]/78 via-[#0b0c13]/55 to-transparent backdrop-blur-xl" />
 
-      <button
-        type="button"
-        aria-label={isMaximized ? 'Restore window' : 'Maximize window'}
-        className="app-no-drag flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-white/8 hover:text-white"
-        onClick={async () => {
-          const nextIsMaximized = await toggleDesktopWindowMaximize();
-          setIsMaximized(nextIsMaximized);
-        }}>
-        {isMaximized ?
-          <Copy size={14} className="-translate-y-[1px]" /> :
-          <Square size={14} />}
-      </button>
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex h-10 items-center justify-end px-3">
+        <div className="app-no-drag pointer-events-auto flex h-8 items-center gap-0.5 rounded-full border border-white/8 bg-[#090a10]/72 px-1.5 shadow-[0_12px_32px_rgba(4,8,15,0.38)] backdrop-blur-xl">
+          <button
+            type="button"
+            aria-label="Minimize window"
+            className="flex h-6 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-white/8 hover:text-white"
+            onClick={() => {
+              void minimizeDesktopWindow();
+            }}>
+            <Minus size={14} />
+          </button>
 
-      <button
-        type="button"
-        aria-label="Close window"
-        className="app-no-drag flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-red-500/18 hover:text-red-300"
-        onClick={() => {
-          void closeDesktopWindow();
-        }}>
-        <X size={16} />
-      </button>
+          <button
+            type="button"
+            aria-label={isMaximized ? 'Restore window' : 'Maximize window'}
+            className="flex h-6 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-white/8 hover:text-white"
+            onClick={async () => {
+              const nextIsMaximized = await toggleDesktopWindowMaximize();
+              setIsMaximized(nextIsMaximized);
+            }}>
+            {isMaximized ?
+              <Copy size={12} className="-translate-y-[1px]" /> :
+              <Square size={12} />}
+          </button>
+
+          <button
+            type="button"
+            aria-label="Close window"
+            className="flex h-6 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-red-500/18 hover:text-red-300"
+            onClick={() => {
+              void closeDesktopWindow();
+            }}>
+            <X size={14} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

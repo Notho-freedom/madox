@@ -1,3 +1,5 @@
+import { getTmdbCacheRecord, setTmdbCacheRecord } from './localDb';
+
 const API_TOKEN =
 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1OGM1OWUzOWQxNDNmYjEyYjZjNDAyMjAzOTlhZWFlOCIsIm5iZiI6MTc3NDI4MzMyNS4wMDE5OTk5LCJzdWIiOiI2OWMxNmEzYzNjMWZmYzJjZTMxYjEzYzQiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.l1UV8AmsbTthAutPK62-TN5YShxhTi21m8VPacipiIQ';
 const BASE_URL = 'https://api.themoviedb.org/3';
@@ -23,6 +25,7 @@ size: 'w780' | 'w1280' | 'original' = 'w1280')
 // Cache
 const cache = new Map<string, {data: any;ts: number;}>();
 const TTL = 5 * 60 * 1000;
+const pendingRequests = new Map<string, Promise<unknown>>();
 
 async function tmdbFetch<T>(
 endpoint: string,
@@ -33,19 +36,47 @@ params: Record<string, string> = {})
   const cached = cache.get(url);
   if (cached && Date.now() - cached.ts < TTL) return cached.data as T;
 
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${API_TOKEN}`,
-      'Content-Type': 'application/json'
-    }
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.status_message || `TMDB error ${res.status}`);
+  const persistentCache = await getTmdbCacheRecord<T>(url);
+  if (persistentCache && persistentCache.expiresAt > Date.now()) {
+    cache.set(url, {
+      data: persistentCache.data,
+      ts: persistentCache.cachedAt
+    });
+    return persistentCache.data as T;
   }
-  const data = await res.json();
-  cache.set(url, { data, ts: Date.now() });
-  return data as T;
+
+  const inFlight = pendingRequests.get(url);
+  if (inFlight) {
+    return inFlight as Promise<T>;
+  }
+
+  const request = (async () => {
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${API_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.status_message || `TMDB error ${res.status}`);
+    }
+    const data = await res.json();
+    const cachedAt = Date.now();
+    cache.set(url, { data, ts: cachedAt });
+    await setTmdbCacheRecord({
+      key: url,
+      data,
+      cachedAt,
+      expiresAt: cachedAt + TTL
+    });
+    return data as T;
+  })().finally(() => {
+    pendingRequests.delete(url);
+  });
+
+  pendingRequests.set(url, request);
+  return request;
 }
 
 // ─── Types ───────────────────────────────────────────────────
@@ -177,11 +208,17 @@ page = 1)
 export async function discoverByGenre(
 type: 'movie' | 'tv',
 genreId: number,
-page = 1)
+options: {
+  page?: number;
+  sortBy?: 'popularity.desc' | 'vote_average.desc';
+  voteCountGte?: number;
+} = {})
 : Promise<TMDBPageResult<TMDBMovie>> {
+  const { page = 1, sortBy = 'popularity.desc', voteCountGte } = options;
   return tmdbFetch<TMDBPageResult<TMDBMovie>>(`/discover/${type}`, {
     with_genres: String(genreId),
-    sort_by: 'popularity.desc',
+    sort_by: sortBy,
+    ...(voteCountGte ? { 'vote_count.gte': String(voteCountGte) } : {}),
     page: String(page)
   });
 }

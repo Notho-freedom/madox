@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { primaryNavItems, type NavPageId } from '../navigation/primaryNav';
 import {
@@ -17,10 +17,38 @@ export function CrystalSidebar({
   onNavigate
 }: CrystalSidebarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rowClipPath =
     'polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px)';
   const iconClipPath =
     'polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)';
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
+
+  const openSidebar = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+
+    setIsExpanded(true);
+  };
+
+  const closeSidebar = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+    }
+
+    closeTimerRef.current = setTimeout(() => {
+      setIsExpanded(false);
+    }, 150);
+  };
 
   const handleSelect = (page?: NavPageId) => {
     if (page) {
@@ -36,6 +64,8 @@ export function CrystalSidebar({
       initial={{
         x: -100
       }}
+      onPointerEnter={openSidebar}
+      onPointerLeave={closeSidebar}
       animate={{
         x: 0,
         width: isExpanded ? 420 : 96
@@ -49,9 +79,9 @@ export function CrystalSidebar({
           <div className="flex items-center justify-center">
             <CrystalMenuTrigger
               ariaExpanded={isExpanded}
-              ariaLabel={isExpanded ? 'Close menu' : 'Open menu'}
+              ariaLabel="Browse menu"
               className="h-12 w-12 overflow-hidden"
-              onClick={() => setIsExpanded((current) => !current)}
+              onClick={() => undefined}
             />
           </div>
           <div className="overflow-hidden pr-6">
@@ -113,7 +143,7 @@ export function CrystalSidebar({
                       className={`relative flex h-12 w-12 items-center justify-center overflow-hidden transition-all duration-300 ${
                         isActive ?
                           'bg-cyan-500/10 shadow-[0_0_22px_rgba(34,211,238,0.16)]' :
-                          'bg-white/[0.03] group-hover:bg-white/[0.06]'
+                          'bg-white/[0.015] group-hover:bg-white/[0.03]'
                       }`}
                       style={{
                         clipPath: iconClipPath
@@ -151,7 +181,7 @@ export function CrystalSidebar({
               );
             })}
 
-            <div className="pt-2">
+            <div className="space-y-3 pt-3">
               {sidebarUtilityActions.map((item) => (
                 <button
                   key={item.id}
@@ -166,7 +196,7 @@ export function CrystalSidebar({
                     style={{
                       clipPath: rowClipPath
                     }}>
-                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-white/[0.04] to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/8 via-white/[0.02] to-transparent" />
                     <div
                       className="absolute inset-0 prism-border"
                       style={{
@@ -176,13 +206,13 @@ export function CrystalSidebar({
                   </div>
                   <div className="flex items-center justify-center">
                     <div
-                      className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-white/[0.03] transition-all duration-300 group-hover:bg-white/[0.06]"
+                      className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-white/[0.015] transition-all duration-300 group-hover:bg-white/[0.03]"
                       style={{
                         clipPath: iconClipPath
                       }}>
                       <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-cyan-400/10" />
                       <div
-                        className="absolute inset-0 prism-border opacity-45 transition-opacity duration-300 group-hover:opacity-80"
+                        className="absolute inset-0 prism-border opacity-30 transition-opacity duration-300 group-hover:opacity-65"
                         style={{
                           clipPath: iconClipPath
                         }}
@@ -232,13 +262,13 @@ export function CrystalSidebar({
               </div>
               <div className="flex items-center justify-center">
                 <div
-                  className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-white/[0.03]"
+                  className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-white/[0.015]"
                   style={{
                     clipPath: iconClipPath
                   }}>
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-cyan-400/10" />
                   <div
-                    className="absolute inset-0 prism-border opacity-55 transition-opacity duration-300 group-hover:opacity-80"
+                    className="absolute inset-0 prism-border opacity-38 transition-opacity duration-300 group-hover:opacity-68"
                     style={{
                       clipPath: iconClipPath
                     }}
@@ -290,13 +320,13 @@ export function CrystalSidebar({
               </div>
               <div className="flex items-center justify-center">
                 <div
-                  className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-white/[0.03] transition-all duration-300 group-hover:bg-red-500/[0.08]"
+                  className="relative flex h-12 w-12 items-center justify-center overflow-hidden bg-white/[0.015] transition-all duration-300 group-hover:bg-red-500/[0.05]"
                   style={{
                     clipPath: iconClipPath
                   }}>
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-red-400/10" />
                   <div
-                    className="absolute inset-0 prism-border opacity-45 transition-opacity duration-300 group-hover:opacity-80"
+                    className="absolute inset-0 prism-border opacity-30 transition-opacity duration-300 group-hover:opacity-65"
                     style={{
                       clipPath: iconClipPath
                     }}
