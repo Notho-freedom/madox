@@ -21,6 +21,8 @@ import { profile } from '../services/tmdb';
 import { genreName, type PersonMediaCredit } from '../services/tmdbShared';
 
 type FilmographyTypeFilter = 'all' | 'movie' | 'tv';
+type TopSectionCardKey = 'biography' | 'gallery' | 'profile';
+type TopSectionCardVariant = 'featured' | 'compact';
 
 interface ActorProfilePageProps {
   onBack: () => void;
@@ -271,7 +273,64 @@ export function ActorProfilePage({
     return `${activeGenres[0]} +${activeGenres.length - 1}`;
   }, [activeGenres]);
 
-  const shouldFeatureGallery = hasGallery && (!hasBiography || (galleryImages.length > 4 && biography.length < 900));
+  const topSectionOrder = useMemo(() => {
+    const cardWeight: Record<TopSectionCardKey, number> = {
+      biography: 3,
+      gallery: 2,
+      profile: 1
+    };
+    const cards: { key: TopSectionCardKey; score: number }[] = [
+      {
+        key: 'profile',
+        score:
+          220 +
+          (bornOn ? 40 : 0) +
+          (person?.place_of_birth ? 40 : 0) +
+          (person?.known_for_department ? 30 : 0) +
+          Math.min(person?.also_known_as?.length ?? 0, 6) * 18
+      }
+    ];
+
+    if (hasBiography) {
+      cards.push({
+        key: 'biography',
+        score: Math.max(260, Math.min(biography.length, 2600))
+      });
+    }
+
+    if (hasGallery) {
+      cards.push({
+        key: 'gallery',
+        score: 280 + galleryImages.length * 180
+      });
+    }
+
+    const sortedBySize = [...cards].sort((left, right) => {
+      return right.score - left.score || cardWeight[right.key] - cardWeight[left.key];
+    });
+
+    const featured = sortedBySize[0].key;
+    const sidebar = sortedBySize
+      .slice(1)
+      .sort((left, right) => {
+        return left.score - right.score || cardWeight[left.key] - cardWeight[right.key];
+      })
+      .map((card) => card.key);
+
+    return {
+      featured,
+      sidebar
+    };
+  }, [
+    biography.length,
+    bornOn,
+    hasBiography,
+    hasGallery,
+    galleryImages.length,
+    person?.also_known_as,
+    person?.known_for_department,
+    person?.place_of_birth
+  ]);
 
   const handleViewMoreTitles = () => {
     filmographySectionRef.current?.scrollIntoView({
@@ -315,25 +374,21 @@ export function ActorProfilePage({
     };
   }, [genrePickerOpen]);
 
-  const renderBiographyPanel = (variant: 'featured' | 'compact') => {
+  const renderBiographyPanel = (variant: TopSectionCardVariant) => {
     const panelTitleClass =
       variant === 'featured'
         ? "font-['Advent_Pro'] text-3xl font-bold text-white"
         : "font-['Advent_Pro'] text-2xl font-bold text-white";
-    const scrollClass =
-      variant === 'featured'
-        ? 'min-h-0 overflow-y-auto pr-2 lg:max-h-[680px]'
-        : 'min-h-0 overflow-y-auto pr-2 lg:max-h-[340px]';
 
     return (
-      <FacetPanel contentClassName="flex min-h-0 flex-col p-7 md:p-8">
+      <FacetPanel className="h-full min-h-0" contentClassName="flex h-full min-h-0 flex-col p-7 md:p-8">
         <div className="mb-5 flex items-center gap-4">
           <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_16px_rgba(34,211,238,0.55)]" />
           <h2 className={panelTitleClass}>Biography</h2>
           <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
         </div>
 
-        <div className={scrollClass}>
+        <div className="min-h-0 flex-1 overflow-y-auto pr-2">
           <p className="break-words text-base leading-8 text-gray-300">
             {displayedBiography ||
               'No biography is available yet for this actor, but the filmography below already maps out the most visible chapters of the career.'}
@@ -352,7 +407,7 @@ export function ActorProfilePage({
     );
   };
 
-  const renderGalleryPanel = (variant: 'featured' | 'compact') => {
+  const renderGalleryPanel = (variant: TopSectionCardVariant) => {
     const panelTitleClass =
       variant === 'featured'
         ? "font-['Advent_Pro'] text-3xl font-bold text-white"
@@ -362,15 +417,12 @@ export function ActorProfilePage({
       variant === 'featured' ? featuredGalleryOverflowCount : galleryOverflowCount;
     const gridClass =
       variant === 'featured'
-        ? 'grid min-h-0 grid-cols-2 gap-4 xl:grid-cols-3'
-        : 'grid min-h-0 grid-cols-2 grid-rows-2 gap-4';
-    const imageClass =
-      variant === 'featured'
-        ? 'relative aspect-[0.88] overflow-hidden rounded-[22px] bg-white/[0.04]'
-        : 'relative aspect-[0.82] overflow-hidden rounded-[22px] bg-white/[0.04]';
+        ? 'grid min-h-0 flex-1 auto-rows-fr grid-cols-2 gap-4 xl:grid-cols-3'
+        : 'grid min-h-0 flex-1 auto-rows-fr grid-cols-2 gap-4';
+    const imageClass = 'relative min-h-0 overflow-hidden rounded-[22px] bg-white/[0.04]';
 
     return (
-      <FacetPanel contentClassName="flex min-h-0 flex-col p-7">
+      <FacetPanel className="h-full min-h-0" contentClassName="flex h-full min-h-0 flex-col p-7">
         <div className="mb-5 flex items-center gap-3">
           <Images size={18} className="text-cyan-300" />
           <h2 className={panelTitleClass}>Photo Gallery</h2>
@@ -386,12 +438,12 @@ export function ActorProfilePage({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ duration: 0.4, delay: index * 0.04 }}
-              >
-                <img
-                  src={profile(imagePath, index === 0 ? 'original' : 'h632')}
-                  alt={`${person.name} portrait ${index + 1}`}
-                  className="h-full w-full object-cover"
-                />
+                >
+                  <img
+                    src={profile(imagePath, index === 0 ? 'original' : 'h632')}
+                    alt={`${person.name} portrait ${index + 1}`}
+                    className="h-full w-full object-cover"
+                  />
                 {overflowCount > 0 && index === images.length - 1 && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/55 backdrop-blur-sm">
                     <div className="text-center">
@@ -414,6 +466,91 @@ export function ActorProfilePage({
         )}
       </FacetPanel>
     );
+  };
+
+  const renderProfilePanel = (variant: TopSectionCardVariant) => {
+    const panelTitleClass =
+      variant === 'featured'
+        ? "font-['Advent_Pro'] text-3xl font-bold text-white"
+        : "font-['Advent_Pro'] text-2xl font-bold text-white";
+    const bodyClass =
+      variant === 'featured'
+        ? 'grid gap-5 xl:grid-cols-2'
+        : 'space-y-5';
+
+    return (
+      <FacetPanel className="h-full min-h-0" contentClassName="flex h-full min-h-0 flex-col p-7">
+        <div className="mb-5 flex items-center gap-3">
+          <Star size={18} className="text-cyan-300" />
+          <h2 className={panelTitleClass}>Profile Highlights</h2>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto pr-2">
+          <div className={bodyClass}>
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
+                Known For Department
+              </div>
+              <div className="mt-1 text-white">{person.known_for_department}</div>
+            </div>
+            {bornOn && (
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
+                  Born
+                </div>
+                <div className="mt-1 text-white">{bornOn}</div>
+              </div>
+            )}
+            {person.place_of_birth && (
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
+                  Place of Birth
+                </div>
+                <div className="mt-1 text-white">{person.place_of_birth}</div>
+              </div>
+            )}
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
+                Popularity
+              </div>
+              <div className="mt-1 text-white">{person.popularity.toFixed(1)}</div>
+            </div>
+            {person.also_known_as && person.also_known_as.length > 0 && (
+              <div className={variant === 'featured' ? 'xl:col-span-2' : ''}>
+                <div className="mb-2 text-[11px] uppercase tracking-[0.22em] text-gray-500">
+                  Also Known As
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {person.also_known_as.slice(0, variant === 'featured' ? 8 : 6).map((alias) => (
+                    <span
+                      key={alias}
+                      className="clip-facet-btn border border-white/8 bg-white/[0.04] px-3 py-2 text-xs uppercase tracking-[0.16em] text-gray-300"
+                    >
+                      {alias}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </FacetPanel>
+    );
+  };
+
+  const renderTopSectionCard = (
+    key: TopSectionCardKey,
+    variant: TopSectionCardVariant
+  ) => {
+    switch (key) {
+      case 'biography':
+        return renderBiographyPanel(variant);
+      case 'gallery':
+        return renderGalleryPanel(variant);
+      case 'profile':
+      default:
+        return renderProfilePanel(variant);
+    }
   };
 
   if (loading && !data) {
@@ -609,71 +746,34 @@ export function ActorProfilePage({
       </section>
 
       <div className="mx-auto w-full max-w-[1600px] px-6 md:px-16">
-        <div className="relative z-10 grid gap-10 lg:grid-cols-[1.35fr_0.95fr] lg:items-start">
-          <div className="min-w-0">
-            {shouldFeatureGallery ? renderGalleryPanel('featured') : renderBiographyPanel('featured')}
+        <div
+          className={
+            topSectionOrder.sidebar.length === 2
+              ? 'relative z-10 grid gap-8 lg:h-[860px] lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.95fr)] lg:grid-rows-[minmax(0,0.78fr)_minmax(0,1fr)] lg:items-stretch'
+              : topSectionOrder.sidebar.length === 1
+                ? 'relative z-10 grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.95fr)] lg:items-start'
+                : 'relative z-10 grid gap-8'
+          }
+        >
+          <div
+            className={
+              topSectionOrder.sidebar.length === 2 ? 'min-w-0 lg:row-span-2' : 'min-w-0'
+            }
+          >
+            {renderTopSectionCard(topSectionOrder.featured, 'featured')}
           </div>
 
-          <div className="grid min-w-0 gap-8 lg:max-h-[860px] lg:grid-rows-[auto_auto]">
-            <FacetPanel contentClassName="p-7">
-              <div className="mb-5 flex items-center gap-3">
-                <Star size={18} className="text-cyan-300" />
-                <h2 className="font-['Advent_Pro'] text-2xl font-bold text-white">
-                  Profile Highlights
-                </h2>
-              </div>
+          {topSectionOrder.sidebar.length > 0 && (
+            <div className="min-w-0">
+              {renderTopSectionCard(topSectionOrder.sidebar[0], 'compact')}
+            </div>
+          )}
 
-              <div className="space-y-5">
-                <div>
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
-                    Known For Department
-                  </div>
-                  <div className="mt-1 text-white">{person.known_for_department}</div>
-                </div>
-                {bornOn && (
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
-                      Born
-                    </div>
-                    <div className="mt-1 text-white">{bornOn}</div>
-                  </div>
-                )}
-                {person.place_of_birth && (
-                  <div>
-                    <div className="text-[11px] uppercase tracking-[0.22em] text-gray-500">
-                      Place of Birth
-                    </div>
-                    <div className="mt-1 text-white">{person.place_of_birth}</div>
-                  </div>
-                )}
-                {person.also_known_as && person.also_known_as.length > 0 && (
-                  <div>
-                    <div className="mb-2 text-[11px] uppercase tracking-[0.22em] text-gray-500">
-                      Also Known As
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {person.also_known_as.slice(0, 6).map((alias) => (
-                        <span
-                          key={alias}
-                          className="clip-facet-btn border border-white/8 bg-white/[0.04] px-3 py-2 text-xs uppercase tracking-[0.16em] text-gray-300"
-                        >
-                          {alias}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </FacetPanel>
-
-            {shouldFeatureGallery
-              ? hasBiography
-                ? renderBiographyPanel('compact')
-                : null
-              : hasGallery
-                ? renderGalleryPanel('compact')
-                : null}
-          </div>
+          {topSectionOrder.sidebar.length > 1 && (
+            <div className="min-w-0">
+              {renderTopSectionCard(topSectionOrder.sidebar[1], 'compact')}
+            </div>
+          )}
         </div>
 
         <div className="relative z-0 mt-16 space-y-10">
