@@ -24,6 +24,10 @@ import { addLike, removeLike } from '../services/likes';
 import { shareMovie } from '../services/share';
 import { backdrop, poster, type TMDBCast } from '../services/tmdb';
 import { addToWatchlist, removeFromWatchlist } from '../services/watchlist';
+
+const TOP_CAST_PANEL_CLIP_PATH =
+  'polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px)';
+
 interface MovieDetailPageProps {
   movie: MovieData;
   onBack: () => void;
@@ -374,50 +378,70 @@ export function MovieDetailPage({
             className="min-w-0"
             style={topCastMaxHeight ? { maxHeight: `${topCastMaxHeight}px` } : undefined}
           >
-              <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.035] p-6 shadow-[0_24px_56px_rgba(0,0,0,0.18)]">
-                <h3 className="mb-6 border-l-4 border-cyan-500 pl-4 font-['Advent_Pro'] text-2xl font-bold text-white">
-                  {t('movieDetail.topCast')}
-                </h3>
-                <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-2 gap-4 sm:grid-cols-3 2xl:grid-cols-4">
-                  {visibleCast.map((c, index) =>
-                <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => onActorClick?.(c)}
-                      className="group relative overflow-hidden rounded-[22px] bg-white/[0.04] text-left">
-                      <div className="aspect-[0.88] overflow-hidden rounded-[22px]">
+              <div
+                className="relative h-full min-h-0 overflow-hidden"
+                style={{
+                  clipPath: TOP_CAST_PANEL_CLIP_PATH
+                }}
+              >
+                <div className="absolute inset-0 bg-[#0b0d16]/86 backdrop-blur-xl" />
+                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(34,211,238,0.08),transparent_30%,transparent_72%,rgba(249,115,22,0.08))]" />
+                <div
+                  className="absolute inset-0 prism-border opacity-35"
+                  style={{
+                    clipPath: TOP_CAST_PANEL_CLIP_PATH
+                  }}
+                />
+                <div className="absolute -left-10 top-0 h-28 w-28 bg-cyan-500/12 blur-3xl" />
+                <div className="absolute -bottom-12 right-0 h-32 w-32 bg-orange-500/10 blur-3xl" />
+
+                <div className="relative z-10 flex h-full min-h-0 flex-col p-7">
+                  <div className="mb-5 flex items-center gap-3">
+                    <User size={18} className="text-cyan-300" />
+                    <h3 className="font-['Advent_Pro'] text-2xl font-bold text-white">
+                      {t('movieDetail.topCast')}
+                    </h3>
+                  </div>
+
+                  <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-2 gap-4 sm:grid-cols-3 2xl:grid-cols-4">
+                    {visibleCast.map((c, index) =>
+                  <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => onActorClick?.(c)}
+                        className="group relative h-full min-h-0 overflow-hidden rounded-[22px] bg-white/[0.04] text-left">
                         {c.profile_path ?
-                    <img
-                      src={`https://image.tmdb.org/t/p/w185${c.profile_path}`}
-                      alt={c.name}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" /> :
+                      <img
+                        src={`https://image.tmdb.org/t/p/w300${c.profile_path}`}
+                        alt={c.name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" /> :
 
 
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900">
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900">
                             <User size={32} className="text-gray-600" />
                           </div>
-                    }
-                      </div>
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/88 via-black/45 to-transparent px-3 pb-3 pt-10">
-                        <div className="line-clamp-1 text-sm font-bold text-white">{c.name}</div>
-                        <div className="line-clamp-2 text-xs text-cyan-100/78">
-                          {c.character || 'Cast'}
-                        </div>
-                      </div>
-                      {index === visibleCast.length - 1 && cast.length > visibleCast.length &&
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/58 backdrop-blur-sm">
-                          <div className="text-center">
-                            <div className="font-['Advent_Pro'] text-3xl font-bold text-white">
-                              +{cast.length - visibleCast.length}
-                            </div>
-                            <div className="mt-1 text-[11px] uppercase tracking-[0.22em] text-cyan-200">
-                              more cast
-                            </div>
+                      }
+                        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/88 via-black/45 to-transparent px-3 pb-3 pt-12">
+                          <div className="line-clamp-1 text-sm font-bold text-white">{c.name}</div>
+                          <div className="line-clamp-2 text-xs text-cyan-100/78">
+                            {c.character || 'Cast'}
                           </div>
                         </div>
-                  }
-                    </button>
-                )}
+                        {index === visibleCast.length - 1 && cast.length > visibleCast.length &&
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/58 backdrop-blur-sm">
+                            <div className="text-center">
+                              <div className="font-['Advent_Pro'] text-3xl font-bold text-white">
+                                +{cast.length - visibleCast.length}
+                              </div>
+                              <div className="mt-1 text-[11px] uppercase tracking-[0.22em] text-cyan-200">
+                                more cast
+                              </div>
+                            </div>
+                          </div>
+                    }
+                      </button>
+                  )}
+                  </div>
                 </div>
               </div>
             </section>
