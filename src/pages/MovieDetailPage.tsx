@@ -384,8 +384,8 @@ export function MovieDetailPage({
                       key={c.id}
                       type="button"
                       onClick={() => onActorClick?.(c)}
-                      className="group relative overflow-hidden rounded-[22px] border border-white/8 bg-white/[0.04] text-left">
-                      <div className="aspect-[0.88] overflow-hidden">
+                      className="group relative overflow-hidden rounded-[22px] bg-white/[0.04] text-left">
+                      <div className="aspect-[0.88] overflow-hidden rounded-[22px]">
                         {c.profile_path ?
                     <img
                       src={`https://image.tmdb.org/t/p/w185${c.profile_path}`}
@@ -398,9 +398,11 @@ export function MovieDetailPage({
                           </div>
                     }
                       </div>
-                      <div className="space-y-1 px-3 pb-3 pt-2">
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/88 via-black/45 to-transparent px-3 pb-3 pt-10">
                         <div className="line-clamp-1 text-sm font-bold text-white">{c.name}</div>
-                        <div className="line-clamp-2 text-xs text-gray-500">{c.character}</div>
+                        <div className="line-clamp-2 text-xs text-cyan-100/78">
+                          {c.character || 'Cast'}
+                        </div>
                       </div>
                       {index === visibleCast.length - 1 && cast.length > visibleCast.length &&
                   <div className="absolute inset-0 flex items-center justify-center bg-black/58 backdrop-blur-sm">
