@@ -18,7 +18,7 @@ import { MovieCard } from '../components/MovieCard';
 import { type MovieData } from '../data/movies';
 import { usePersonProfile } from '../hooks/useTMDB';
 import { profile } from '../services/tmdb';
-import { type PersonMediaCredit } from '../services/tmdbShared';
+import { genreName, type PersonMediaCredit } from '../services/tmdbShared';
 
 type FilmographyTypeFilter = 'all' | 'movie' | 'tv';
 
@@ -169,6 +169,9 @@ export function ActorProfilePage({
     return images;
   }, [data, person]);
 
+  const galleryPreviewImages = useMemo(() => galleryImages.slice(0, 4), [galleryImages]);
+  const galleryOverflowCount = Math.max(0, galleryImages.length - galleryPreviewImages.length);
+
   const genreOptions = useMemo(() => {
     const genres = new Set<string>();
 
@@ -176,10 +179,23 @@ export function ActorProfilePage({
       const parts = (item.genre ?? '')
         .split(' / ')
         .map((part) => part.trim())
-        .filter(Boolean);
+        .filter((part) => Boolean(part) && part !== 'Entertainment');
 
       for (const part of parts) {
         genres.add(part);
+      }
+
+      if (parts.length === 0 && item.primaryGenre && item.primaryGenre !== 'Unknown') {
+        genres.add(item.primaryGenre);
+      }
+
+      if (parts.length === 0 && item.genreIds.length > 0) {
+        for (const genreId of item.genreIds) {
+          const resolvedGenre = genreName(genreId);
+          if (resolvedGenre !== 'Unknown') {
+            genres.add(resolvedGenre);
+          }
+        }
       }
     }
 
@@ -486,9 +502,9 @@ export function ActorProfilePage({
       </section>
 
       <div className="mx-auto w-full max-w-[1600px] px-6 md:px-16">
-        <div className="grid gap-10 lg:grid-cols-[1.35fr_0.95fr] lg:items-start">
+        <div className="grid gap-10 lg:h-[900px] lg:grid-cols-[1.35fr_0.95fr] lg:items-stretch">
           <div className="min-w-0">
-            <FacetPanel contentClassName="p-7 md:p-8">
+            <FacetPanel className="lg:h-full" contentClassName="flex h-full flex-col p-7 md:p-8">
               <div className="mb-5 flex items-center gap-4">
                 <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_16px_rgba(34,211,238,0.55)]" />
                 <h2 className="font-['Advent_Pro'] text-3xl font-bold text-white">
@@ -497,10 +513,12 @@ export function ActorProfilePage({
                 <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
               </div>
 
-              <p className="break-words text-base leading-8 text-gray-300">
-                {displayedBiography ||
-                  'No biography is available yet for this actor, but the filmography below already maps out the most visible chapters of the career.'}
-              </p>
+              <div className="min-h-0 flex-1 overflow-y-auto pr-2">
+                <p className="break-words text-base leading-8 text-gray-300">
+                  {displayedBiography ||
+                    'No biography is available yet for this actor, but the filmography below already maps out the most visible chapters of the career.'}
+                </p>
+              </div>
 
               {biographyNeedsClamp && (
                 <button
@@ -513,7 +531,7 @@ export function ActorProfilePage({
             </FacetPanel>
           </div>
 
-          <div className="min-w-0 space-y-8">
+          <div className="grid min-w-0 gap-8 lg:h-full lg:grid-rows-[auto_minmax(0,1fr)]">
             <FacetPanel contentClassName="p-7">
               <div className="mb-5 flex items-center gap-3">
                 <Star size={18} className="text-cyan-300" />
@@ -565,7 +583,7 @@ export function ActorProfilePage({
               </div>
             </FacetPanel>
 
-            <FacetPanel contentClassName="p-7">
+            <FacetPanel className="lg:h-full" contentClassName="flex h-full flex-col p-7">
               <div className="mb-5 flex items-center gap-3">
                 <Images size={18} className="text-cyan-300" />
                 <h2 className="font-['Advent_Pro'] text-2xl font-bold text-white">
@@ -574,11 +592,11 @@ export function ActorProfilePage({
               </div>
 
               {galleryImages.length > 0 ? (
-                <div className="grid grid-cols-2 gap-4">
-                  {galleryImages.slice(0, 8).map((imagePath, index) => (
+                <div className="grid min-h-0 flex-1 grid-cols-2 gap-4">
+                  {galleryPreviewImages.map((imagePath, index) => (
                     <motion.div
                       key={imagePath}
-                      className="aspect-[0.82] overflow-hidden rounded-[22px] bg-white/[0.04]"
+                      className="relative aspect-[0.82] overflow-hidden rounded-[22px] bg-white/[0.04]"
                       initial={{ opacity: 0, y: 16 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, margin: '-40px' }}
@@ -589,11 +607,23 @@ export function ActorProfilePage({
                         alt={`${person.name} portrait ${index + 1}`}
                         className="h-full w-full object-cover"
                       />
+                      {galleryOverflowCount > 0 && index === galleryPreviewImages.length - 1 && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/55 backdrop-blur-sm">
+                          <div className="text-center">
+                            <div className="font-['Advent_Pro'] text-3xl font-bold text-white">
+                              +{galleryOverflowCount}
+                            </div>
+                            <div className="mt-1 text-[11px] uppercase tracking-[0.22em] text-cyan-200">
+                              more photos
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </motion.div>
                   ))}
                 </div>
               ) : (
-                <div className="text-gray-400">
+                <div className="flex min-h-0 flex-1 items-center text-gray-400">
                   No additional photos are available for this actor yet.
                 </div>
               )}
@@ -676,7 +706,7 @@ export function ActorProfilePage({
               </div>
             </div>
 
-            <FacetPanel className="mb-8" contentClassName="p-5 md:p-6">
+            <FacetPanel className="mb-8 overflow-visible" contentClassName="p-5 md:p-6">
               <div className="flex flex-col gap-4">
                 <form onSubmit={handleSearchSubmit} className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row">
                   <div className="relative min-w-0 flex-1">
