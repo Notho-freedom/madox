@@ -65,7 +65,7 @@ export function ActorsPage({ onActorClick }: ActorsPageProps) {
 
   return (
     <motion.div
-      className="px-16 py-12 pb-32 pt-8"
+      className="px-16 py-12 pb-32 pt-8 md:pt-20"
       initial={{
         opacity: 0,
         y: 20

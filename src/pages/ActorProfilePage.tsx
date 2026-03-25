@@ -556,14 +556,14 @@ export function ActorProfilePage({
   if (loading && !data) {
     return (
       <motion.div
-        className="relative z-40 min-h-screen bg-[#08080f] px-6 pb-24 pt-8 md:px-16"
+        className="relative z-40 min-h-screen bg-[#08080f] px-6 pb-24 pt-8 md:px-16 md:pt-20"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 30 }}
       >
         <button
           onClick={onBack}
-          className="mb-8 flex items-center gap-2 text-sm uppercase tracking-widest text-gray-400 transition-colors hover:text-white"
+          className="mb-8 flex items-center gap-2 text-sm uppercase tracking-widest text-gray-400 transition-colors hover:text-white md:hidden"
         >
           <ArrowLeft size={18} />
           Back
@@ -608,7 +608,7 @@ export function ActorProfilePage({
           </button>
           <button
             onClick={onBack}
-            className="clip-facet-btn border border-white/15 bg-white/5 px-6 py-3 text-sm font-bold uppercase tracking-widest text-white"
+            className="clip-facet-btn border border-white/15 bg-white/5 px-6 py-3 text-sm font-bold uppercase tracking-widest text-white md:hidden"
           >
             Go Back
           </button>
@@ -625,15 +625,15 @@ export function ActorProfilePage({
       exit={{ opacity: 0, y: 30 }}
       transition={{ duration: 0.45 }}
     >
-      <button
-        onClick={onBack}
-        className="fixed left-4 top-20 z-50 flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-4 py-2 text-white backdrop-blur-md transition-colors hover:bg-white/10 md:left-32 md:top-8"
+        <button
+          onClick={onBack}
+          className="fixed left-4 top-16 z-50 flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-4 py-2 text-white backdrop-blur-md transition-colors hover:bg-white/10 md:hidden"
       >
         <ArrowLeft size={20} />
         <span className="text-sm uppercase tracking-widest">Back</span>
       </button>
 
-      <section className="relative overflow-hidden px-6 pb-16 pt-24 md:px-16 md:pb-20">
+      <section className="relative overflow-hidden px-6 pb-16 pt-24 md:px-16 md:pb-20 md:pt-28">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-20"
           style={{

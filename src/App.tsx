@@ -301,10 +301,36 @@ export function App() {
     }
   };
 
+  const desktopBackAction =
+    !isPlayerOpen && selectedMovie ?
+      {
+        label: t('common.back'),
+        onBack: () => setSelectedMovie(null)
+      } :
+    !isPlayerOpen && selectedPerson ?
+      {
+        label: t('common.back'),
+        onBack: handlePersonBack
+      } :
+    !isPlayerOpen && isHistoryOpen ?
+      {
+        label: t('common.back'),
+        onBack: handleHistoryBack
+      } :
+    !isPlayerOpen && viewAllCategory ?
+      {
+        label: t('common.back'),
+        onBack: handleViewAllBack
+      } :
+      null;
+
   return (
     <div className="min-h-screen w-full text-white selection:bg-cyan-500/30 selection:text-cyan-100">
       <CrystalBackground />
-      <DesktopWindowControls />
+      <DesktopWindowControls
+        backLabel={desktopBackAction?.label}
+        onBack={desktopBackAction?.onBack}
+      />
 
       {!isPlayerOpen && (
         <>

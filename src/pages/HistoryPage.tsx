@@ -30,7 +30,7 @@ export function HistoryPage({
 
   return (
     <motion.div
-      className="px-16 py-12 pb-28 pt-10"
+      className="px-16 py-12 pb-28 pt-10 md:pt-20"
       initial={{
         opacity: 0,
         y: 18
@@ -49,7 +49,7 @@ export function HistoryPage({
       <button
         type="button"
         onClick={onBack}
-        className="mb-8 flex items-center gap-2 text-sm uppercase tracking-[0.22em] text-gray-400 transition-colors hover:text-white">
+        className="mb-8 flex items-center gap-2 text-sm uppercase tracking-[0.22em] text-gray-400 transition-colors hover:text-white md:hidden">
         <ArrowLeft size={18} />
         Back to Home
       </button>

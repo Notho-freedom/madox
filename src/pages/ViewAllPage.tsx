@@ -72,7 +72,7 @@ export function ViewAllPage({
   };
   return (
     <motion.div
-      className="px-16 py-12 pb-32 pt-8"
+      className="px-16 py-12 pb-32 pt-8 md:pt-20"
       initial={{
         opacity: 0,
         y: 20
@@ -92,7 +92,7 @@ export function ViewAllPage({
       {/* Back + Header */}
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8 group">
+        className="mb-8 flex items-center gap-2 text-gray-400 transition-colors group hover:text-white md:hidden">
         
         <ArrowLeft
           size={20}
