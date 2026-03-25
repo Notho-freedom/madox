@@ -16,41 +16,16 @@ import {
   User,
   Volume2
 } from 'lucide-react';
+import {
+  FacetButton,
+  FacetField,
+  FacetPanel,
+  FacetTextarea,
+  FacetToggle
+} from '../components/design';
 import { useAppSettings } from '../hooks/useAppSettings';
 import { useI18n } from '../i18n/useI18n';
 import { type AppLanguage, type AppSettings } from '../services/appSettings';
-
-const sectionClip =
-  'polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)';
-
-function Toggle({
-  enabled,
-  onToggle
-}: {
-  enabled: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      onClick={onToggle}
-      className={`relative h-6 w-12 rounded-full transition-colors duration-300 ${
-        enabled ? 'bg-cyan-500' : 'bg-white/10'
-      }`}
-    >
-      <motion.div
-        className="absolute top-1 h-4 w-4 rounded-full bg-white shadow-md"
-        animate={{
-          left: enabled ? 28 : 4
-        }}
-        transition={{
-          type: 'spring',
-          stiffness: 500,
-          damping: 30
-        }}
-      />
-    </button>
-  );
-}
 
 type SettingsSectionId =
   | 'display'
@@ -63,12 +38,7 @@ function ProfileSection() {
   const { t } = useI18n();
 
   return (
-    <section
-      className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
-      style={{
-        clipPath: sectionClip
-      }}
-    >
+    <FacetPanel contentClassName="p-8" shape="panelWide">
       <h2 className="mb-6 text-2xl font-bold text-white font-['Advent_Pro']">
         {t('settings.profile.title')}
       </h2>
@@ -82,73 +52,47 @@ function ProfileSection() {
           />
         </div>
         <div>
-          <button className="mb-2 px-4 py-2 bg-white/10 border border-white/20 text-white text-sm uppercase tracking-widest hover:bg-white/20 transition-colors">
+          <FacetButton className="mb-2" shape="buttonCut10" size="sm" variant="ghost">
             {t('settings.profile.changeAvatar')}
-          </button>
+          </FacetButton>
           <p className="text-xs text-gray-500">{t('settings.profile.uploadHint')}</p>
         </div>
       </div>
 
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
-          <div>
-            <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
-              {t('settings.profile.firstName')}
-            </label>
-            <input
-              type="text"
-              defaultValue="Alex"
-              className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
-              {t('settings.profile.lastName')}
-            </label>
-            <input
-              type="text"
-              defaultValue="Chen"
-              className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors"
-            />
-          </div>
-        </div>
-        <div>
-          <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
-            {t('settings.profile.emailAddress')}
-          </label>
-          <input
-            type="email"
-            defaultValue="alex.chen@example.com"
-            className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors"
+          <FacetField
+            defaultValue="Alex"
+            label={t('settings.profile.firstName')}
+            type="text"
+          />
+          <FacetField
+            defaultValue="Chen"
+            label={t('settings.profile.lastName')}
+            type="text"
           />
         </div>
-        <div>
-          <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
-            {t('settings.profile.bio')}
-          </label>
-          <textarea
-            defaultValue="Cinephile. Sci-fi enthusiast. Always looking for the next great story."
-            rows={3}
-            className="w-full resize-none bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors"
-          />
-        </div>
+        <FacetField
+          defaultValue="alex.chen@example.com"
+          label={t('settings.profile.emailAddress')}
+          type="email"
+        />
+        <FacetTextarea
+          defaultValue="Cinephile. Sci-fi enthusiast. Always looking for the next great story."
+          label={t('settings.profile.bio')}
+          rows={3}
+        />
       </div>
 
       <div className="mt-8 flex justify-end gap-4 border-t border-white/10 pt-8">
         <button className="px-6 py-2 text-sm uppercase tracking-widest text-gray-400 transition-colors hover:text-white">
           {t('common.cancel')}
         </button>
-        <button
-          className="px-8 py-2 bg-cyan-500 text-black font-bold uppercase tracking-widest hover:bg-cyan-400 transition-colors"
-          style={{
-            clipPath:
-              'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
-          }}
-        >
+        <FacetButton shape="buttonCut10" size="sm" variant="solid">
           {t('common.saveChanges')}
-        </button>
+        </FacetButton>
       </div>
-    </section>
+    </FacetPanel>
   );
 }
 
@@ -160,76 +104,46 @@ function SecuritySection() {
 
   return (
     <div className="space-y-8">
-      <section
-        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
-        style={{
-          clipPath: sectionClip
-        }}
-      >
+      <FacetPanel contentClassName="p-8" shape="panelWide">
         <h2 className="mb-6 text-2xl font-bold text-white font-['Advent_Pro']">
           {t('settings.security.changePassword')}
         </h2>
         <div className="space-y-6">
-          <div>
-            <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
-              {t('settings.security.currentPassword')}
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                defaultValue="••••••••••"
-                className="w-full bg-black/30 border border-white/10 px-4 py-3 pr-12 text-white outline-none focus:border-cyan-500/50 transition-colors"
-              />
+          <FacetField
+            defaultValue="••••••••••"
+            label={t('settings.security.currentPassword')}
+            suffix={
               <button
+                type="button"
                 onClick={() => setShowPassword((current) => !current)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors hover:text-white"
+                className="text-gray-500 transition-colors hover:text-white"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
-            </div>
-          </div>
+            }
+            type={showPassword ? 'text' : 'password'}
+          />
           <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
-                {t('settings.security.newPassword')}
-              </label>
-              <input
-                type="password"
-                placeholder={t('settings.security.newPasswordPlaceholder')}
-                className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors placeholder-gray-600"
-              />
-            </div>
-            <div>
-              <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
-                {t('settings.security.confirmPassword')}
-              </label>
-              <input
-                type="password"
-                placeholder={t('settings.security.confirmPassword')}
-                className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors placeholder-gray-600"
-              />
-            </div>
+            <FacetField
+              label={t('settings.security.newPassword')}
+              placeholder={t('settings.security.newPasswordPlaceholder')}
+              type="password"
+            />
+            <FacetField
+              label={t('settings.security.confirmPassword')}
+              placeholder={t('settings.security.confirmPassword')}
+              type="password"
+            />
           </div>
         </div>
         <div className="mt-6 flex justify-end">
-          <button
-            className="px-8 py-2 bg-cyan-500 text-black font-bold uppercase tracking-widest hover:bg-cyan-400 transition-colors"
-            style={{
-              clipPath:
-                'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
-            }}
-          >
+          <FacetButton shape="buttonCut10" size="sm" variant="solid">
             {t('settings.security.updatePassword')}
-          </button>
+          </FacetButton>
         </div>
-      </section>
+      </FacetPanel>
 
-      <section
-        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
-        style={{
-          clipPath: sectionClip
-        }}
-      >
+      <FacetPanel contentClassName="p-8" shape="panelWide">
         <h2 className="mb-6 text-2xl font-bold text-white font-['Advent_Pro']">
           {t('settings.security.securityOptions')}
         </h2>
@@ -246,7 +160,7 @@ function SecuritySection() {
                 </div>
               </div>
             </div>
-            <Toggle enabled={twoFactor} onToggle={() => setTwoFactor((current) => !current)} />
+            <FacetToggle enabled={twoFactor} onToggle={() => setTwoFactor((current) => !current)} />
           </div>
           <div className="flex items-center justify-between border-b border-white/5 py-3">
             <div className="flex items-center gap-3">
@@ -260,7 +174,7 @@ function SecuritySection() {
                 </div>
               </div>
             </div>
-            <Toggle
+            <FacetToggle
               enabled={loginAlerts}
               onToggle={() => setLoginAlerts((current) => !current)}
             />
@@ -312,7 +226,7 @@ function SecuritySection() {
             ))}
           </div>
         </div>
-      </section>
+      </FacetPanel>
     </div>
   );
 }
@@ -322,12 +236,7 @@ function SubscriptionSection() {
 
   return (
     <div className="space-y-8">
-      <section
-        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
-        style={{
-          clipPath: sectionClip
-        }}
-      >
+      <FacetPanel contentClassName="p-8" shape="panelWide">
         <div className="mb-8 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-white font-['Advent_Pro']">
             {t('settings.subscription.currentPlan')}
@@ -365,18 +274,13 @@ function SubscriptionSection() {
             </div>
             <div className="text-white">April 23, 2026</div>
           </div>
-          <button className="px-6 py-2 bg-white/10 border border-white/20 text-white text-sm uppercase tracking-widest hover:bg-white/20 transition-colors">
+          <FacetButton shape="buttonCut10" size="sm" variant="ghost">
             {t('settings.subscription.managePlan')}
-          </button>
+          </FacetButton>
         </div>
-      </section>
+      </FacetPanel>
 
-      <section
-        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
-        style={{
-          clipPath: sectionClip
-        }}
-      >
+      <FacetPanel contentClassName="p-8" shape="panelWide">
         <h2 className="mb-6 text-2xl font-bold text-white font-['Advent_Pro']">
           {t('settings.subscription.paymentMethod')}
         </h2>
@@ -395,7 +299,7 @@ function SubscriptionSection() {
         <button className="text-sm uppercase tracking-widest text-gray-400 transition-colors hover:text-white">
           {t('settings.subscription.addPaymentMethod')}
         </button>
-      </section>
+      </FacetPanel>
     </div>
   );
 }
@@ -458,12 +362,7 @@ function NotificationsSection({
   );
 
   return (
-    <section
-      className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
-      style={{
-        clipPath: sectionClip
-      }}
-    >
+    <FacetPanel contentClassName="p-8" shape="panelWide">
       <h2 className="mb-8 text-2xl font-bold text-white font-['Advent_Pro']">
         {t('settings.notifications.title')}
       </h2>
@@ -481,7 +380,7 @@ function NotificationsSection({
               <div className="font-medium text-white">{t(item.labelKey)}</div>
               <div className="text-xs text-gray-500">{t(item.descriptionKey)}</div>
             </div>
-            <Toggle
+            <FacetToggle
               enabled={item.enabled}
               onToggle={() =>
                 void updateSettings({
@@ -506,7 +405,7 @@ function NotificationsSection({
               <div className="font-medium text-white">{t(item.labelKey)}</div>
               <div className="text-xs text-gray-500">{t(item.descriptionKey)}</div>
             </div>
-            <Toggle
+            <FacetToggle
               enabled={item.enabled}
               onToggle={() =>
                 void updateSettings({
@@ -517,7 +416,7 @@ function NotificationsSection({
           </div>
         ))}
       </div>
-    </section>
+    </FacetPanel>
   );
 }
 
@@ -534,27 +433,17 @@ function DisplaySection({
 
   if (!settings) {
     return (
-      <section
-        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
-        style={{
-          clipPath: sectionClip
-        }}
-      >
+      <FacetPanel contentClassName="p-8" shape="panelWide">
         <div className="text-sm uppercase tracking-widest text-gray-500">
           Loading settings...
         </div>
-      </section>
+      </FacetPanel>
     );
   }
 
   return (
     <div className="space-y-8">
-      <section
-        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
-        style={{
-          clipPath: sectionClip
-        }}
-      >
+      <FacetPanel contentClassName="p-8" shape="panelWide">
         <h2 className="mb-8 text-2xl font-bold text-white font-['Advent_Pro']">
           {t('settings.display.playback')}
         </h2>
@@ -566,30 +455,13 @@ function DisplaySection({
             </label>
             <div className="flex gap-3">
               {qualityOptions.map((option) => (
-                <button
+                <FacetButton
                   key={option}
                   onClick={() => void updateSettings({ playbackQuality: option })}
-                  className={`relative px-6 py-2 text-sm uppercase tracking-widest transition-all ${
-                    settings.playbackQuality === option
-                      ? 'bg-cyan-500/10 text-cyan-300'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                  }`}
-                  style={{
-                    clipPath:
-                      'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                  }}
+                  variant={settings.playbackQuality === option ? 'outline' : 'ghost'}
                 >
-                  {settings.playbackQuality === option && (
-                    <div
-                      className="absolute inset-0 prism-border"
-                      style={{
-                        clipPath:
-                          'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                      }}
-                    />
-                  )}
                   {option}
-                </button>
+                </FacetButton>
               ))}
             </div>
           </div>
@@ -606,7 +478,7 @@ function DisplaySection({
                 </div>
               </div>
             </div>
-            <Toggle
+            <FacetToggle
               enabled={settings.autoplayNextEpisode}
               onToggle={() =>
                 void updateSettings({
@@ -626,7 +498,7 @@ function DisplaySection({
                 </div>
               </div>
             </div>
-            <Toggle
+            <FacetToggle
               enabled={settings.subtitlesEnabled}
               onToggle={() =>
                 void updateSettings({
@@ -636,14 +508,9 @@ function DisplaySection({
             />
           </div>
         </div>
-      </section>
+      </FacetPanel>
 
-      <section
-        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
-        style={{
-          clipPath: sectionClip
-        }}
-      >
+      <FacetPanel contentClassName="p-8" shape="panelWide">
         <h2 className="mb-8 text-2xl font-bold text-white font-['Advent_Pro']">
           {t('settings.display.interface')}
         </h2>
@@ -655,30 +522,13 @@ function DisplaySection({
             </label>
             <div className="flex flex-wrap gap-3">
               {languages.map((language) => (
-                <button
+                <FacetButton
                   key={language}
                   onClick={() => void updateSettings({ language })}
-                  className={`relative px-6 py-2 text-sm uppercase tracking-widest transition-all ${
-                    settings.language === language
-                      ? 'bg-cyan-500/10 text-cyan-300'
-                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                  }`}
-                  style={{
-                    clipPath:
-                      'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                  }}
+                  variant={settings.language === language ? 'outline' : 'ghost'}
                 >
-                  {settings.language === language && (
-                    <div
-                      className="absolute inset-0 prism-border"
-                      style={{
-                        clipPath:
-                          'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                      }}
-                    />
-                  )}
                   {t(`settings.languages.${language}`)}
-                </button>
+                </FacetButton>
               ))}
             </div>
           </div>
@@ -716,7 +566,7 @@ function DisplaySection({
                 {t('settings.display.reducedMotionDescription')}
               </div>
             </div>
-            <Toggle
+            <FacetToggle
               enabled={settings.reducedMotion}
               onToggle={() =>
                 void updateSettings({
@@ -726,7 +576,7 @@ function DisplaySection({
             />
           </div>
         </div>
-      </section>
+      </FacetPanel>
     </div>
   );
 }

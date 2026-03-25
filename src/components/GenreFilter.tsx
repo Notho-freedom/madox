@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { HorizontalCarousel } from './HorizontalCarousel';
+import { facetClipPaths } from './design';
 import {
   homeGenreOptions,
   type HomeGenreId
@@ -32,8 +33,7 @@ export function GenreFilter({ activeGenre, onChange }: GenreFilterProps) {
                 layoutId="activeGenre"
                 className="absolute inset-0 bg-white/10 prism-border"
                 style={{
-                  clipPath:
-                  'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                  clipPath: facetClipPaths.buttonFacet
                 }}
                 transition={{
                   type: 'spring',
@@ -47,8 +47,7 @@ export function GenreFilter({ activeGenre, onChange }: GenreFilterProps) {
               <div
                 className="absolute inset-0 bg-white/5 border border-white/10 group-hover:bg-white/10 transition-colors duration-300"
                 style={{
-                  clipPath:
-                  'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                  clipPath: facetClipPaths.buttonFacet
                 }} />
 
               }

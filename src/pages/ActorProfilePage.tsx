@@ -15,6 +15,14 @@ import {
   User
 } from 'lucide-react';
 import { MovieCard } from '../components/MovieCard';
+import {
+  FacetButton,
+  FacetField,
+  FacetMediaTile,
+  FacetPanel,
+  FacetSectionHeader,
+  FacetSelect
+} from '../components/design';
 import { type MovieData } from '../data/movies';
 import { usePersonProfile } from '../hooks/useTMDB';
 import { profile } from '../services/tmdb';
@@ -31,39 +39,6 @@ interface ActorProfilePageProps {
 }
 
 const EMPTY_CREDITS: PersonMediaCredit[] = [];
-const PANEL_CLIP_PATH =
-  'polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px)';
-
-function FacetPanel({
-  children,
-  className = '',
-  contentClassName = ''
-}: {
-  children: React.ReactNode;
-  className?: string;
-  contentClassName?: string;
-}) {
-  return (
-    <div
-      className={`relative overflow-hidden ${className}`}
-      style={{
-        clipPath: PANEL_CLIP_PATH
-      }}
-    >
-      <div className="absolute inset-0 bg-[#0b0d16]/86 backdrop-blur-xl" />
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(34,211,238,0.08),transparent_30%,transparent_72%,rgba(249,115,22,0.08))]" />
-      <div
-        className="absolute inset-0 prism-border opacity-35"
-        style={{
-          clipPath: PANEL_CLIP_PATH
-        }}
-      />
-      <div className="absolute -left-10 top-0 h-28 w-28 bg-cyan-500/12 blur-3xl" />
-      <div className="absolute -bottom-12 right-0 h-32 w-32 bg-orange-500/10 blur-3xl" />
-      <div className={`relative z-10 ${contentClassName}`}>{children}</div>
-    </div>
-  );
-}
 
 function formatDate(value: string | null | undefined): string | null {
   if (!value) {
@@ -344,9 +319,6 @@ export function ActorProfilePage({
     setSearchQuery(searchInput.trim());
   };
 
-  const filterSelectClassName =
-    "w-full rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-cyan-400/45 focus:bg-white/[0.06]";
-
   useEffect(() => {
     setActiveType('all');
     setActiveGenres([]);
@@ -382,11 +354,11 @@ export function ActorProfilePage({
 
     return (
       <FacetPanel className="h-full min-h-0" contentClassName="flex h-full min-h-0 flex-col p-7 md:p-8">
-        <div className="mb-5 flex items-center gap-4">
-          <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_16px_rgba(34,211,238,0.55)]" />
-          <h2 className={panelTitleClass}>Biography</h2>
-          <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-        </div>
+        <FacetSectionHeader
+          className="mb-5"
+          title="Biography"
+          titleClassName={panelTitleClass}
+        />
 
         <div className="min-h-0 flex-1 overflow-y-auto pr-2">
           <p className="break-words text-base leading-8 text-gray-300">
@@ -423,40 +395,28 @@ export function ActorProfilePage({
 
     return (
       <FacetPanel className="h-full min-h-0" contentClassName="flex h-full min-h-0 flex-col p-7">
-        <div className="mb-5 flex items-center gap-3">
-          <Images size={18} className="text-cyan-300" />
-          <h2 className={panelTitleClass}>Photo Gallery</h2>
-        </div>
+        <FacetSectionHeader
+          className="mb-5"
+          icon={<Images size={18} />}
+          title="Photo Gallery"
+          titleClassName={panelTitleClass}
+        />
 
         {hasGallery ? (
           <div className={gridClass}>
             {images.map((imagePath, index) => (
-              <motion.div
+              <FacetMediaTile
                 key={`${variant}-${imagePath}`}
                 className={imageClass}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.4, delay: index * 0.04 }}
-                >
-                  <img
-                    src={profile(imagePath, index === 0 ? 'original' : 'h632')}
-                    alt={`${person.name} portrait ${index + 1}`}
-                    className="h-full w-full object-cover"
-                  />
-                {overflowCount > 0 && index === images.length - 1 && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/55 backdrop-blur-sm">
-                    <div className="text-center">
-                      <div className="font-['Advent_Pro'] text-3xl font-bold text-white">
-                        +{overflowCount}
-                      </div>
-                      <div className="mt-1 text-[11px] uppercase tracking-[0.22em] text-cyan-200">
-                        more photos
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
+                imageAlt={`${person.name} portrait ${index + 1}`}
+                imageSrc={profile(imagePath, index === 0 ? 'original' : 'h632')}
+                overflowCaption="more photos"
+                overflowLabel={
+                  overflowCount > 0 && index === images.length - 1 ?
+                    `+${overflowCount}` :
+                    undefined
+                }
+              />
             ))}
           </div>
         ) : (
@@ -480,10 +440,12 @@ export function ActorProfilePage({
 
     return (
       <FacetPanel className="h-full min-h-0" contentClassName="flex h-full min-h-0 flex-col p-7">
-        <div className="mb-5 flex items-center gap-3">
-          <Star size={18} className="text-cyan-300" />
-          <h2 className={panelTitleClass}>Profile Highlights</h2>
-        </div>
+        <FacetSectionHeader
+          className="mb-5"
+          icon={<Star size={18} />}
+          title="Profile Highlights"
+          titleClassName={panelTitleClass}
+        />
 
         <div className="min-h-0 flex-1 overflow-y-auto pr-2">
           <div className={bodyClass}>
@@ -600,18 +562,19 @@ export function ActorProfilePage({
           {error || 'We could not load this actor profile right now.'}
         </p>
         <div className="flex gap-4">
-          <button
+          <FacetButton
             onClick={refetch}
-            className="clip-facet-btn bg-white px-6 py-3 text-sm font-bold uppercase tracking-widest text-black"
+            variant="solid"
           >
             Retry
-          </button>
-          <button
+          </FacetButton>
+          <FacetButton
             onClick={onBack}
-            className="clip-facet-btn border border-white/15 bg-white/5 px-6 py-3 text-sm font-bold uppercase tracking-widest text-white md:hidden"
+            className="md:hidden"
+            variant="ghost"
           >
             Go Back
-          </button>
+          </FacetButton>
         </div>
       </motion.div>
     );
@@ -779,24 +742,25 @@ export function ActorProfilePage({
         <div className="relative z-0 mt-16 space-y-10">
           <section className="min-w-0">
             <div className="mb-6 flex items-center gap-4">
-              <Sparkles size={18} className="text-cyan-300" />
-              <h2 className="font-['Advent_Pro'] text-3xl font-bold text-white">
-                Known For
-              </h2>
-              <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-              {knownFor.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleViewMoreTitles}
-                  className="group flex items-center gap-1 text-sm uppercase tracking-widest text-cyan-400 transition-colors hover:text-cyan-300"
-                >
-                  View More
-                  <ChevronRight
-                    size={16}
-                    className="transition-transform group-hover:translate-x-1"
-                  />
-                </button>
-              )}
+              <FacetSectionHeader
+                action={
+                  knownFor.length > 0 ?
+                    <button
+                      type="button"
+                      onClick={handleViewMoreTitles}
+                      className="group flex items-center gap-1 text-sm uppercase tracking-widest text-cyan-400 transition-colors hover:text-cyan-300"
+                    >
+                      View More
+                      <ChevronRight
+                        size={16}
+                        className="transition-transform group-hover:translate-x-1"
+                      />
+                    </button> :
+                    undefined
+                }
+                icon={<Sparkles size={18} />}
+                title="Known For"
+              />
             </div>
 
             {knownFor.length > 0 ? (
@@ -833,17 +797,17 @@ export function ActorProfilePage({
           </section>
 
           <section ref={filmographySectionRef} className="min-w-0">
-            <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
+              <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
               <div>
-                <div className="mb-3 flex items-center gap-4">
-                  <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_16px_rgba(34,211,238,0.55)]" />
-                  <h2 className="font-['Advent_Pro'] text-3xl font-bold text-white">
-                    Filmography
-                  </h2>
-                  <span className="rounded-full bg-white/5 px-3 py-1 text-sm text-gray-400 prism-border">
-                    {filteredFilmography.length} titles
-                  </span>
-                </div>
+                <FacetSectionHeader
+                  className="mb-3"
+                  count={
+                    <span className="rounded-full bg-white/5 px-3 py-1 text-sm text-gray-400 prism-border">
+                      {filteredFilmography.length} titles
+                    </span>
+                  }
+                  title="Filmography"
+                />
                 <p className="ml-5 text-sm uppercase tracking-[0.22em] text-gray-500">
                   Full acting catalog with instant local filters
                 </p>
@@ -853,63 +817,62 @@ export function ActorProfilePage({
             <FacetPanel className="mb-8 overflow-visible" contentClassName="p-5 md:p-6">
               <div className="flex flex-col gap-4">
                 <form onSubmit={handleSearchSubmit} className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row">
-                  <div className="relative min-w-0 flex-1">
-                    <Search
-                      size={16}
-                      className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-                    />
-                    <input
-                      type="text"
-                      value={searchInput}
-                      onChange={(event) => setSearchInput(event.target.value)}
-                      placeholder="Search filmography..."
-                      className="w-full rounded-[18px] border border-white/10 bg-white/[0.04] py-3 pl-10 pr-4 text-sm text-white outline-none transition-colors placeholder:text-gray-500 focus:border-cyan-400/45 focus:bg-white/[0.06]"
-                    />
-                  </div>
-                  <button
+                  <FacetField
+                    containerClassName="min-w-0 flex-1"
+                    onChange={(event) => setSearchInput(event.target.value)}
+                    placeholder="Search filmography..."
+                    prefixIcon={<Search size={16} />}
+                    shape="rounded"
+                    type="text"
+                    value={searchInput}
+                  />
+                  <FacetButton
                     type="submit"
-                    className="clip-facet-btn border border-cyan-500/30 bg-cyan-500/12 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-cyan-300 transition-colors hover:bg-cyan-500/18"
+                    size="md"
+                    variant="outline"
                   >
                     Search
-                  </button>
+                  </FacetButton>
                 </form>
 
                 <div className="grid gap-3 lg:grid-cols-[220px_minmax(0,1fr)]">
-                  <div>
-                    <label className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-gray-500">
-                      Type
-                    </label>
-                    <select
-                      value={activeType}
-                      onChange={(event) => setActiveType(event.target.value as FilmographyTypeFilter)}
-                      className={filterSelectClassName}
-                    >
-                      {(Object.keys(typeLabels) as FilmographyTypeFilter[]).map((type) => (
-                        <option key={type} value={type} className="bg-[#0b0d16]">
-                          {typeLabels[type]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <FacetSelect
+                    containerClassName="min-w-0"
+                    label="Type"
+                    labelClassName="mb-2 block text-[11px] uppercase tracking-[0.22em] text-gray-500"
+                    selectClassName="rounded-[18px] bg-white/[0.04] focus:border-cyan-400/45 focus:bg-white/[0.06]"
+                    shape="rounded"
+                    value={activeType}
+                    onChange={(event) => setActiveType(event.target.value as FilmographyTypeFilter)}
+                  >
+                    {(Object.keys(typeLabels) as FilmographyTypeFilter[]).map((type) => (
+                      <option key={type} value={type} className="bg-[#0b0d16]">
+                        {typeLabels[type]}
+                      </option>
+                    ))}
+                  </FacetSelect>
 
                   <div ref={genrePickerRef} className="relative min-w-0">
                     <label className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-gray-500">
                       Genres
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => setGenrePickerOpen((current) => !current)}
+                    <FacetButton
+                      className="h-[50px] w-full justify-between rounded-[18px] border-white/10 bg-white/[0.04] px-4 py-3 text-left text-sm font-normal normal-case tracking-normal text-white disabled:cursor-not-allowed disabled:opacity-60"
                       disabled={genreOptions.length <= 1}
-                      className={`${filterSelectClassName} flex h-[50px] items-center justify-between gap-3 text-left disabled:cursor-not-allowed disabled:opacity-60`}
+                      onClick={() => setGenrePickerOpen((current) => !current)}
+                      shape="buttonCut10"
+                      trailingIcon={
+                        <ChevronDown
+                          size={16}
+                          className={`shrink-0 text-gray-400 transition-transform ${
+                            genrePickerOpen ? 'rotate-180' : ''
+                          }`}
+                        />
+                      }
+                      variant="ghost"
                     >
                       <span className="truncate">{selectedGenreLabel}</span>
-                      <ChevronDown
-                        size={16}
-                        className={`shrink-0 text-gray-400 transition-transform ${
-                          genrePickerOpen ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </button>
+                    </FacetButton>
                     {genrePickerOpen && genreOptions.length > 1 && (
                       <FacetPanel
                         className="absolute left-0 right-0 top-full z-30 mt-3"

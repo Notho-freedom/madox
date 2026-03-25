@@ -3,6 +3,12 @@ import { motion } from 'framer-motion';
 import { HorizontalCarousel } from '../components/HorizontalCarousel';
 import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { MovieCard } from '../components/MovieCard';
+import {
+  FacetButton,
+  FacetField,
+  FacetSectionHeader,
+  facetClipPaths
+} from '../components/design';
 import { GridSkeleton, ErrorState } from '../components/LoadingSkeleton';
 import { Play, Search } from 'lucide-react';
 import { useI18n } from '../i18n/useI18n';
@@ -109,8 +115,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: `url(${backdrop(featured.backdropPath || null)})`,
-            clipPath:
-            'polygon(0 0, 100% 0, 100% 85%, 95% 100%, 5% 100%, 0 85%)'
+            clipPath: facetClipPaths.seriesHero
           }} />
         
           <div className="absolute inset-0 bg-gradient-to-t from-[#08080f] via-[#08080f]/40 to-transparent" />
@@ -124,51 +129,34 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
             <p className="text-gray-300 text-sm mb-6 line-clamp-2 max-w-xl">
               {featured.description}
             </p>
-            <button
+            <FacetButton
             onClick={() => onMovieClick(featured)}
-            className="flex items-center gap-3 px-8 py-3 bg-white text-black font-bold uppercase tracking-widest hover:bg-cyan-50 transition-colors"
-            style={{
-              clipPath:
-              'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
-            }}>
-            
-              <Play size={20} fill="currentColor" /> {t('common.watchNow')}
-            </button>
+            leadingIcon={<Play size={20} fill="currentColor" />}
+            shape="buttonCut10"
+            variant="solid">
+              {t('common.watchNow')}
+            </FacetButton>
           </div>
         </div>
       }
 
       <div className="flex items-end justify-between mb-8 border-b border-white/10 pb-6">
-        <div className="flex items-center gap-4">
-          <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
-          <h2 className="text-4xl font-bold text-white tracking-tight font-['Advent_Pro']">
-            {t('seriesPage.title')}
-          </h2>
-        </div>
+        <FacetSectionHeader
+          title={t('seriesPage.title')}
+          titleClassName="text-4xl tracking-tight"
+        />
         <form onSubmit={handleSearch} className="flex gap-2">
-          <div className="relative">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-            
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={t('seriesPage.searchPlaceholder')}
-              className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 text-white text-sm rounded-lg focus:outline-none focus:border-cyan-500/50 w-64 placeholder-gray-500" />
-            
-          </div>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-sm uppercase tracking-widest hover:bg-cyan-500/30 transition-colors"
-            style={{
-              clipPath:
-              'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
-            }}>
-            
+          <FacetField
+            inputClassName="w-64 bg-white/5 py-2"
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder={t('seriesPage.searchPlaceholder')}
+            prefixIcon={<Search size={16} />}
+            type="text"
+            value={searchInput}
+          />
+          <FacetButton shape="buttonCut8" size="sm" type="submit" variant="outline">
             {t('common.search')}
-          </button>
+          </FacetButton>
         </form>
       </div>
 
@@ -179,21 +167,18 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
         buttonClassName="h-9 w-9"
       >
         {CATEGORIES.map((c, i) =>
-        <button
+        <FacetButton
           key={c.labelKey}
           onClick={() => {
             setActiveCategory(i);
             setSearchQuery('');
             setSearchInput('');
           }}
-          className={`relative px-5 py-2 text-sm uppercase tracking-widest transition-all whitespace-nowrap ${activeCategory === i && !isSearching ? 'text-cyan-300 bg-cyan-500/10' : 'text-gray-400 bg-white/5 hover:bg-white/10 hover:text-white'}`}
-          style={{
-            clipPath:
-            'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-          }}>
-          
+          className="whitespace-nowrap"
+          size="sm"
+          variant={activeCategory === i && !isSearching ? 'outline' : 'ghost'}>
             {t(c.labelKey)}
-          </button>
+          </FacetButton>
         )}
       </HorizontalCarousel>
 

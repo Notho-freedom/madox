@@ -11,6 +11,13 @@ import {
   Calendar,
   User } from
 'lucide-react';
+import {
+  FacetButton,
+  FacetIconButton,
+  FacetMediaTile,
+  FacetPanel,
+  FacetSectionHeader
+} from '../components/design';
 import { getYouTubeThumbnail, type MovieData } from '../data/movies';
 import { HorizontalCarousel } from '../components/HorizontalCarousel';
 import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
@@ -24,9 +31,6 @@ import { addLike, removeLike } from '../services/likes';
 import { shareMovie } from '../services/share';
 import { backdrop, poster, type TMDBCast } from '../services/tmdb';
 import { addToWatchlist, removeFromWatchlist } from '../services/watchlist';
-
-const TOP_CAST_PANEL_CLIP_PATH =
-  'polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px)';
 
 interface MovieDetailPageProps {
   movie: MovieData;
@@ -321,47 +325,40 @@ export function MovieDetailPage({
               </p>
 
               <div className="flex gap-6 flex-wrap">
-                <button
+                <FacetButton
                   onClick={onPlay}
-                  className="px-8 py-4 bg-white text-black font-bold tracking-widest uppercase flex items-center gap-3 hover:bg-cyan-50 transition-colors"
-                  style={{
-                    clipPath:
-                    'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
-                  }}>
-                  
-                  <Play size={20} fill="currentColor" /> {t('common.watchNow')}
-                </button>
-                <button
+                  leadingIcon={<Play size={20} fill="currentColor" />}
+                  shape="buttonCut10"
+                  size="lg"
+                  variant="solid">
+                  {t('common.watchNow')}
+                </FacetButton>
+                <FacetButton
                   onClick={handleToggleWatchlist}
-                  className="px-8 py-4 bg-white/5 border border-white/20 text-white font-bold tracking-widest uppercase flex items-center gap-3 hover:bg-white/10 transition-colors"
-                  style={{
-                    clipPath:
-                    'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
-                  }}>
-                  
-                  <Plus size={20} /> {isInWatchlist ? t('movieDetail.inWatchlist') : t('movieDetail.addToList')}
-                </button>
-                <button
+                  leadingIcon={<Plus size={20} />}
+                  shape="buttonCut10"
+                  size="lg"
+                  variant="ghost">
+                  {isInWatchlist ? t('movieDetail.inWatchlist') : t('movieDetail.addToList')}
+                </FacetButton>
+                <FacetIconButton
+                  active={shareState !== 'idle'}
                   onClick={handleShare}
-                  title={shareState === 'idle' ? t('movieDetail.share') : shareState === 'copied' ? t('movieDetail.linkCopied') : t('movieDetail.shared')}
-                  className={`p-4 border border-white/20 transition-colors rounded-full ${
+                  icon={<Share2 size={20} />}
+                  label={
                     shareState === 'idle'
-                      ? 'bg-white/5 text-white hover:text-cyan-300'
-                      : 'bg-cyan-500/10 text-cyan-300'
-                  }`}
-                >
-                  <Share2 size={20} />
-                </button>
-                <button
+                      ? t('movieDetail.share')
+                      : shareState === 'copied'
+                        ? t('movieDetail.linkCopied')
+                        : t('movieDetail.shared')
+                  }
+                />
+                <FacetIconButton
+                  active={isLiked}
                   onClick={handleToggleLike}
-                  className={`p-4 border border-white/20 transition-colors rounded-full ${
-                    isLiked
-                      ? 'bg-cyan-500/10 text-cyan-300'
-                      : 'bg-white/5 text-white hover:text-cyan-300'
-                  }`}
-                >
-                  <ThumbsUp size={20} />
-                </button>
+                  icon={<ThumbsUp size={20} />}
+                  label="Like"
+                />
               </div>
             </motion.div>
           </div>
@@ -378,77 +375,46 @@ export function MovieDetailPage({
             className="min-w-0"
             style={topCastMaxHeight ? { maxHeight: `${topCastMaxHeight}px` } : undefined}
           >
-              <div
-                className="relative h-full min-h-0 overflow-hidden"
-                style={{
-                  clipPath: TOP_CAST_PANEL_CLIP_PATH
-                }}
+              <FacetPanel
+                className="h-full min-h-0"
+                contentClassName="flex h-full min-h-0 flex-col p-7"
               >
-                <div className="absolute inset-0 bg-[#0b0d16]/86 backdrop-blur-xl" />
-                <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(34,211,238,0.08),transparent_30%,transparent_72%,rgba(249,115,22,0.08))]" />
-                <div
-                  className="absolute inset-0 prism-border opacity-35"
-                  style={{
-                    clipPath: TOP_CAST_PANEL_CLIP_PATH
-                  }}
+                <FacetSectionHeader
+                  className="mb-5"
+                  icon={<User size={18} />}
+                  title={t('movieDetail.topCast')}
+                  titleClassName="font-['Advent_Pro'] text-2xl font-bold text-white"
                 />
-                <div className="absolute -left-10 top-0 h-28 w-28 bg-cyan-500/12 blur-3xl" />
-                <div className="absolute -bottom-12 right-0 h-32 w-32 bg-orange-500/10 blur-3xl" />
 
-                <div className="relative z-10 flex h-full min-h-0 flex-col p-7">
-                  <div className="mb-5 flex items-center gap-3">
-                    <User size={18} className="text-cyan-300" />
-                    <h3 className="font-['Advent_Pro'] text-2xl font-bold text-white">
-                      {t('movieDetail.topCast')}
-                    </h3>
-                  </div>
-
-                  <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-2 gap-4 sm:grid-cols-3 2xl:grid-cols-4">
-                    {visibleCast.map((c, index) =>
-                  <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => onActorClick?.(c)}
-                        className="group relative h-full min-h-0 overflow-hidden rounded-[22px] bg-white/[0.04] text-left">
-                        {c.profile_path ?
-                      <img
-                        src={`https://image.tmdb.org/t/p/w300${c.profile_path}`}
-                        alt={c.name}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" /> :
-
-
-                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-700 to-gray-900">
-                            <User size={32} className="text-gray-600" />
-                          </div>
+                <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-2 gap-4 sm:grid-cols-3 2xl:grid-cols-4">
+                  {visibleCast.map((c, index) =>
+                    <FacetMediaTile
+                      key={c.id}
+                      className="h-full"
+                      imageAlt={c.name}
+                      imageSrc={
+                        c.profile_path ?
+                          `https://image.tmdb.org/t/p/w300${c.profile_path}` :
+                          undefined
                       }
-                        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/88 via-black/45 to-transparent px-3 pb-3 pt-12">
-                          <div className="line-clamp-1 text-sm font-bold text-white">{c.name}</div>
-                          <div className="line-clamp-2 text-xs text-cyan-100/78">
-                            {c.character || 'Cast'}
-                          </div>
-                        </div>
-                        {index === visibleCast.length - 1 && cast.length > visibleCast.length &&
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/58 backdrop-blur-sm">
-                            <div className="text-center">
-                              <div className="font-['Advent_Pro'] text-3xl font-bold text-white">
-                                +{cast.length - visibleCast.length}
-                              </div>
-                              <div className="mt-1 text-[11px] uppercase tracking-[0.22em] text-cyan-200">
-                                more cast
-                              </div>
-                            </div>
-                          </div>
-                    }
-                      </button>
+                      onClick={() => onActorClick?.(c)}
+                      overlayLabel={c.name}
+                      overlaySubtitle={c.character || 'Cast'}
+                      overflowCaption="more cast"
+                      overflowLabel={
+                        index === visibleCast.length - 1 && cast.length > visibleCast.length ?
+                          `+${cast.length - visibleCast.length}` :
+                          undefined
+                      }
+                    />
                   )}
-                  </div>
                 </div>
-              </div>
+              </FacetPanel>
             </section>
           }
 
           <div className="space-y-8" ref={rightColumnRef}>
-            <div className="p-6 bg-white/5 border border-white/10 rounded-lg">
+            <FacetPanel chrome="subtle" contentClassName="p-6">
               <h4 className="text-gray-400 uppercase tracking-widest text-sm mb-4">
                 {t('movieDetail.details')}
               </h4>
@@ -492,7 +458,7 @@ export function MovieDetailPage({
                   </div>
                 </div>
               </div>
-            </div>
+            </FacetPanel>
 
             {(trailerId || movie.videoId) &&
             <div
@@ -528,9 +494,11 @@ export function MovieDetailPage({
         </div>
 
         <section className="mt-12">
-            <h3 className="text-2xl font-bold text-white mb-6 font-['Advent_Pro'] border-l-4 border-cyan-500 pl-4">
-              {t('movieDetail.moreLikeThis')}
-            </h3>
+            <FacetSectionHeader
+              className="mb-6"
+              title={t('movieDetail.moreLikeThis')}
+              titleClassName="text-2xl"
+            />
             {loading ?
             <CardSkeleton count={4} /> :
             similar.length > 0 ?

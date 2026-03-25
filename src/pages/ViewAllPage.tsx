@@ -13,6 +13,11 @@ import {
 import { MovieCard } from '../components/MovieCard';
 import { HorizontalCarousel } from '../components/HorizontalCarousel';
 import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
+import {
+  FacetButton,
+  FacetSectionHeader,
+  facetClipPaths
+} from '../components/design';
 import { getYouTubeThumbnail, type MovieData } from '../data/movies';
 import { useTMDBCatalog, type TMDBCatalogSource } from '../hooks/useTMDB';
 type SortOption = 'popular' | 'rating' | 'year-new' | 'year-old' | 'title';
@@ -103,15 +108,16 @@ export function ViewAllPage({
 
       <div className="flex items-end justify-between mb-8 border-b border-white/10 pb-6">
         <div>
-          <div className="flex items-center gap-4 mb-2">
-            <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
-            <h1 className="text-5xl font-bold text-white tracking-tight font-['Advent_Pro']">
-              {title}
-            </h1>
-            <span className="px-3 py-1 bg-white/5 rounded-full text-sm text-gray-400 border border-white/10">
-              {filteredAndSorted.length} titles
-            </span>
-          </div>
+          <FacetSectionHeader
+            className="mb-2"
+            count={
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-gray-400">
+                {filteredAndSorted.length} titles
+              </span>
+            }
+            title={title}
+            titleClassName="text-5xl tracking-tight"
+          />
           <p className="text-gray-400 ml-5 tracking-wide">{description}</p>
         </div>
 
@@ -134,17 +140,15 @@ export function ViewAllPage({
 
           {/* Sort Dropdown */}
           <div className="relative">
-            <button
+            <FacetButton
               onClick={() => setShowSortMenu(!showSortMenu)}
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-sm uppercase tracking-widest text-gray-300"
-              style={{
-                clipPath:
-                'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
-              }}>
-              
-              <SortAsc size={16} /> {sortLabels[sortBy]}{' '}
-              <ChevronDown size={14} />
-            </button>
+              leadingIcon={<SortAsc size={16} />}
+              shape="buttonCut10"
+              size="sm"
+              trailingIcon={<ChevronDown size={14} />}
+              variant="ghost">
+              {sortLabels[sortBy]}
+            </FacetButton>
 
             {showSortMenu &&
             <>
@@ -193,17 +197,14 @@ export function ViewAllPage({
         buttonClassName="h-9 w-9"
       >
         {genres.map((genre) =>
-        <button
+        <FacetButton
           key={genre}
           onClick={() => setActiveGenre(genre)}
-          className={`relative px-5 py-2 text-sm uppercase tracking-widest transition-all whitespace-nowrap ${activeGenre === genre ? 'text-cyan-300 bg-cyan-500/10' : 'text-gray-400 bg-white/5 hover:bg-white/10 hover:text-white'}`}
-          style={{
-            clipPath:
-            'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-          }}>
-          
+          className="whitespace-nowrap"
+          size="sm"
+          variant={activeGenre === genre ? 'outline' : 'ghost'}>
             {genre}
-          </button>
+          </FacetButton>
         )}
       </HorizontalCarousel>
 
@@ -212,15 +213,16 @@ export function ViewAllPage({
       <div className="flex flex-col items-center justify-center py-32 text-gray-500">
           <Filter size={48} className="mb-4 opacity-20" />
           <p className="text-lg">No titles match your filters.</p>
-          <button
+        <FacetButton
           onClick={() => {
             setActiveGenre('All');
             setSortBy('popular');
           }}
-          className="mt-4 px-6 py-2 bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20 transition-colors uppercase tracking-widest text-sm">
-          
+          className="mt-4"
+          size="sm"
+          variant="outline">
             Reset Filters
-          </button>
+          </FacetButton>
         </div> :
       viewMode === 'grid' ?
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
@@ -256,8 +258,7 @@ export function ViewAllPage({
           key={movie.id}
           className="group relative flex items-center gap-6 p-4 bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer overflow-hidden"
           style={{
-            clipPath:
-            'polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px)'
+            clipPath: facetClipPaths.listItem
           }}
           initial={{
             opacity: 0,

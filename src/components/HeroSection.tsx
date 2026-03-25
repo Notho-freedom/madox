@@ -9,6 +9,7 @@ import {
 } from '../data/homeGenres';
 import { backdrop } from '../services/tmdb';
 import { HeroSkeleton } from './LoadingSkeleton';
+import { FacetButton, facetClipPaths } from './design';
 
 interface HeroSectionProps {
   activeGenre?: HomeGenreId;
@@ -160,7 +161,7 @@ export function HeroSection({
           </p>
 
           <div className="flex gap-6">
-            <motion.button
+            <FacetButton
               whileHover={{
                 scale: 1.05
               }}
@@ -168,14 +169,14 @@ export function HeroSection({
                 scale: 0.95
               }}
               onClick={() => onPlay?.(featured)}
-              className="group clip-facet-btn relative flex items-center gap-3 overflow-hidden bg-white px-8 py-4 font-bold uppercase tracking-widest text-black"
+              leadingIcon={<Play size={20} fill="currentColor" />}
+              size="lg"
+              variant="solid"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-200 via-white to-cyan-100 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              <Play size={20} fill="currentColor" className="relative z-10" />
-              <span className="relative z-10">Watch Now</span>
-            </motion.button>
+              Watch Now
+            </FacetButton>
 
-            <motion.button
+            <FacetButton
               whileHover={{
                 scale: 1.05
               }}
@@ -183,14 +184,18 @@ export function HeroSection({
                 scale: 0.95
               }}
               onClick={() => onMovieClick?.(featured)}
-              className="group clip-facet-btn flex items-center gap-3 border border-white/20 bg-white/5 px-8 py-4 font-bold uppercase tracking-widest text-white backdrop-blur-sm transition-colors hover:bg-white/10"
+              className="backdrop-blur-sm"
+              leadingIcon={
+                <Plus
+                  size={20}
+                  className="transition-transform duration-300 group-hover:rotate-90"
+                />
+              }
+              size="lg"
+              variant="ghost"
             >
-              <Plus
-                size={20}
-                className="transition-transform duration-300 group-hover:rotate-90"
-              />
-              <span>More Info</span>
-            </motion.button>
+              More Info
+            </FacetButton>
           </div>
         </motion.div>
       </div>
@@ -217,8 +222,7 @@ export function HeroSection({
           <div
             className="absolute inset-0 overflow-hidden"
             style={{
-              clipPath:
-                'polygon(20% 0%, 90% 0%, 100% 30%, 100% 85%, 80% 100%, 10% 100%, 0% 70%, 0% 15%)'
+              clipPath: facetClipPaths.heroFrame
             }}
           >
             <div

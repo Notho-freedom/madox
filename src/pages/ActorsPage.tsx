@@ -2,6 +2,13 @@ import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Sparkles } from 'lucide-react';
 import { ActorCard } from '../components/ActorCard';
+import {
+  FacetButton,
+  FacetField,
+  FacetPanel,
+  FacetSectionHeader,
+  FacetSelect
+} from '../components/design';
 import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { ErrorState, GridSkeleton } from '../components/LoadingSkeleton';
 import { useI18n } from '../i18n/useI18n';
@@ -84,83 +91,74 @@ export function ActorsPage({ onActorClick }: ActorsPageProps) {
     >
       <div className="mb-8 flex flex-wrap items-end justify-between gap-6 border-b border-white/10 pb-6">
         <div>
-          <div className="mb-2 flex items-center gap-4">
-            <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
-            <h1 className="text-5xl font-bold text-white tracking-tight font-['Advent_Pro']">
-              {t('actorsPage.title')}
-            </h1>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-gray-400">
-              {t('common.results', { count: visibleActors.length })}
-            </span>
-          </div>
+          <FacetSectionHeader
+            className="mb-2"
+            count={
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-gray-400">
+                {t('common.results', { count: visibleActors.length })}
+              </span>
+            }
+            title={t('actorsPage.title')}
+            titleClassName="text-5xl tracking-tight"
+          />
           <p className="ml-5 max-w-2xl tracking-wide text-gray-400">
             {t('actorsPage.description')}
           </p>
         </div>
 
         <form onSubmit={handleSearch} className="flex flex-wrap gap-3">
-          <div className="relative">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-            />
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder={t('actorsPage.searchPlaceholder')}
-              className="w-72 rounded-lg border border-white/10 bg-white/5 py-2 pl-10 pr-4 text-sm text-white placeholder-gray-500 focus:border-cyan-500/50 focus:outline-none"
-            />
-          </div>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-sm uppercase tracking-widest hover:bg-cyan-500/30 transition-colors"
-            style={{
-              clipPath:
-                'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
-            }}
-          >
+          <FacetField
+            inputClassName="w-72 bg-white/5 py-2"
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder={t('actorsPage.searchPlaceholder')}
+            prefixIcon={<Search size={16} />}
+            type="text"
+            value={searchInput}
+          />
+          <FacetButton shape="buttonCut8" size="sm" type="submit" variant="outline">
             {t('common.search')}
-          </button>
+          </FacetButton>
         </form>
       </div>
 
-      <div className="mb-8 flex flex-wrap items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <FacetPanel className="mb-8" chrome="subtle" contentClassName="flex flex-wrap items-center gap-4 p-4">
         <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-2 text-xs uppercase tracking-[0.22em] text-cyan-200">
           <Sparkles size={14} />
           <span>{t('actorsPage.loadHint')}</span>
         </div>
 
-        <label className="flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-gray-500">
-          <span>{t('actorsPage.sort')}</span>
-          <select
+        <div className="min-w-[240px]">
+          <FacetSelect
+            label={t('actorsPage.sort')}
+            labelClassName="flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-gray-500"
+            selectClassName="bg-[#0d111b] py-2"
             value={sortBy}
             onChange={(event) => setSortBy(event.target.value as ActorSort)}
-            className="rounded-lg border border-white/10 bg-[#0d111b] px-3 py-2 text-sm tracking-normal text-white focus:border-cyan-500/50 focus:outline-none"
           >
             <option value="popular">{t('actorsPage.sortOptions.popular')}</option>
             <option value="alphabetical">
               {t('actorsPage.sortOptions.alphabetical')}
             </option>
-          </select>
-        </label>
+          </FacetSelect>
+        </div>
 
-        <label className="flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-gray-500">
-          <span>{t('actorsPage.knownForFilter')}</span>
-          <select
+        <div className="min-w-[240px]">
+          <FacetSelect
+            label={t('actorsPage.knownForFilter')}
+            labelClassName="flex items-center gap-3 text-xs uppercase tracking-[0.22em] text-gray-500"
+            selectClassName="bg-[#0d111b] py-2"
             value={knownForFilter}
             onChange={(event) =>
               setKnownForFilter(event.target.value as KnownForFilter)
             }
-            className="rounded-lg border border-white/10 bg-[#0d111b] px-3 py-2 text-sm tracking-normal text-white focus:border-cyan-500/50 focus:outline-none"
           >
             <option value="all">{t('actorsPage.knownForOptions.all')}</option>
             <option value="movies">{t('actorsPage.knownForOptions.movies')}</option>
             <option value="series">{t('actorsPage.knownForOptions.series')}</option>
             <option value="mixed">{t('actorsPage.knownForOptions.mixed')}</option>
-          </select>
-        </label>
-      </div>
+          </FacetSelect>
+        </div>
+      </FacetPanel>
 
       {showSkeleton ? (
         <GridSkeleton count={12} />

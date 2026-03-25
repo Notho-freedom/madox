@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { HorizontalCarousel } from '../components/HorizontalCarousel';
 import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { MovieCard } from '../components/MovieCard';
+import { FacetButton, FacetField, FacetSectionHeader } from '../components/design';
 import { GridSkeleton, ErrorState } from '../components/LoadingSkeleton';
 import { Search } from 'lucide-react';
 import { useI18n } from '../i18n/useI18n';
@@ -113,44 +114,33 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
       
       <div className="flex items-end justify-between mb-8 border-b border-white/10 pb-6">
         <div>
-          <div className="flex items-center gap-4 mb-2">
-            <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
-            <h1 className="text-5xl font-bold text-white tracking-tight font-['Advent_Pro']">
-              {t('moviesPage.title')}
-            </h1>
-            <span className="px-3 py-1 bg-white/5 rounded-full text-sm text-gray-400 border border-white/10">
-              {t('common.results', { count: activeData.data.length })}
-            </span>
-          </div>
+          <FacetSectionHeader
+            className="mb-2"
+            count={
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-gray-400">
+                {t('common.results', { count: activeData.data.length })}
+              </span>
+            }
+            title={t('moviesPage.title')}
+            titleClassName="text-5xl tracking-tight"
+          />
           <p className="text-gray-400 ml-5 tracking-wide">
             {t('moviesPage.description')}
           </p>
         </div>
 
         <form onSubmit={handleSearch} className="flex gap-2">
-          <div className="relative">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-            
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={t('moviesPage.searchPlaceholder')}
-              className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 text-white text-sm rounded-lg focus:outline-none focus:border-cyan-500/50 w-64 placeholder-gray-500" />
-            
-          </div>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-sm uppercase tracking-widest hover:bg-cyan-500/30 transition-colors"
-            style={{
-              clipPath:
-              'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
-            }}>
-            
+          <FacetField
+            inputClassName="w-64 bg-white/5 py-2"
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder={t('moviesPage.searchPlaceholder')}
+            prefixIcon={<Search size={16} />}
+            type="text"
+            value={searchInput}
+          />
+          <FacetButton shape="buttonCut8" size="sm" type="submit" variant="outline">
             {t('common.search')}
-          </button>
+          </FacetButton>
         </form>
       </div>
 
@@ -161,21 +151,18 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
         buttonClassName="h-9 w-9"
       >
         {CATEGORIES.map((c, i) =>
-        <button
+        <FacetButton
           key={c.labelKey}
           onClick={() => {
             setActiveCategory(i);
             setSearchQuery('');
             setSearchInput('');
           }}
-          className={`relative px-5 py-2 text-sm uppercase tracking-widest transition-all whitespace-nowrap ${activeCategory === i && !isSearching ? 'text-cyan-300 bg-cyan-500/10' : 'text-gray-400 bg-white/5 hover:bg-white/10 hover:text-white'}`}
-          style={{
-            clipPath:
-            'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-          }}>
-          
+          className="whitespace-nowrap"
+          size="sm"
+          variant={activeCategory === i && !isSearching ? 'outline' : 'ghost'}>
             {t(c.labelKey)}
-          </button>
+          </FacetButton>
         )}
       </HorizontalCarousel>
 
