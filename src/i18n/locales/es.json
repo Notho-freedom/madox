@@ -1,0 +1,192 @@
+{
+  "common": {
+    "action": "Acción",
+    "all": "Todo",
+    "animation": "Animación",
+    "back": "Volver",
+    "cancel": "Cancelar",
+    "clearAll": "Vaciar todo",
+    "comedy": "Comedia",
+    "crime": "Crimen",
+    "drama": "Drama",
+    "horror": "Terror",
+    "items": "{{count}} elementos",
+    "movie": "Película",
+    "movies": "Películas",
+    "nowPlaying": "En cines",
+    "onTheAir": "En emisión",
+    "popular": "Populares",
+    "results": "{{count}} resultados",
+    "retry": "Reintentar",
+    "saveChanges": "Guardar",
+    "scifi": "Ciencia ficción",
+    "scifiFantasy": "Sci-Fi y fantasía",
+    "search": "Buscar",
+    "series": "Series",
+    "thriller": "Thriller",
+    "topRated": "Mejor valoradas",
+    "watchNow": "Ver ahora"
+  },
+  "nav": {
+    "actors": "Actores",
+    "home": "Inicio",
+    "movies": "Películas",
+    "series": "Series",
+    "settings": "Ajustes",
+    "trending": "Tendencias",
+    "watchlist": "Mi lista"
+  },
+  "sidebar": {
+    "premiumMember": "Miembro premium",
+    "searchPlaceholder": "Buscar en toda la app...",
+    "signOut": "Cerrar sesión"
+  },
+  "moviesPage": {
+    "description": "Descubre películas impulsadas por TMDB.",
+    "searchPlaceholder": "Buscar películas...",
+    "title": "Películas"
+  },
+  "seriesPage": {
+    "featured": "Serie destacada",
+    "searchPlaceholder": "Buscar series...",
+    "title": "Series"
+  },
+  "trendingPage": {
+    "description": "El contenido más popular de esta semana — impulsado por TMDB.",
+    "falling": "Bajando",
+    "rising": "Subiendo",
+    "stable": "Estable",
+    "title": "Tendencias"
+  },
+  "watchlistPage": {
+    "emptyDescription": "Explora el catálogo y añade títulos a tu lista.",
+    "emptyTitle": "Tu lista está vacía.",
+    "title": "Mi lista"
+  },
+  "movieDetail": {
+    "addToList": "Añadir a la lista",
+    "details": "Detalles",
+    "genres": "Géneros",
+    "inWatchlist": "En mi lista",
+    "linkCopied": "Enlace copiado",
+    "loadingTrailer": "Cargando tráiler...",
+    "moreLikeThis": "Más como esto",
+    "officialTrailer": "Tráiler oficial",
+    "released": "Estreno",
+    "runtime": "Duración",
+    "share": "Compartir",
+    "shared": "Compartido",
+    "status": "Estado",
+    "studio": "Estudio",
+    "topCast": "Reparto principal",
+    "watchTrailer": "Ver tráiler"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "sections": {
+      "display": "Pantalla",
+      "notifications": "Notificaciones",
+      "profile": "Perfil",
+      "security": "Seguridad",
+      "subscription": "Suscripción"
+    },
+    "profile": {
+      "bio": "Bio",
+      "changeAvatar": "Cambiar avatar",
+      "emailAddress": "Correo electrónico",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "title": "Detalles del perfil",
+      "uploadHint": "JPG, GIF o PNG. Máx. 1 MB."
+    },
+    "security": {
+      "activeSessions": "Sesiones activas",
+      "changePassword": "Cambiar contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "current": "Actual",
+      "currentPassword": "Contraseña actual",
+      "loginAlerts": "Alertas de inicio de sesión",
+      "loginAlertsDescription": "Recibe avisos de nuevos accesos",
+      "newPassword": "Nueva contraseña",
+      "newPasswordPlaceholder": "Introduce la nueva contraseña",
+      "revoke": "Revocar",
+      "securityOptions": "Opciones de seguridad",
+      "twoFactorAuthentication": "Autenticación en dos pasos",
+      "twoFactorDescription": "Añade una capa extra de seguridad",
+      "updatePassword": "Actualizar contraseña"
+    },
+    "subscription": {
+      "active": "Activo",
+      "addPaymentMethod": "+ Añadir método de pago",
+      "currentPlan": "Plan actual",
+      "edit": "Editar",
+      "managePlan": "Gestionar plan",
+      "nextBillingDate": "Próximo cobro",
+      "paymentMethod": "Método de pago"
+    },
+    "notifications": {
+      "channels": "Canales",
+      "contentAlerts": "Alertas de contenido",
+      "emailDescription": "Recibir actualizaciones por correo",
+      "emailNotifications": "Notificaciones por correo",
+      "newReleases": "Novedades",
+      "newReleasesDescription": "Cuando llegan nuevas películas o series",
+      "personalizedRecommendations": "Recomendaciones personalizadas",
+      "personalizedRecommendationsDescription": "Selecciones basadas en tus gustos",
+      "pushDescription": "Recibir avisos push en tus dispositivos",
+      "pushNotifications": "Notificaciones push",
+      "title": "Preferencias de notificación",
+      "watchlistUpdates": "Actualizaciones de la lista",
+      "watchlistUpdatesDescription": "Cuando un título de tu lista esté disponible",
+      "weeklyNewsletter": "Boletín semanal",
+      "weeklyNewsletterDescription": "Resumen semanal con el mejor contenido"
+    },
+    "display": {
+      "autoplayDescription": "Reproducir automáticamente el siguiente episodio",
+      "autoplayNextEpisode": "Reproducción automática",
+      "interface": "Interfaz",
+      "language": "Idioma",
+      "playback": "Reproducción",
+      "reducedMotion": "Reducir movimiento",
+      "reducedMotionDescription": "Minimiza las animaciones en toda la app",
+      "subtitles": "Subtítulos",
+      "subtitlesDescription": "Mostrar subtítulos por defecto",
+      "theme": "Tema",
+      "videoQuality": "Calidad de vídeo"
+    },
+    "languages": {
+      "de": "Deutsch",
+      "en": "English",
+      "es": "Español",
+      "fr": "Français"
+    },
+    "theme": {
+      "active": "Activo",
+      "comingSoon": "Próximamente",
+      "darkCrystal": "Dark Crystal",
+      "light": "Claro"
+    }
+  },
+  "actorsPage": {
+    "description": "Explora a los actores más populares y abre su perfil completo.",
+    "emptyDescription": "Prueba con otro nombre o reinicia los filtros.",
+    "emptyTitle": "No hay actores que coincidan.",
+    "knownFor": "Conocido por",
+    "knownForFilter": "Referencia",
+    "knownForOptions": {
+      "all": "Todo",
+      "mixed": "Mixto",
+      "movies": "Películas",
+      "series": "Series"
+    },
+    "loadHint": "Actores populares impulsados por TMDB.",
+    "popularity": "Popularidad",
+    "searchPlaceholder": "Buscar actores...",
+    "sort": "Ordenar",
+    "sortOptions": {
+      "alphabetical": "A-Z",
+      "popular": "Más populares"
+    },
+    "title": "Actores"
+  }
+}

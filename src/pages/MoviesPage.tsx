@@ -5,6 +5,7 @@ import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { MovieCard } from '../components/MovieCard';
 import { GridSkeleton, ErrorState } from '../components/LoadingSkeleton';
 import { Search } from 'lucide-react';
+import { useI18n } from '../i18n/useI18n';
 import {
   usePopular,
   useTopRated,
@@ -15,49 +16,49 @@ import {
 import { type MovieData } from '../data/movies';
 const CATEGORIES = [
 {
-  label: 'Popular',
+  labelKey: 'common.popular',
   hook: 'popular'
 },
 {
-  label: 'Top Rated',
+  labelKey: 'common.topRated',
   hook: 'topRated'
 },
 {
-  label: 'Now Playing',
+  labelKey: 'common.nowPlaying',
   hook: 'nowPlaying'
 },
 {
-  label: 'Action',
+  labelKey: 'common.action',
   hook: 'genre',
   genreId: 28
 },
 {
-  label: 'Sci-Fi',
+  labelKey: 'common.scifi',
   hook: 'genre',
   genreId: 878
 },
 {
-  label: 'Horror',
+  labelKey: 'common.horror',
   hook: 'genre',
   genreId: 27
 },
 {
-  label: 'Comedy',
+  labelKey: 'common.comedy',
   hook: 'genre',
   genreId: 35
 },
 {
-  label: 'Drama',
+  labelKey: 'common.drama',
   hook: 'genre',
   genreId: 18
 },
 {
-  label: 'Animation',
+  labelKey: 'common.animation',
   hook: 'genre',
   genreId: 16
 },
 {
-  label: 'Thriller',
+  labelKey: 'common.thriller',
   hook: 'genre',
   genreId: 53
 }] as
@@ -66,6 +67,7 @@ interface MoviesPageProps {
   onMovieClick: (movie: MovieData) => void;
 }
 export function MoviesPage({ onMovieClick }: MoviesPageProps) {
+  const { t } = useI18n();
   const [activeCategory, setActiveCategory] = useState(0);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -114,14 +116,14 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
           <div className="flex items-center gap-4 mb-2">
             <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
             <h1 className="text-5xl font-bold text-white tracking-tight font-['Advent_Pro']">
-              Movies
+              {t('moviesPage.title')}
             </h1>
             <span className="px-3 py-1 bg-white/5 rounded-full text-sm text-gray-400 border border-white/10">
-              {activeData.data.length} results
+              {t('common.results', { count: activeData.data.length })}
             </span>
           </div>
           <p className="text-gray-400 ml-5 tracking-wide">
-            Discover movies powered by TMDB.
+            {t('moviesPage.description')}
           </p>
         </div>
 
@@ -135,7 +137,7 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search movies..."
+              placeholder={t('moviesPage.searchPlaceholder')}
               className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 text-white text-sm rounded-lg focus:outline-none focus:border-cyan-500/50 w-64 placeholder-gray-500" />
             
           </div>
@@ -147,7 +149,7 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
               'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
             }}>
             
-            Search
+            {t('common.search')}
           </button>
         </form>
       </div>
@@ -160,7 +162,7 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
       >
         {CATEGORIES.map((c, i) =>
         <button
-          key={c.label}
+          key={c.labelKey}
           onClick={() => {
             setActiveCategory(i);
             setSearchQuery('');
@@ -172,7 +174,7 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
             'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
           }}>
           
-            {c.label}
+            {t(c.labelKey)}
           </button>
         )}
       </HorizontalCarousel>

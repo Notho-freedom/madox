@@ -10,8 +10,10 @@ import { getHeroSource, getHomeSectionSet } from '../src/data/homeContent';
 import { type TMDBCatalogSource } from '../src/hooks/useTMDB';
 import {
   mapMoviePage,
+  mapPersonPage,
   type HomeBootstrapResponse,
   type MoviePageResult,
+  type PersonPageResult,
   type PersonMediaCredit,
   personCreditToMediaData,
   type TMDBCast,
@@ -23,6 +25,7 @@ import {
   type TMDBPersonDetails,
   type TMDBPersonExternalIds,
   type TMDBPersonImage,
+  type TMDBPersonSummary,
   type PersonProfileResponse,
   type TMDBVideo
 } from '../src/services/tmdbShared';
@@ -471,6 +474,41 @@ async function getPopularCatalog(type: MediaType, page: number) {
         page,
         type
       }
+    }
+  );
+}
+
+async function getPopularPeople(page: number): Promise<PersonPageResult> {
+  const key = cacheKey('people', { kind: 'popular', page });
+
+  return readThroughCache(
+    key,
+    DISCOVERY_TTL_MS,
+    async () => {
+      const result = await tmdbFetchJson<TMDBPageResult<TMDBPersonSummary>>(
+        '/person/popular',
+        { page }
+      );
+      return mapPersonPage(result);
+    }
+  );
+}
+
+async function searchPeople(query: string, page: number): Promise<PersonPageResult> {
+  const key = cacheKey('people-search', { page, query });
+
+  return readThroughCache(
+    key,
+    SEARCH_TTL_MS,
+    async () => {
+      const result = await tmdbFetchJson<TMDBPageResult<TMDBPersonSummary>>(
+        '/search/person',
+        {
+          page,
+          query
+        }
+      );
+      return mapPersonPage(result);
     }
   );
 }
@@ -1039,6 +1077,23 @@ export function createApiApp() {
       const type = (c.req.query('type') || 'multi') as 'movie' | 'tv' | 'multi';
       const page = Number(c.req.query('page') || '1');
       return c.json(await searchTmdbCatalog(q, type, page));
+    } catch (error) {
+      Sentry.captureException(error);
+      return c.json(jsonError(error), 500);
+    }
+  });
+
+  app.get('/api/people', async (c) => {
+    try {
+      const kind = c.req.query('kind') || 'popular';
+      const page = Number(c.req.query('page') || '1');
+
+      if (kind === 'search') {
+        const query = c.req.query('q') || '';
+        return c.json(await searchPeople(query, page));
+      }
+
+      return c.json(await getPopularPeople(page));
     } catch (error) {
       Sentry.captureException(error);
       return c.json(jsonError(error), 500);

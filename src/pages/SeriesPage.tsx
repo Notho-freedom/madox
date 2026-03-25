@@ -5,6 +5,7 @@ import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { MovieCard } from '../components/MovieCard';
 import { GridSkeleton, ErrorState } from '../components/LoadingSkeleton';
 import { Play, Search } from 'lucide-react';
+import { useI18n } from '../i18n/useI18n';
 import {
   usePopular,
   useTopRated,
@@ -16,39 +17,39 @@ import { backdrop } from '../services/tmdb';
 import { type MovieData } from '../data/movies';
 const CATEGORIES = [
 {
-  label: 'Popular',
+  labelKey: 'common.popular',
   hook: 'popular'
 },
 {
-  label: 'Top Rated',
+  labelKey: 'common.topRated',
   hook: 'topRated'
 },
 {
-  label: 'On The Air',
+  labelKey: 'common.onTheAir',
   hook: 'nowPlaying'
 },
 {
-  label: 'Sci-Fi & Fantasy',
+  labelKey: 'common.scifiFantasy',
   hook: 'genre',
   genreId: 10765
 },
 {
-  label: 'Drama',
+  labelKey: 'common.drama',
   hook: 'genre',
   genreId: 18
 },
 {
-  label: 'Action',
+  labelKey: 'common.action',
   hook: 'genre',
   genreId: 10759
 },
 {
-  label: 'Animation',
+  labelKey: 'common.animation',
   hook: 'genre',
   genreId: 16
 },
 {
-  label: 'Crime',
+  labelKey: 'common.crime',
   hook: 'genre',
   genreId: 80
 }] as
@@ -57,6 +58,7 @@ interface SeriesPageProps {
   onMovieClick: (movie: MovieData) => void;
 }
 export function SeriesPage({ onMovieClick }: SeriesPageProps) {
+  const { t } = useI18n();
   const [activeCategory, setActiveCategory] = useState(0);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -114,7 +116,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-[#08080f] via-[#08080f]/40 to-transparent" />
           <div className="absolute bottom-0 left-0 p-12 w-full max-w-3xl">
             <span className="px-3 py-1 bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs tracking-[0.2em] uppercase backdrop-blur-md mb-4 inline-block">
-              Featured Series
+              {t('seriesPage.featured')}
             </span>
             <h1 className="text-4xl font-bold text-white mb-3 font-['Advent_Pro'] line-clamp-2">
               {featured.title}
@@ -130,7 +132,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
               'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
             }}>
             
-              <Play size={20} fill="currentColor" /> Watch Now
+              <Play size={20} fill="currentColor" /> {t('common.watchNow')}
             </button>
           </div>
         </div>
@@ -140,7 +142,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
         <div className="flex items-center gap-4">
           <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
           <h2 className="text-4xl font-bold text-white tracking-tight font-['Advent_Pro']">
-            Series
+            {t('seriesPage.title')}
           </h2>
         </div>
         <form onSubmit={handleSearch} className="flex gap-2">
@@ -153,7 +155,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search series..."
+              placeholder={t('seriesPage.searchPlaceholder')}
               className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 text-white text-sm rounded-lg focus:outline-none focus:border-cyan-500/50 w-64 placeholder-gray-500" />
             
           </div>
@@ -165,7 +167,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
               'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
             }}>
             
-            Search
+            {t('common.search')}
           </button>
         </form>
       </div>
@@ -178,7 +180,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
       >
         {CATEGORIES.map((c, i) =>
         <button
-          key={c.label}
+          key={c.labelKey}
           onClick={() => {
             setActiveCategory(i);
             setSearchQuery('');
@@ -190,7 +192,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
             'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
           }}>
           
-            {c.label}
+            {t(c.labelKey)}
           </button>
         )}
       </HorizontalCarousel>

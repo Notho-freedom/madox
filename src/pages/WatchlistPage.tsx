@@ -1,23 +1,28 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { MovieCard } from '../components/MovieCard';
 import { Bookmark, Trash2, ListX } from 'lucide-react';
 import { type MovieData } from '../data/movies';
-import { useTopRated } from '../hooks/useTMDB';
-import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
-import { GridSkeleton } from '../components/LoadingSkeleton';
+import { GridSkeleton, ErrorState } from '../components/LoadingSkeleton';
+import { useI18n } from '../i18n/useI18n';
+import { useWatchlist } from '../hooks/useWatchlist';
+import { clearWatchlist, removeFromWatchlist } from '../services/watchlist';
 interface WatchlistPageProps {
   onMovieClick: (movie: MovieData) => void;
 }
 export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
-  const { data, loading, hasMore, isLoadingMore, loadMore } = useTopRated('movie');
-  const [removed, setRemoved] = useState<Set<string>>(new Set());
-  const watchlist = data.filter((item) => !removed.has(item.id));
-  const handleRemove = (id: string) => {
-    setRemoved((prev) => new Set(prev).add(id));
+  const { t } = useI18n();
+  const { data: watchlist, loading, error, refetch } = useWatchlist();
+
+  const handleRemove = async (id: number, mediaType: 'movie' | 'tv') => {
+    await removeFromWatchlist({
+      mediaType,
+      tmdbId: id
+    });
   };
-  const handleClearAll = () => {
-    setRemoved(new Set(data.map((d) => d.id)));
+
+  const handleClearAll = async () => {
+    await clearWatchlist();
   };
   return (
     <motion.div
@@ -44,10 +49,10 @@ export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
             <Bookmark size={24} className="text-purple-400" />
           </div>
           <h1 className="text-4xl font-bold text-white font-['Advent_Pro']">
-            My Watchlist
+            {t('watchlistPage.title')}
           </h1>
           <span className="px-3 py-1 bg-white/5 rounded-full text-sm text-gray-400 border border-white/10">
-            {watchlist.length} items
+            {t('common.items', { count: watchlist.length })}
           </span>
         </div>
         {watchlist.length > 0 &&
@@ -55,19 +60,21 @@ export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
           onClick={handleClearAll}
           className="text-sm text-red-400 hover:text-red-300 flex items-center gap-2 uppercase tracking-widest transition-colors">
           
-            <Trash2 size={16} /> Clear All
+            <Trash2 size={16} /> {t('common.clearAll')}
           </button>
         }
       </div>
 
       {loading ?
       <GridSkeleton count={8} /> :
+      error ?
+      <ErrorState message={error} onRetry={refetch} /> :
       watchlist.length === 0 ?
       <div className="flex flex-col items-center justify-center py-32 text-gray-500">
           <ListX size={48} className="mb-4 opacity-20" />
-          <p className="text-lg">Your watchlist is empty.</p>
+          <p className="text-lg">{t('watchlistPage.emptyTitle')}</p>
           <p className="text-sm text-gray-600 mt-2">
-            Browse content and add items to your watchlist.
+            {t('watchlistPage.emptyDescription')}
           </p>
         </div> :
 
@@ -96,18 +103,13 @@ export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
                     onClick={() => onMovieClick(item)} />
                 </div>
                 <button
-                  onClick={() => handleRemove(item.id)}
+                  onClick={() => handleRemove(item.tmdbId ?? Number(item.id), item.mediaType ?? 'movie')}
                   className="absolute right-8 top-4 z-20 rounded-full border border-red-500/30 bg-black/50 p-2 text-red-400 opacity-0 transition-opacity hover:bg-red-500/20 group-hover:opacity-100 backdrop-blur-md">
                   <Trash2 size={16} />
                 </button>
               </motion.div>
             )}
           </div>
-          <LoadMoreSentinel
-            canLoadMore={hasMore}
-            className="mt-10 h-10"
-            isLoadingMore={isLoadingMore}
-            onLoadMore={loadMore} />
         </>
       }
     </motion.div>);

@@ -7,11 +7,14 @@ import {
 import {
   type HomeBootstrapResponse,
   type MoviePageResult,
+  type PersonCardData,
+  type PersonPageResult,
   type PersonProfileResponse,
   type PersonMediaCredit,
   type TMDBCast,
   type TMDBGenre,
   type TMDBMovieDetails,
+  type TMDBPersonSummary,
   type TMDBPersonDetails,
   type TMDBPersonExternalIds,
   type TMDBPersonImage,
@@ -35,11 +38,14 @@ export type {
   ApiCacheSnapshot,
   HomeBootstrapResponse,
   MoviePageResult,
+  PersonCardData,
+  PersonPageResult,
   PersonMediaCredit,
   PersonProfileResponse,
   TMDBCast,
   TMDBGenre,
   TMDBMovieDetails,
+  TMDBPersonSummary,
   TMDBPersonDetails,
   TMDBPersonExternalIds,
   TMDBPersonImage,
@@ -319,6 +325,42 @@ export async function getPersonProfile(
     undefined,
     {
       cacheTtlMs: 60_000,
+      ...options
+    }
+  );
+}
+
+export async function getPopularPeople(
+  page = 1,
+  options: ApiRequestOptions = {}
+): Promise<PersonPageResult> {
+  return apiFetch<PersonPageResult>(
+    '/api/people',
+    {
+      kind: 'popular',
+      page
+    },
+    {
+      cacheTtlMs: 60_000,
+      ...options
+    }
+  );
+}
+
+export async function searchPeople(
+  query: string,
+  page = 1,
+  options: ApiRequestOptions = {}
+): Promise<PersonPageResult> {
+  return apiFetch<PersonPageResult>(
+    '/api/people',
+    {
+      kind: 'search',
+      page,
+      q: query
+    },
+    {
+      cacheTtlMs: 30_000,
       ...options
     }
   );

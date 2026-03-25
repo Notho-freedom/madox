@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search } from 'lucide-react';
+import { useI18n } from '../i18n/useI18n';
 import { primaryNavItems, type NavPageId } from '../navigation/primaryNav';
 import {
   sidebarFooterAction,
@@ -24,6 +25,7 @@ export function CrystalSidebarMenuContent({
   onNavigate,
   searchAutoFocus = false
 }: CrystalSidebarMenuContentProps) {
+  const { t } = useI18n();
   const isDesktop = layout === 'desktop';
   const navSpacingClass = isDesktop ? 'space-y-4' : 'space-y-3';
   const itemClipPath =
@@ -47,7 +49,7 @@ export function CrystalSidebarMenuContent({
             />
             <input
               type="text"
-              placeholder="Search for anything..."
+              placeholder={t('sidebar.searchPlaceholder')}
               autoFocus={searchAutoFocus}
               className="ml-3 w-full bg-transparent border-none text-sm tracking-[0.18em] text-white outline-none placeholder-gray-500"
             />
@@ -91,7 +93,7 @@ export function CrystalSidebarMenuContent({
                   </div>
                   <item.icon size={18} className="relative z-10" />
                   <span className="relative z-10 ml-3 text-sm uppercase tracking-[0.2em]">
-                    {item.label}
+                    {t(item.labelKey)}
                   </span>
                 </button>
               );
@@ -99,9 +101,10 @@ export function CrystalSidebarMenuContent({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-3">
-          <div className="space-y-2">
-            {sidebarUtilityActions.map((item) => (
+        {sidebarUtilityActions.length > 0 && (
+          <div className="flex-1 overflow-y-auto px-6 py-3">
+            <div className="space-y-2">
+              {sidebarUtilityActions.map((item) => (
               <button
                 key={item.id}
                 type="button"
@@ -125,15 +128,16 @@ export function CrystalSidebarMenuContent({
                 </div>
                 <item.icon size={18} className="relative z-10" />
                 <span className="relative z-10 text-sm uppercase tracking-[0.2em]">
-                  {item.label}
+                  {t(item.labelKey)}
                 </span>
                 {item.hasIndicator && (
                   <span className="relative z-10 ml-auto h-2 w-2 rounded-full bg-cyan-400" />
                 )}
               </button>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="mt-auto px-6 pb-6 pt-3">
           <div className="mb-5 flex items-center gap-4">
@@ -153,7 +157,7 @@ export function CrystalSidebarMenuContent({
                 {sidebarProfile.name}
               </div>
               <div className="text-xs uppercase tracking-[0.2em] text-cyan-400">
-                {sidebarProfile.membership}
+                {t(sidebarProfile.membershipKey)}
               </div>
             </button>
           </div>
@@ -180,7 +184,7 @@ export function CrystalSidebarMenuContent({
             </div>
             <sidebarFooterAction.icon size={18} className="relative z-10" />
             <span className="relative z-10 text-sm uppercase tracking-[0.2em]">
-              {sidebarFooterAction.label}
+              {t(sidebarFooterAction.labelKey)}
             </span>
           </button>
         </div>

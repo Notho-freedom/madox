@@ -8,6 +8,7 @@ import {
   Star,
   Play } from
 'lucide-react';
+import { useI18n } from '../i18n/useI18n';
 import { useTrending } from '../hooks/useTMDB';
 import { type MovieData } from '../data/movies';
 import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
@@ -16,6 +17,7 @@ interface TrendingPageProps {
   onMovieClick?: (movie: MovieData) => void;
 }
 export function TrendingPage({ onMovieClick }: TrendingPageProps) {
+  const { t } = useI18n();
   const {
     data,
     loading,
@@ -50,10 +52,10 @@ export function TrendingPage({ onMovieClick }: TrendingPageProps) {
         </div>
         <div>
           <h1 className="text-5xl font-bold text-white font-['Advent_Pro']">
-            Trending Now
+            {t('trendingPage.title')}
           </h1>
           <p className="text-gray-400 tracking-wide">
-            Most popular content this week — powered by TMDB.
+            {t('trendingPage.description')}
           </p>
         </div>
       </div>
@@ -120,7 +122,7 @@ export function TrendingPage({ onMovieClick }: TrendingPageProps) {
                         <>
                           <span className="h-1 w-1 rounded-full bg-gray-600" />
                           <span className="text-xs uppercase">
-                            {item.mediaType === 'tv' ? 'Series' : 'Movie'}
+                            {item.mediaType === 'tv' ? t('common.series') : t('common.movie')}
                           </span>
                         </>
                       }
@@ -139,19 +141,19 @@ export function TrendingPage({ onMovieClick }: TrendingPageProps) {
                     {change === 'up' &&
                       <div className="flex items-center gap-2 text-green-400">
                         <ArrowUp size={20} />
-                        <span className="text-sm font-bold">RISING</span>
+                        <span className="text-sm font-bold">{t('trendingPage.rising').toUpperCase()}</span>
                       </div>
                     }
                     {change === 'down' &&
                       <div className="flex items-center gap-2 text-red-400">
                         <ArrowDown size={20} />
-                        <span className="text-sm font-bold">FALLING</span>
+                        <span className="text-sm font-bold">{t('trendingPage.falling').toUpperCase()}</span>
                       </div>
                     }
                     {change === 'same' &&
                       <div className="flex items-center gap-2 text-gray-500">
                         <Minus size={20} />
-                        <span className="text-sm font-bold">STABLE</span>
+                        <span className="text-sm font-bold">{t('trendingPage.stable').toUpperCase()}</span>
                       </div>
                     }
                   </div>

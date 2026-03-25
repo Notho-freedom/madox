@@ -1,39 +1,44 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
-  Settings,
-  User,
-  Shield,
-  CreditCard,
   Bell,
-  Monitor,
+  Check,
+  CreditCard,
   Eye,
   EyeOff,
-  Check,
-  Lock,
-  Globe,
-  Volume2,
-  Subtitles,
-  Smartphone,
   Laptop,
-  Tv } from
-'lucide-react';
+  Lock,
+  Monitor,
+  Settings,
+  Shield,
+  Smartphone,
+  Subtitles,
+  User,
+  Volume2
+} from 'lucide-react';
+import { useAppSettings } from '../hooks/useAppSettings';
+import { useI18n } from '../i18n/useI18n';
+import { type AppLanguage, type AppSettings } from '../services/appSettings';
+
 const sectionClip =
-'polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)';
+  'polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px)';
+
 function Toggle({
   enabled,
   onToggle
-
-
-
-}: {enabled: boolean;onToggle: () => void;}) {
+}: {
+  enabled: boolean;
+  onToggle: () => void;
+}) {
   return (
     <button
       onClick={onToggle}
-      className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${enabled ? 'bg-cyan-500' : 'bg-white/10'}`}>
-      
+      className={`relative h-6 w-12 rounded-full transition-colors duration-300 ${
+        enabled ? 'bg-cyan-500' : 'bg-white/10'
+      }`}
+    >
       <motion.div
-        className="absolute top-1 w-4 h-4 rounded-full bg-white shadow-md"
+        className="absolute top-1 h-4 w-4 rounded-full bg-white shadow-md"
         animate={{
           left: enabled ? 28 : 4
         }}
@@ -41,182 +46,168 @@ function Toggle({
           type: 'spring',
           stiffness: 500,
           damping: 30
-        }} />
-      
-    </button>);
-
+        }}
+      />
+    </button>
+  );
 }
-const sections = [
-{
-  icon: User,
-  label: 'Profile',
-  id: 'profile'
-},
-{
-  icon: Shield,
-  label: 'Security',
-  id: 'security'
-},
-{
-  icon: CreditCard,
-  label: 'Subscription',
-  id: 'subscription'
-},
-{
-  icon: Bell,
-  label: 'Notifications',
-  id: 'notifications'
-},
-{
-  icon: Monitor,
-  label: 'Display',
-  id: 'display'
-}];
+
+type SettingsSectionId =
+  | 'display'
+  | 'notifications'
+  | 'profile'
+  | 'security'
+  | 'subscription';
 
 function ProfileSection() {
+  const { t } = useI18n();
+
   return (
     <section
-      className="bg-white/5 border border-white/10 p-8 relative overflow-hidden"
+      className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
       style={{
         clipPath: sectionClip
-      }}>
-      
-      <h2 className="text-2xl font-bold text-white mb-6 font-['Advent_Pro']">
-        Profile Details
+      }}
+    >
+      <h2 className="mb-6 text-2xl font-bold text-white font-['Advent_Pro']">
+        {t('settings.profile.title')}
       </h2>
 
-      <div className="flex items-center gap-6 mb-8">
-        <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-cyan-500 to-purple-500 p-[2px]">
+      <div className="mb-8 flex items-center gap-6">
+        <div className="h-24 w-24 rounded-full bg-gradient-to-tr from-cyan-500 to-purple-500 p-[2px]">
           <img
             src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop"
             alt="Profile"
-            className="w-full h-full rounded-full object-cover border-4 border-[#08080f]" />
-          
+            className="h-full w-full rounded-full border-4 border-[#08080f] object-cover"
+          />
         </div>
         <div>
-          <button className="px-4 py-2 bg-white/10 border border-white/20 text-white text-sm uppercase tracking-widest hover:bg-white/20 transition-colors mb-2">
-            Change Avatar
+          <button className="mb-2 px-4 py-2 bg-white/10 border border-white/20 text-white text-sm uppercase tracking-widest hover:bg-white/20 transition-colors">
+            {t('settings.profile.changeAvatar')}
           </button>
-          <p className="text-xs text-gray-500">JPG, GIF or PNG. Max 1MB.</p>
+          <p className="text-xs text-gray-500">{t('settings.profile.uploadHint')}</p>
         </div>
       </div>
 
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-              First Name
+            <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+              {t('settings.profile.firstName')}
             </label>
             <input
               type="text"
               defaultValue="Alex"
-              className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors" />
-            
+              className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors"
+            />
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-              Last Name
+            <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+              {t('settings.profile.lastName')}
             </label>
             <input
               type="text"
               defaultValue="Chen"
-              className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors" />
-            
+              className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors"
+            />
           </div>
         </div>
         <div>
-          <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-            Email Address
+          <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+            {t('settings.profile.emailAddress')}
           </label>
           <input
             type="email"
             defaultValue="alex.chen@example.com"
-            className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors" />
-          
+            className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors"
+          />
         </div>
         <div>
-          <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-            Bio
+          <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+            {t('settings.profile.bio')}
           </label>
           <textarea
             defaultValue="Cinephile. Sci-fi enthusiast. Always looking for the next great story."
             rows={3}
-            className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors resize-none" />
-          
+            className="w-full resize-none bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors"
+          />
         </div>
       </div>
 
-      <div className="mt-8 pt-8 border-t border-white/10 flex justify-end gap-4">
-        <button className="px-6 py-2 text-gray-400 hover:text-white transition-colors text-sm uppercase tracking-widest">
-          Cancel
+      <div className="mt-8 flex justify-end gap-4 border-t border-white/10 pt-8">
+        <button className="px-6 py-2 text-sm uppercase tracking-widest text-gray-400 transition-colors hover:text-white">
+          {t('common.cancel')}
         </button>
         <button
           className="px-8 py-2 bg-cyan-500 text-black font-bold uppercase tracking-widest hover:bg-cyan-400 transition-colors"
           style={{
             clipPath:
-            'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
-          }}>
-          
-          Save Changes
+              'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
+          }}
+        >
+          {t('common.saveChanges')}
         </button>
       </div>
-    </section>);
-
+    </section>
+  );
 }
+
 function SecuritySection() {
+  const { t } = useI18n();
   const [showPassword, setShowPassword] = useState(false);
   const [twoFactor, setTwoFactor] = useState(true);
   const [loginAlerts, setLoginAlerts] = useState(true);
+
   return (
     <div className="space-y-8">
       <section
-        className="bg-white/5 border border-white/10 p-8 relative overflow-hidden"
+        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
         style={{
           clipPath: sectionClip
-        }}>
-        
-        <h2 className="text-2xl font-bold text-white mb-6 font-['Advent_Pro']">
-          Change Password
+        }}
+      >
+        <h2 className="mb-6 text-2xl font-bold text-white font-['Advent_Pro']">
+          {t('settings.security.changePassword')}
         </h2>
         <div className="space-y-6">
           <div>
-            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-              Current Password
+            <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+              {t('settings.security.currentPassword')}
             </label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 defaultValue="••••••••••"
-                className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors pr-12" />
-              
+                className="w-full bg-black/30 border border-white/10 px-4 py-3 pr-12 text-white outline-none focus:border-cyan-500/50 transition-colors"
+              />
               <button
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
-                
+                onClick={() => setShowPassword((current) => !current)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors hover:text-white"
+              >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-                New Password
+              <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+                {t('settings.security.newPassword')}
               </label>
               <input
                 type="password"
-                placeholder="Enter new password"
-                className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors placeholder-gray-600" />
-              
+                placeholder={t('settings.security.newPasswordPlaceholder')}
+                className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors placeholder-gray-600"
+              />
             </div>
             <div>
-              <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-                Confirm Password
+              <label className="mb-2 block text-xs uppercase tracking-widest text-gray-500">
+                {t('settings.security.confirmPassword')}
               </label>
               <input
                 type="password"
-                placeholder="Confirm new password"
-                className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors placeholder-gray-600" />
-              
+                placeholder={t('settings.security.confirmPassword')}
+                className="w-full bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-cyan-500/50 transition-colors placeholder-gray-600"
+              />
             </div>
           </div>
         </div>
@@ -225,486 +216,542 @@ function SecuritySection() {
             className="px-8 py-2 bg-cyan-500 text-black font-bold uppercase tracking-widest hover:bg-cyan-400 transition-colors"
             style={{
               clipPath:
-              'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
-            }}>
-            
-            Update Password
+                'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)'
+            }}
+          >
+            {t('settings.security.updatePassword')}
           </button>
         </div>
       </section>
 
       <section
-        className="bg-white/5 border border-white/10 p-8 relative overflow-hidden"
+        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
         style={{
           clipPath: sectionClip
-        }}>
-        
-        <h2 className="text-2xl font-bold text-white mb-6 font-['Advent_Pro']">
-          Security Options
+        }}
+      >
+        <h2 className="mb-6 text-2xl font-bold text-white font-['Advent_Pro']">
+          {t('settings.security.securityOptions')}
         </h2>
         <div className="space-y-6">
-          <div className="flex items-center justify-between py-3 border-b border-white/5">
+          <div className="flex items-center justify-between border-b border-white/5 py-3">
             <div className="flex items-center gap-3">
               <Lock size={18} className="text-cyan-400" />
               <div>
-                <div className="text-white font-medium">
-                  Two-Factor Authentication
+                <div className="font-medium text-white">
+                  {t('settings.security.twoFactorAuthentication')}
                 </div>
                 <div className="text-xs text-gray-500">
-                  Add an extra layer of security to your account
+                  {t('settings.security.twoFactorDescription')}
                 </div>
               </div>
             </div>
-            <Toggle
-              enabled={twoFactor}
-              onToggle={() => setTwoFactor(!twoFactor)} />
-            
+            <Toggle enabled={twoFactor} onToggle={() => setTwoFactor((current) => !current)} />
           </div>
-          <div className="flex items-center justify-between py-3 border-b border-white/5">
+          <div className="flex items-center justify-between border-b border-white/5 py-3">
             <div className="flex items-center gap-3">
               <Bell size={18} className="text-cyan-400" />
               <div>
-                <div className="text-white font-medium">Login Alerts</div>
+                <div className="font-medium text-white">
+                  {t('settings.security.loginAlerts')}
+                </div>
                 <div className="text-xs text-gray-500">
-                  Get notified of new sign-ins to your account
+                  {t('settings.security.loginAlertsDescription')}
                 </div>
               </div>
             </div>
             <Toggle
               enabled={loginAlerts}
-              onToggle={() => setLoginAlerts(!loginAlerts)} />
-            
+              onToggle={() => setLoginAlerts((current) => !current)}
+            />
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-white/10">
-          <h3 className="text-sm uppercase tracking-widest text-gray-500 mb-4">
-            Active Sessions
+        <div className="mt-8 border-t border-white/10 pt-6">
+          <h3 className="mb-4 text-sm uppercase tracking-widest text-gray-500">
+            {t('settings.security.activeSessions')}
           </h3>
           <div className="space-y-3">
             {[
-            {
-              device: 'MacBook Pro',
-              location: 'Paris, France',
-              current: true
-            },
-            {
-              device: 'iPhone 15',
-              location: 'Paris, France',
-              current: false
-            }].
-            map((session, i) =>
-            <div
-              key={i}
-              className="flex items-center justify-between py-3 px-4 bg-black/20 border border-white/5 rounded">
-              
+              {
+                current: true,
+                device: 'MacBook Pro',
+                location: 'Paris, France'
+              },
+              {
+                current: false,
+                device: 'iPhone 15',
+                location: 'Paris, France'
+              }
+            ].map((session, index) => (
+              <div
+                key={session.device}
+                className="flex items-center justify-between rounded border border-white/5 bg-black/20 px-4 py-3"
+              >
                 <div className="flex items-center gap-3">
-                  {i === 0 ?
-                <Laptop size={18} className="text-gray-400" /> :
-
-                <Smartphone size={18} className="text-gray-400" />
-                }
+                  {index === 0 ? (
+                    <Laptop size={18} className="text-gray-400" />
+                  ) : (
+                    <Smartphone size={18} className="text-gray-400" />
+                  )}
                   <div>
-                    <div className="text-white text-sm">{session.device}</div>
-                    <div className="text-xs text-gray-500">
-                      {session.location}
-                    </div>
+                    <div className="text-sm text-white">{session.device}</div>
+                    <div className="text-xs text-gray-500">{session.location}</div>
                   </div>
                 </div>
-                {session.current ?
-              <span className="text-xs text-cyan-400 uppercase tracking-widest">
-                    Current
-                  </span> :
-
-              <button className="text-xs text-red-400 hover:text-red-300 uppercase tracking-widest transition-colors">
-                    Revoke
+                {session.current ? (
+                  <span className="text-xs uppercase tracking-widest text-cyan-400">
+                    {t('settings.security.current')}
+                  </span>
+                ) : (
+                  <button className="text-xs uppercase tracking-widest text-red-400 transition-colors hover:text-red-300">
+                    {t('settings.security.revoke')}
                   </button>
-              }
+                )}
               </div>
-            )}
+            ))}
           </div>
         </div>
       </section>
-    </div>);
-
+    </div>
+  );
 }
+
 function SubscriptionSection() {
+  const { t } = useI18n();
+
   return (
     <div className="space-y-8">
       <section
-        className="bg-white/5 border border-white/10 p-8 relative overflow-hidden"
+        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
         style={{
           clipPath: sectionClip
-        }}>
-        
-        <div className="flex items-center justify-between mb-8">
+        }}
+      >
+        <div className="mb-8 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-white font-['Advent_Pro']">
-            Current Plan
+            {t('settings.subscription.currentPlan')}
           </h2>
-          <span className="px-4 py-1 text-xs uppercase tracking-widest font-bold text-cyan-300 prism-border bg-cyan-500/10">
+          <span className="prism-border bg-cyan-500/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-cyan-300">
             Premium
           </span>
         </div>
 
-        <div className="flex items-baseline gap-2 mb-6">
-          <span className="text-5xl font-bold text-white font-['Advent_Pro']">
-            $14.99
-          </span>
-          <span className="text-gray-500 text-sm">/month</span>
+        <div className="mb-6 flex items-baseline gap-2">
+          <span className="text-5xl font-bold text-white font-['Advent_Pro']">$14.99</span>
+          <span className="text-sm text-gray-500">/month</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="mb-8 grid grid-cols-2 gap-4">
           {[
-          '4K Ultra HD',
-          'Multiple Devices',
-          'Offline Downloads',
-          'No Ads',
-          'Early Access',
-          'Dolby Atmos'].
-          map((feature) =>
-          <div key={feature} className="flex items-center gap-2 text-sm">
+            '4K Ultra HD',
+            'Multiple Devices',
+            'Offline Downloads',
+            'No Ads',
+            'Early Access',
+            'Dolby Atmos'
+          ].map((feature) => (
+            <div key={feature} className="flex items-center gap-2 text-sm">
               <Check size={16} className="text-cyan-400" />
               <span className="text-gray-300">{feature}</span>
             </div>
-          )}
+          ))}
         </div>
 
-        <div className="pt-6 border-t border-white/10 flex items-center justify-between">
+        <div className="flex items-center justify-between border-t border-white/10 pt-6">
           <div>
-            <div className="text-xs text-gray-500 uppercase tracking-widest">
-              Next billing date
+            <div className="text-xs uppercase tracking-widest text-gray-500">
+              {t('settings.subscription.nextBillingDate')}
             </div>
             <div className="text-white">April 23, 2026</div>
           </div>
           <button className="px-6 py-2 bg-white/10 border border-white/20 text-white text-sm uppercase tracking-widest hover:bg-white/20 transition-colors">
-            Manage Plan
+            {t('settings.subscription.managePlan')}
           </button>
         </div>
       </section>
 
       <section
-        className="bg-white/5 border border-white/10 p-8 relative overflow-hidden"
+        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
         style={{
           clipPath: sectionClip
-        }}>
-        
-        <h2 className="text-2xl font-bold text-white mb-6 font-['Advent_Pro']">
-          Payment Method
+        }}
+      >
+        <h2 className="mb-6 text-2xl font-bold text-white font-['Advent_Pro']">
+          {t('settings.subscription.paymentMethod')}
         </h2>
-        <div className="flex items-center gap-4 p-4 bg-black/20 border border-white/5 rounded mb-4">
-          <div className="w-12 h-8 bg-gradient-to-r from-blue-600 to-blue-400 rounded flex items-center justify-center text-white text-xs font-bold">
+        <div className="mb-4 flex items-center gap-4 rounded border border-white/5 bg-black/20 p-4">
+          <div className="flex h-8 w-12 items-center justify-center rounded bg-gradient-to-r from-blue-600 to-blue-400 text-xs font-bold text-white">
             VISA
           </div>
           <div>
-            <div className="text-white text-sm">•••• •••• •••• 4829</div>
+            <div className="text-sm text-white">•••• •••• •••• 4829</div>
             <div className="text-xs text-gray-500">Expires 08/2027</div>
           </div>
-          <button className="ml-auto text-xs text-cyan-400 hover:text-cyan-300 uppercase tracking-widest transition-colors">
-            Edit
+          <button className="ml-auto text-xs uppercase tracking-widest text-cyan-400 transition-colors hover:text-cyan-300">
+            {t('settings.subscription.edit')}
           </button>
         </div>
-        <button className="text-sm text-gray-400 hover:text-white transition-colors uppercase tracking-widest">
-          + Add Payment Method
+        <button className="text-sm uppercase tracking-widest text-gray-400 transition-colors hover:text-white">
+          {t('settings.subscription.addPaymentMethod')}
         </button>
       </section>
-    </div>);
-
+    </div>
+  );
 }
-function NotificationsSection() {
-  const [emailNotifs, setEmailNotifs] = useState(true);
-  const [pushNotifs, setPushNotifs] = useState(true);
-  const [newReleases, setNewReleases] = useState(true);
-  const [recommendations, setRecommendations] = useState(false);
-  const [watchlistUpdates, setWatchlistUpdates] = useState(true);
-  const [newsletter, setNewsletter] = useState(false);
+
+function NotificationsSection({
+  settings,
+  updateSettings
+}: {
+  settings: AppSettings | null;
+  updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
+}) {
+  const { t } = useI18n();
+
+  const channelItems = useMemo(
+    () => [
+      {
+        descriptionKey: 'settings.notifications.emailDescription',
+        enabled: settings?.emailNotifications ?? false,
+        labelKey: 'settings.notifications.emailNotifications',
+        settingKey: 'emailNotifications' as const
+      },
+      {
+        descriptionKey: 'settings.notifications.pushDescription',
+        enabled: settings?.pushNotifications ?? false,
+        labelKey: 'settings.notifications.pushNotifications',
+        settingKey: 'pushNotifications' as const
+      }
+    ],
+    [settings]
+  );
+
+  const alertItems = useMemo(
+    () => [
+      {
+        descriptionKey: 'settings.notifications.newReleasesDescription',
+        enabled: settings?.newReleasesAlerts ?? false,
+        labelKey: 'settings.notifications.newReleases',
+        settingKey: 'newReleasesAlerts' as const
+      },
+      {
+        descriptionKey: 'settings.notifications.personalizedRecommendationsDescription',
+        enabled: settings?.recommendationsAlerts ?? false,
+        labelKey: 'settings.notifications.personalizedRecommendations',
+        settingKey: 'recommendationsAlerts' as const
+      },
+      {
+        descriptionKey: 'settings.notifications.watchlistUpdatesDescription',
+        enabled: settings?.watchlistUpdatesAlerts ?? false,
+        labelKey: 'settings.notifications.watchlistUpdates',
+        settingKey: 'watchlistUpdatesAlerts' as const
+      },
+      {
+        descriptionKey: 'settings.notifications.weeklyNewsletterDescription',
+        enabled: settings?.newsletterEnabled ?? false,
+        labelKey: 'settings.notifications.weeklyNewsletter',
+        settingKey: 'newsletterEnabled' as const
+      }
+    ],
+    [settings]
+  );
+
   return (
     <section
-      className="bg-white/5 border border-white/10 p-8 relative overflow-hidden"
+      className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
       style={{
         clipPath: sectionClip
-      }}>
-      
-      <h2 className="text-2xl font-bold text-white mb-8 font-['Advent_Pro']">
-        Notification Preferences
+      }}
+    >
+      <h2 className="mb-8 text-2xl font-bold text-white font-['Advent_Pro']">
+        {t('settings.notifications.title')}
       </h2>
 
       <div className="space-y-1">
-        <h3 className="text-sm uppercase tracking-widest text-gray-500 mb-4">
-          Channels
+        <h3 className="mb-4 text-sm uppercase tracking-widest text-gray-500">
+          {t('settings.notifications.channels')}
         </h3>
-        {[
-        {
-          label: 'Email Notifications',
-          desc: 'Receive updates via email',
-          enabled: emailNotifs,
-          toggle: () => setEmailNotifs(!emailNotifs)
-        },
-        {
-          label: 'Push Notifications',
-          desc: 'Receive push notifications on your devices',
-          enabled: pushNotifs,
-          toggle: () => setPushNotifs(!pushNotifs)
-        }].
-        map((item) =>
-        <div
-          key={item.label}
-          className="flex items-center justify-between py-4 border-b border-white/5">
-          
+        {channelItems.map((item) => (
+          <div
+            key={item.settingKey}
+            className="flex items-center justify-between border-b border-white/5 py-4"
+          >
             <div>
-              <div className="text-white font-medium">{item.label}</div>
-              <div className="text-xs text-gray-500">{item.desc}</div>
+              <div className="font-medium text-white">{t(item.labelKey)}</div>
+              <div className="text-xs text-gray-500">{t(item.descriptionKey)}</div>
             </div>
-            <Toggle enabled={item.enabled} onToggle={item.toggle} />
+            <Toggle
+              enabled={item.enabled}
+              onToggle={() =>
+                void updateSettings({
+                  [item.settingKey]: !item.enabled
+                })
+              }
+            />
           </div>
-        )}
+        ))}
       </div>
 
       <div className="mt-8 space-y-1">
-        <h3 className="text-sm uppercase tracking-widest text-gray-500 mb-4">
-          Content Alerts
+        <h3 className="mb-4 text-sm uppercase tracking-widest text-gray-500">
+          {t('settings.notifications.contentAlerts')}
         </h3>
-        {[
-        {
-          label: 'New Releases',
-          desc: 'When new movies or series are added',
-          enabled: newReleases,
-          toggle: () => setNewReleases(!newReleases)
-        },
-        {
-          label: 'Personalized Recommendations',
-          desc: 'Curated picks based on your taste',
-          enabled: recommendations,
-          toggle: () => setRecommendations(!recommendations)
-        },
-        {
-          label: 'Watchlist Updates',
-          desc: 'When items in your watchlist become available',
-          enabled: watchlistUpdates,
-          toggle: () => setWatchlistUpdates(!watchlistUpdates)
-        },
-        {
-          label: 'Weekly Newsletter',
-          desc: 'A digest of top content every week',
-          enabled: newsletter,
-          toggle: () => setNewsletter(!newsletter)
-        }].
-        map((item) =>
-        <div
-          key={item.label}
-          className="flex items-center justify-between py-4 border-b border-white/5">
-          
+        {alertItems.map((item) => (
+          <div
+            key={item.settingKey}
+            className="flex items-center justify-between border-b border-white/5 py-4"
+          >
             <div>
-              <div className="text-white font-medium">{item.label}</div>
-              <div className="text-xs text-gray-500">{item.desc}</div>
+              <div className="font-medium text-white">{t(item.labelKey)}</div>
+              <div className="text-xs text-gray-500">{t(item.descriptionKey)}</div>
             </div>
-            <Toggle enabled={item.enabled} onToggle={item.toggle} />
+            <Toggle
+              enabled={item.enabled}
+              onToggle={() =>
+                void updateSettings({
+                  [item.settingKey]: !item.enabled
+                })
+              }
+            />
           </div>
-        )}
+        ))}
       </div>
-    </section>);
-
+    </section>
+  );
 }
-function DisplaySection() {
-  const [quality, setQuality] = useState('auto');
-  const [language, setLanguage] = useState('en');
-  const [autoplay, setAutoplay] = useState(true);
-  const [subtitles, setSubtitles] = useState(true);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const qualityOptions = [
-  {
-    id: 'auto',
-    label: 'Auto'
-  },
-  {
-    id: '1080p',
-    label: '1080p'
-  },
-  {
-    id: '4k',
-    label: '4K'
-  }];
 
-  const languages = [
-  {
-    id: 'en',
-    label: 'English'
-  },
-  {
-    id: 'fr',
-    label: 'Français'
-  },
-  {
-    id: 'es',
-    label: 'Español'
-  },
-  {
-    id: 'de',
-    label: 'Deutsch'
-  }];
+function DisplaySection({
+  settings,
+  updateSettings
+}: {
+  settings: AppSettings | null;
+  updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
+}) {
+  const { t } = useI18n();
+  const qualityOptions: AppSettings['playbackQuality'][] = ['auto', '1080p', '4k'];
+  const languages: AppLanguage[] = ['en', 'fr', 'es', 'de'];
+
+  if (!settings) {
+    return (
+      <section
+        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
+        style={{
+          clipPath: sectionClip
+        }}
+      >
+        <div className="text-sm uppercase tracking-widest text-gray-500">
+          Loading settings...
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div className="space-y-8">
       <section
-        className="bg-white/5 border border-white/10 p-8 relative overflow-hidden"
+        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
         style={{
           clipPath: sectionClip
-        }}>
-        
-        <h2 className="text-2xl font-bold text-white mb-8 font-['Advent_Pro']">
-          Playback
+        }}
+      >
+        <h2 className="mb-8 text-2xl font-bold text-white font-['Advent_Pro']">
+          {t('settings.display.playback')}
         </h2>
 
         <div className="space-y-8">
           <div>
-            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-3">
-              Video Quality
+            <label className="mb-3 block text-xs uppercase tracking-widest text-gray-500">
+              {t('settings.display.videoQuality')}
             </label>
             <div className="flex gap-3">
-              {qualityOptions.map((opt) =>
-              <button
-                key={opt.id}
-                onClick={() => setQuality(opt.id)}
-                className={`relative px-6 py-2 text-sm uppercase tracking-widest transition-all ${quality === opt.id ? 'text-cyan-300 bg-cyan-500/10' : 'text-gray-400 bg-white/5 hover:bg-white/10'}`}
-                style={{
-                  clipPath:
-                  'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                }}>
-                
-                  {quality === opt.id &&
-                <div
-                  className="absolute inset-0 prism-border"
+              {qualityOptions.map((option) => (
+                <button
+                  key={option}
+                  onClick={() => void updateSettings({ playbackQuality: option })}
+                  className={`relative px-6 py-2 text-sm uppercase tracking-widest transition-all ${
+                    settings.playbackQuality === option
+                      ? 'bg-cyan-500/10 text-cyan-300'
+                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                  }`}
                   style={{
                     clipPath:
-                    'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                  }} />
-
-                }
-                  {opt.label}
+                      'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                  }}
+                >
+                  {settings.playbackQuality === option && (
+                    <div
+                      className="absolute inset-0 prism-border"
+                      style={{
+                        clipPath:
+                          'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                      }}
+                    />
+                  )}
+                  {option}
                 </button>
-              )}
+              ))}
             </div>
           </div>
 
-          <div className="flex items-center justify-between py-3 border-b border-white/5">
+          <div className="flex items-center justify-between border-b border-white/5 py-3">
             <div className="flex items-center gap-3">
               <Volume2 size={18} className="text-cyan-400" />
               <div>
-                <div className="text-white font-medium">
-                  Autoplay Next Episode
+                <div className="font-medium text-white">
+                  {t('settings.display.autoplayNextEpisode')}
                 </div>
                 <div className="text-xs text-gray-500">
-                  Automatically play the next episode
+                  {t('settings.display.autoplayDescription')}
                 </div>
               </div>
             </div>
             <Toggle
-              enabled={autoplay}
-              onToggle={() => setAutoplay(!autoplay)} />
-            
+              enabled={settings.autoplayNextEpisode}
+              onToggle={() =>
+                void updateSettings({
+                  autoplayNextEpisode: !settings.autoplayNextEpisode
+                })
+              }
+            />
           </div>
 
-          <div className="flex items-center justify-between py-3 border-b border-white/5">
+          <div className="flex items-center justify-between border-b border-white/5 py-3">
             <div className="flex items-center gap-3">
               <Subtitles size={18} className="text-cyan-400" />
               <div>
-                <div className="text-white font-medium">Subtitles</div>
+                <div className="font-medium text-white">{t('settings.display.subtitles')}</div>
                 <div className="text-xs text-gray-500">
-                  Show subtitles by default
+                  {t('settings.display.subtitlesDescription')}
                 </div>
               </div>
             </div>
             <Toggle
-              enabled={subtitles}
-              onToggle={() => setSubtitles(!subtitles)} />
-            
+              enabled={settings.subtitlesEnabled}
+              onToggle={() =>
+                void updateSettings({
+                  subtitlesEnabled: !settings.subtitlesEnabled
+                })
+              }
+            />
           </div>
         </div>
       </section>
 
       <section
-        className="bg-white/5 border border-white/10 p-8 relative overflow-hidden"
+        className="relative overflow-hidden border border-white/10 bg-white/5 p-8"
         style={{
           clipPath: sectionClip
-        }}>
-        
-        <h2 className="text-2xl font-bold text-white mb-8 font-['Advent_Pro']">
-          Interface
+        }}
+      >
+        <h2 className="mb-8 text-2xl font-bold text-white font-['Advent_Pro']">
+          {t('settings.display.interface')}
         </h2>
 
         <div className="space-y-8">
           <div>
-            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-3">
-              Language
+            <label className="mb-3 block text-xs uppercase tracking-widest text-gray-500">
+              {t('settings.display.language')}
             </label>
-            <div className="flex gap-3">
-              {languages.map((lang) =>
-              <button
-                key={lang.id}
-                onClick={() => setLanguage(lang.id)}
-                className={`relative px-6 py-2 text-sm uppercase tracking-widest transition-all ${language === lang.id ? 'text-cyan-300 bg-cyan-500/10' : 'text-gray-400 bg-white/5 hover:bg-white/10'}`}
-                style={{
-                  clipPath:
-                  'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                }}>
-                
-                  {language === lang.id &&
-                <div
-                  className="absolute inset-0 prism-border"
+            <div className="flex flex-wrap gap-3">
+              {languages.map((language) => (
+                <button
+                  key={language}
+                  onClick={() => void updateSettings({ language })}
+                  className={`relative px-6 py-2 text-sm uppercase tracking-widest transition-all ${
+                    settings.language === language
+                      ? 'bg-cyan-500/10 text-cyan-300'
+                      : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                  }`}
                   style={{
                     clipPath:
-                    'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
-                  }} />
-
-                }
-                  {lang.label}
+                      'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                  }}
+                >
+                  {settings.language === language && (
+                    <div
+                      className="absolute inset-0 prism-border"
+                      style={{
+                        clipPath:
+                          'polygon(15% 0, 100% 0, 100% 70%, 85% 100%, 0 100%, 0 30%)'
+                      }}
+                    />
+                  )}
+                  {t(`settings.languages.${language}`)}
                 </button>
-              )}
+              ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-3">
-              Theme
+            <label className="mb-3 block text-xs uppercase tracking-widest text-gray-500">
+              {t('settings.display.theme')}
             </label>
             <div className="flex gap-4">
-              <div className="p-4 bg-cyan-500/10 border-2 border-cyan-500/50 rounded-lg flex items-center gap-3 cursor-pointer">
-                <div className="w-8 h-8 rounded bg-[#08080f] border border-white/20" />
+              <div className="flex cursor-pointer items-center gap-3 rounded-lg border-2 border-cyan-500/50 bg-cyan-500/10 p-4">
+                <div className="h-8 w-8 rounded border border-white/20 bg-[#08080f]" />
                 <div>
-                  <div className="text-white text-sm font-medium">
-                    Dark Crystal
+                  <div className="text-sm font-medium text-white">
+                    {t('settings.theme.darkCrystal')}
                   </div>
-                  <div className="text-xs text-cyan-400">Active</div>
+                  <div className="text-xs text-cyan-400">{t('settings.theme.active')}</div>
                 </div>
               </div>
-              <div className="p-4 bg-white/5 border border-white/10 rounded-lg flex items-center gap-3 cursor-pointer opacity-50">
-                <div className="w-8 h-8 rounded bg-gray-200 border border-gray-300" />
+              <div className="flex cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-white/5 p-4 opacity-50">
+                <div className="h-8 w-8 rounded border border-gray-300 bg-gray-200" />
                 <div>
-                  <div className="text-gray-400 text-sm font-medium">Light</div>
-                  <div className="text-xs text-gray-600">Coming Soon</div>
+                  <div className="text-sm font-medium text-gray-400">
+                    {t('settings.theme.light')}
+                  </div>
+                  <div className="text-xs text-gray-600">{t('settings.theme.comingSoon')}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between py-3 border-b border-white/5">
+          <div className="flex items-center justify-between border-b border-white/5 py-3">
             <div>
-              <div className="text-white font-medium">Reduced Motion</div>
+              <div className="font-medium text-white">{t('settings.display.reducedMotion')}</div>
               <div className="text-xs text-gray-500">
-                Minimize animations throughout the app
+                {t('settings.display.reducedMotionDescription')}
               </div>
             </div>
             <Toggle
-              enabled={reducedMotion}
-              onToggle={() => setReducedMotion(!reducedMotion)} />
-            
+              enabled={settings.reducedMotion}
+              onToggle={() =>
+                void updateSettings({
+                  reducedMotion: !settings.reducedMotion
+                })
+              }
+            />
           </div>
         </div>
       </section>
-    </div>);
-
+    </div>
+  );
 }
+
 export function SettingsPage() {
-  const [activeSection, setActiveSection] = useState('profile');
+  const { t } = useI18n();
+  const { loading, settings, updateSettings } = useAppSettings();
+  const [activeSection, setActiveSection] = useState<SettingsSectionId>('profile');
+
+  const sections = [
+    { icon: User, id: 'profile', labelKey: 'settings.sections.profile' },
+    { icon: Shield, id: 'security', labelKey: 'settings.sections.security' },
+    {
+      icon: CreditCard,
+      id: 'subscription',
+      labelKey: 'settings.sections.subscription'
+    },
+    {
+      icon: Bell,
+      id: 'notifications',
+      labelKey: 'settings.sections.notifications'
+    },
+    { icon: Monitor, id: 'display', labelKey: 'settings.sections.display' }
+  ] as const;
+
   const renderSection = () => {
     switch (activeSection) {
       case 'profile':
@@ -714,16 +761,19 @@ export function SettingsPage() {
       case 'subscription':
         return <SubscriptionSection />;
       case 'notifications':
-        return <NotificationsSection />;
+        return (
+          <NotificationsSection settings={settings} updateSettings={updateSettings} />
+        );
       case 'display':
-        return <DisplaySection />;
+        return <DisplaySection settings={settings} updateSettings={updateSettings} />;
       default:
         return null;
     }
   };
+
   return (
     <motion.div
-      className="px-16 py-12 pb-32 max-w-5xl mx-auto"
+      className="mx-auto max-w-5xl px-16 py-12 pb-32"
       initial={{
         opacity: 0,
         y: 20
@@ -738,37 +788,37 @@ export function SettingsPage() {
       }}
       transition={{
         duration: 0.5
-      }}>
-      
-      <div className="flex items-center gap-4 mb-12 border-b border-white/10 pb-6">
+      }}
+    >
+      <div className="mb-12 flex items-center gap-4 border-b border-white/10 pb-6">
         <Settings size={32} className="text-gray-400" />
         <h1 className="text-4xl font-bold text-white font-['Advent_Pro']">
-          Settings
+          {t('settings.title')}
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Sidebar Menu */}
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         <div className="space-y-2">
-          {sections.map((item) =>
-          <button
-            key={item.id}
-            onClick={() => setActiveSection(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all ${activeSection === item.id ? 'bg-cyan-500/10 border-l-2 border-cyan-400 text-cyan-300' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-            
+          {sections.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveSection(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all ${
+                activeSection === item.id
+                  ? 'bg-cyan-500/10 border-l-2 border-cyan-400 text-cyan-300'
+                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
+              }`}
+            >
               <item.icon size={18} />
-              <span className="uppercase tracking-widest text-sm">
-                {item.label}
-              </span>
+              <span className="text-sm uppercase tracking-widest">{t(item.labelKey)}</span>
             </button>
-          )}
+          ))}
         </div>
 
-        {/* Content Area */}
         <div className="md:col-span-2">
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeSection}
+              key={`${activeSection}-${loading ? 'loading' : 'ready'}`}
               initial={{
                 opacity: 0,
                 x: 20
@@ -783,13 +833,13 @@ export function SettingsPage() {
               }}
               transition={{
                 duration: 0.3
-              }}>
-              
+              }}
+            >
               {renderSection()}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
-    </motion.div>);
-
+    </motion.div>
+  );
 }

@@ -1,7 +1,10 @@
 const DB_NAME = 'madox-local-store';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const TMDB_CACHE_STORE = 'tmdb-cache';
 const WATCH_HISTORY_STORE = 'watch-history';
+const WATCHLIST_STORE = 'watchlist';
+const LIKES_STORE = 'likes';
+const SETTINGS_STORE = 'settings';
 
 export interface TmdbCacheRecord<T = unknown> {
   key: string;
@@ -30,6 +33,31 @@ export interface WatchHistoryRecord {
   currentTime: number;
   durationSeconds: number;
   updatedAt: number;
+}
+
+export interface MediaLibraryRecord {
+  id: string;
+  tmdbId: number;
+  mediaType: 'movie' | 'tv';
+  title: string;
+  year: string;
+  rating: string;
+  color: string;
+  videoId: string;
+  genre?: string;
+  duration?: string;
+  description?: string;
+  posterPath?: string | null;
+  backdropPath?: string | null;
+  popularity?: number;
+  voteCount?: number;
+  savedAt: number;
+}
+
+export interface SettingsRecord<T = unknown> {
+  key: string;
+  updatedAt: number;
+  value: T;
 }
 
 let dbPromise: Promise<IDBDatabase | null> | null = null;
@@ -71,6 +99,26 @@ function openDatabase(): Promise<IDBDatabase | null> {
           keyPath: 'id'
         });
         store.createIndex('updatedAt', 'updatedAt');
+      }
+
+      if (!db.objectStoreNames.contains(WATCHLIST_STORE)) {
+        const store = db.createObjectStore(WATCHLIST_STORE, {
+          keyPath: 'id'
+        });
+        store.createIndex('savedAt', 'savedAt');
+      }
+
+      if (!db.objectStoreNames.contains(LIKES_STORE)) {
+        const store = db.createObjectStore(LIKES_STORE, {
+          keyPath: 'id'
+        });
+        store.createIndex('savedAt', 'savedAt');
+      }
+
+      if (!db.objectStoreNames.contains(SETTINGS_STORE)) {
+        db.createObjectStore(SETTINGS_STORE, {
+          keyPath: 'key'
+        });
       }
     };
 
@@ -147,5 +195,91 @@ export async function putWatchHistoryRecord(
 export async function deleteWatchHistoryRecord(id: string): Promise<void> {
   await withStore(WATCH_HISTORY_STORE, 'readwrite', async (store) => {
     await wrapRequest(store.delete(id));
+  });
+}
+
+async function getMediaLibraryRecords(
+  storeName: typeof WATCHLIST_STORE | typeof LIKES_STORE
+): Promise<MediaLibraryRecord[]> {
+  const result = await withStore(storeName, 'readonly', async (store) => {
+    const records = await wrapRequest(store.getAll());
+    return (records as MediaLibraryRecord[]) ?? [];
+  });
+
+  return (result ?? []).sort((left, right) => right.savedAt - left.savedAt);
+}
+
+async function putMediaLibraryRecord(
+  storeName: typeof WATCHLIST_STORE | typeof LIKES_STORE,
+  record: MediaLibraryRecord
+): Promise<void> {
+  await withStore(storeName, 'readwrite', async (store) => {
+    await wrapRequest(store.put(record));
+  });
+}
+
+async function deleteMediaLibraryRecord(
+  storeName: typeof WATCHLIST_STORE | typeof LIKES_STORE,
+  id: string
+): Promise<void> {
+  await withStore(storeName, 'readwrite', async (store) => {
+    await wrapRequest(store.delete(id));
+  });
+}
+
+async function clearMediaLibraryRecords(
+  storeName: typeof WATCHLIST_STORE | typeof LIKES_STORE
+): Promise<void> {
+  await withStore(storeName, 'readwrite', async (store) => {
+    await wrapRequest(store.clear());
+  });
+}
+
+export async function getWatchlistRecords(): Promise<MediaLibraryRecord[]> {
+  return getMediaLibraryRecords(WATCHLIST_STORE);
+}
+
+export async function putWatchlistRecord(record: MediaLibraryRecord): Promise<void> {
+  await putMediaLibraryRecord(WATCHLIST_STORE, record);
+}
+
+export async function deleteWatchlistRecord(id: string): Promise<void> {
+  await deleteMediaLibraryRecord(WATCHLIST_STORE, id);
+}
+
+export async function clearWatchlistRecords(): Promise<void> {
+  await clearMediaLibraryRecords(WATCHLIST_STORE);
+}
+
+export async function getLikeRecords(): Promise<MediaLibraryRecord[]> {
+  return getMediaLibraryRecords(LIKES_STORE);
+}
+
+export async function putLikeRecord(record: MediaLibraryRecord): Promise<void> {
+  await putMediaLibraryRecord(LIKES_STORE, record);
+}
+
+export async function deleteLikeRecord(id: string): Promise<void> {
+  await deleteMediaLibraryRecord(LIKES_STORE, id);
+}
+
+export async function clearLikeRecords(): Promise<void> {
+  await clearMediaLibraryRecords(LIKES_STORE);
+}
+
+export async function getSettingsRecord<T = unknown>(
+  key: string
+): Promise<SettingsRecord<T> | null> {
+  return withStore(SETTINGS_STORE, 'readonly', async (store) => {
+    const record = await wrapRequest(store.get(key));
+    return (record as SettingsRecord<T> | undefined) ?? null;
+  });
+}
+
+export async function putSettingsRecord<T>(
+  record: SettingsRecord<T>
+): Promise<void> {
+  await withStore(SETTINGS_STORE, 'readwrite', async (store) => {
+    await wrapRequest(store.put(record));
   });
 }

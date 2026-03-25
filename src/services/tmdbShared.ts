@@ -90,6 +90,17 @@ export interface TMDBPersonCombinedCredit extends TMDBMovie {
   media_type: 'movie' | 'tv';
 }
 
+export interface TMDBPersonSummary {
+  adult?: boolean;
+  gender?: number;
+  id: number;
+  known_for?: TMDBMovie[];
+  known_for_department: string;
+  name: string;
+  popularity: number;
+  profile_path: string | null;
+}
+
 export interface PersonMediaCredit extends MovieData {
   character: string;
   genreIds: number[];
@@ -98,6 +109,19 @@ export interface PersonMediaCredit extends MovieData {
   primaryGenre: string;
   tmdbId: number;
   voteCount: number;
+}
+
+export interface PersonCardData {
+  color: string;
+  id: string;
+  knownForDepartment: string;
+  knownForTitles: string[];
+  mediaKinds: ('movie' | 'tv')[];
+  name: string;
+  popularity: number;
+  primaryKnownFor: string;
+  profilePath: string | null;
+  tmdbId: number;
 }
 
 export interface PersonProfileResponse {
@@ -128,6 +152,13 @@ export interface TMDBPageResult<T> {
 export interface MoviePageResult {
   page: number;
   results: MovieData[];
+  total_pages: number;
+  total_results: number;
+}
+
+export interface PersonPageResult {
+  page: number;
+  results: PersonCardData[];
   total_pages: number;
   total_results: number;
 }
@@ -248,10 +279,50 @@ export function personCreditToMediaData(
   };
 }
 
+export function tmdbPersonToCardData(item: TMDBPersonSummary): PersonCardData {
+  const knownFor = item.known_for ?? [];
+  const knownForTitles = knownFor
+    .map((entry) => entry.title || entry.name || '')
+    .filter(Boolean)
+    .slice(0, 3);
+  const mediaKinds = Array.from(
+    new Set(
+      knownFor
+        .map((entry) => (entry.media_type || (entry.first_air_date ? 'tv' : 'movie')) as 'movie' | 'tv')
+        .filter((entry): entry is 'movie' | 'tv' => entry === 'movie' || entry === 'tv')
+    )
+  );
+  const primaryGenre = genreName(knownFor[0]?.genre_ids?.[0] ?? -1);
+
+  return {
+    color: genreColor(primaryGenre),
+    id: String(item.id),
+    knownForDepartment: item.known_for_department,
+    knownForTitles,
+    mediaKinds,
+    name: item.name,
+    popularity: item.popularity,
+    primaryKnownFor: knownForTitles[0] || item.known_for_department || 'Actor',
+    profilePath: item.profile_path,
+    tmdbId: item.id
+  };
+}
+
 export function mapMoviePage(result: TMDBPageResult<TMDBMovie>): MoviePageResult {
   return {
     page: result.page,
     results: result.results.map(tmdbToMovieData),
+    total_pages: result.total_pages,
+    total_results: result.total_results
+  };
+}
+
+export function mapPersonPage(
+  result: TMDBPageResult<TMDBPersonSummary>
+): PersonPageResult {
+  return {
+    page: result.page,
+    results: result.results.map(tmdbPersonToCardData),
     total_pages: result.total_pages,
     total_results: result.total_results
   };

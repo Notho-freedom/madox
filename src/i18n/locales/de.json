@@ -1,0 +1,192 @@
+{
+  "common": {
+    "action": "Action",
+    "all": "Alle",
+    "animation": "Animation",
+    "back": "Zurück",
+    "cancel": "Abbrechen",
+    "clearAll": "Alles löschen",
+    "comedy": "Komödie",
+    "crime": "Krimi",
+    "drama": "Drama",
+    "horror": "Horror",
+    "items": "{{count}} Einträge",
+    "movie": "Film",
+    "movies": "Filme",
+    "nowPlaying": "Im Kino",
+    "onTheAir": "On Air",
+    "popular": "Beliebt",
+    "results": "{{count}} Ergebnisse",
+    "retry": "Erneut versuchen",
+    "saveChanges": "Speichern",
+    "scifi": "Sci-Fi",
+    "scifiFantasy": "Sci-Fi & Fantasy",
+    "search": "Suchen",
+    "series": "Serien",
+    "thriller": "Thriller",
+    "topRated": "Bestbewertet",
+    "watchNow": "Jetzt ansehen"
+  },
+  "nav": {
+    "actors": "Schauspieler",
+    "home": "Start",
+    "movies": "Filme",
+    "series": "Serien",
+    "settings": "Einstellungen",
+    "trending": "Trends",
+    "watchlist": "Merkliste"
+  },
+  "sidebar": {
+    "premiumMember": "Premium-Mitglied",
+    "searchPlaceholder": "Alles durchsuchen...",
+    "signOut": "Abmelden"
+  },
+  "moviesPage": {
+    "description": "Entdecke Filme mit Daten von TMDB.",
+    "searchPlaceholder": "Filme suchen...",
+    "title": "Filme"
+  },
+  "seriesPage": {
+    "featured": "Ausgewählte Serie",
+    "searchPlaceholder": "Serien suchen...",
+    "title": "Serien"
+  },
+  "trendingPage": {
+    "description": "Die beliebtesten Inhalte dieser Woche — mit TMDB.",
+    "falling": "Fallend",
+    "rising": "Steigend",
+    "stable": "Stabil",
+    "title": "Trends"
+  },
+  "watchlistPage": {
+    "emptyDescription": "Durchstöbere den Katalog und füge Titel zu deiner Liste hinzu.",
+    "emptyTitle": "Deine Merkliste ist leer.",
+    "title": "Meine Merkliste"
+  },
+  "movieDetail": {
+    "addToList": "Zur Liste",
+    "details": "Details",
+    "genres": "Genres",
+    "inWatchlist": "In Merkliste",
+    "linkCopied": "Link kopiert",
+    "loadingTrailer": "Trailer wird geladen...",
+    "moreLikeThis": "Mehr davon",
+    "officialTrailer": "Offizieller Trailer",
+    "released": "Veröffentlicht",
+    "runtime": "Laufzeit",
+    "share": "Teilen",
+    "shared": "Geteilt",
+    "status": "Status",
+    "studio": "Studio",
+    "topCast": "Hauptbesetzung",
+    "watchTrailer": "Trailer ansehen"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "sections": {
+      "display": "Anzeige",
+      "notifications": "Benachrichtigungen",
+      "profile": "Profil",
+      "security": "Sicherheit",
+      "subscription": "Abo"
+    },
+    "profile": {
+      "bio": "Bio",
+      "changeAvatar": "Avatar ändern",
+      "emailAddress": "E-Mail-Adresse",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "title": "Profildetails",
+      "uploadHint": "JPG, GIF oder PNG. Max. 1 MB."
+    },
+    "security": {
+      "activeSessions": "Aktive Sitzungen",
+      "changePassword": "Passwort ändern",
+      "confirmPassword": "Passwort bestätigen",
+      "current": "Aktuell",
+      "currentPassword": "Aktuelles Passwort",
+      "loginAlerts": "Login-Benachrichtigungen",
+      "loginAlertsDescription": "Erhalte Hinweise bei neuen Anmeldungen",
+      "newPassword": "Neues Passwort",
+      "newPasswordPlaceholder": "Neues Passwort eingeben",
+      "revoke": "Entziehen",
+      "securityOptions": "Sicherheitsoptionen",
+      "twoFactorAuthentication": "Zwei-Faktor-Authentifizierung",
+      "twoFactorDescription": "Füge eine zusätzliche Sicherheitsebene hinzu",
+      "updatePassword": "Passwort aktualisieren"
+    },
+    "subscription": {
+      "active": "Aktiv",
+      "addPaymentMethod": "+ Zahlungsmethode hinzufügen",
+      "currentPlan": "Aktueller Plan",
+      "edit": "Bearbeiten",
+      "managePlan": "Plan verwalten",
+      "nextBillingDate": "Nächste Abrechnung",
+      "paymentMethod": "Zahlungsmethode"
+    },
+    "notifications": {
+      "channels": "Kanäle",
+      "contentAlerts": "Inhaltsalarme",
+      "emailDescription": "Updates per E-Mail erhalten",
+      "emailNotifications": "E-Mail-Benachrichtigungen",
+      "newReleases": "Neuerscheinungen",
+      "newReleasesDescription": "Wenn neue Filme oder Serien erscheinen",
+      "personalizedRecommendations": "Personalisierte Empfehlungen",
+      "personalizedRecommendationsDescription": "Empfehlungen passend zu deinem Geschmack",
+      "pushDescription": "Push-Benachrichtigungen auf deinen Geräten erhalten",
+      "pushNotifications": "Push-Benachrichtigungen",
+      "title": "Benachrichtigungseinstellungen",
+      "watchlistUpdates": "Merkliste-Updates",
+      "watchlistUpdatesDescription": "Wenn ein Titel aus deiner Liste verfügbar wird",
+      "weeklyNewsletter": "Wöchentlicher Newsletter",
+      "weeklyNewsletterDescription": "Wöchentliche Übersicht mit Top-Inhalten"
+    },
+    "display": {
+      "autoplayDescription": "Die nächste Episode automatisch starten",
+      "autoplayNextEpisode": "Autoplay",
+      "interface": "Oberfläche",
+      "language": "Sprache",
+      "playback": "Wiedergabe",
+      "reducedMotion": "Reduzierte Bewegung",
+      "reducedMotionDescription": "Animationen in der App minimieren",
+      "subtitles": "Untertitel",
+      "subtitlesDescription": "Untertitel standardmäßig anzeigen",
+      "theme": "Thema",
+      "videoQuality": "Videoqualität"
+    },
+    "languages": {
+      "de": "Deutsch",
+      "en": "English",
+      "es": "Español",
+      "fr": "Français"
+    },
+    "theme": {
+      "active": "Aktiv",
+      "comingSoon": "Bald",
+      "darkCrystal": "Dark Crystal",
+      "light": "Hell"
+    }
+  },
+  "actorsPage": {
+    "description": "Entdecke die beliebtesten Schauspieler und öffne ihr vollständiges Profil.",
+    "emptyDescription": "Versuche einen anderen Namen oder setze die Filter zurück.",
+    "emptyTitle": "Keine passenden Schauspieler gefunden.",
+    "knownFor": "Bekannt aus",
+    "knownForFilter": "Bekannt für",
+    "knownForOptions": {
+      "all": "Alle",
+      "mixed": "Gemischt",
+      "movies": "Filme",
+      "series": "Serien"
+    },
+    "loadHint": "Beliebte Schauspieler mit TMDB-Daten.",
+    "popularity": "Popularität",
+    "searchPlaceholder": "Schauspieler suchen...",
+    "sort": "Sortieren",
+    "sortOptions": {
+      "alphabetical": "A-Z",
+      "popular": "Am beliebtesten"
+    },
+    "title": "Schauspieler"
+  }
+}

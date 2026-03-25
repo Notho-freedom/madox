@@ -12,13 +12,17 @@ import {
   getDetails,
   getNowPlaying,
   getPersonProfile,
+  getPopularPeople,
   getPopular,
   getSimilar,
   getTopRated,
   getTrailerId,
   getTrending,
+  searchPeople,
   search,
   type MoviePageResult,
+  type PersonCardData,
+  type PersonPageResult,
   type PersonProfileResponse,
   type TMDBCast,
   type TMDBMovieDetails
@@ -45,6 +49,17 @@ interface UsePersonProfileResult {
   data: PersonProfileResponse | null;
   error: string | null;
   loading: boolean;
+  refetch: () => void;
+}
+
+interface UsePeopleCatalogResult {
+  data: PersonCardData[];
+  error: string | null;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  isRefreshing: boolean;
+  loading: boolean;
+  loadMore: () => void;
   refetch: () => void;
 }
 
@@ -104,6 +119,23 @@ function mergeUniqueMovies(current: MovieData[], incoming: MovieData[]): MovieDa
   return Array.from(merged.values());
 }
 
+function mergeUniquePeople(
+  current: PersonCardData[],
+  incoming: PersonCardData[]
+): PersonCardData[] {
+  const merged = new Map<string, PersonCardData>();
+
+  for (const item of current) {
+    merged.set(item.id, item);
+  }
+
+  for (const item of incoming) {
+    merged.set(item.id, item);
+  }
+
+  return Array.from(merged.values());
+}
+
 function toMovieBatch(
   pages: MoviePageResult[],
   filter?: (item: MovieData) => boolean
@@ -115,6 +147,10 @@ function toMovieBatch(
 
 function getErrorMessage(err: unknown): string {
   return err instanceof Error ? err.message : 'Unknown catalog error.';
+}
+
+function toPersonBatch(pages: PersonPageResult[]): PersonCardData[] {
+  return pages.flatMap((page) => page.results);
 }
 
 interface PaginatedQueryOptions {
@@ -341,6 +377,178 @@ function usePaginatedMovieQuery(
   };
 }
 
+function usePaginatedPeopleQuery(
+  fetchPage: (page: number, signal?: AbortSignal) => Promise<PersonPageResult>,
+  options: {
+    enabled?: boolean;
+    initialPageBatch?: number;
+  } = {}
+): UsePeopleCatalogResult {
+  const { enabled = true, initialPageBatch = INITIAL_PAGE_BATCH } = options;
+  const [data, setData] = useState<PersonCardData[]>([]);
+  const [loading, setLoading] = useState(enabled);
+  const [error, setError] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const dataRef = useRef<PersonCardData[]>([]);
+  const loadedPageRef = useRef(0);
+  const totalPagesRef = useRef(1);
+  const generationRef = useRef(0);
+  const initAbortRef = useRef<AbortController | null>(null);
+  const loadMoreAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
+
+  const initialize = useCallback(async () => {
+    generationRef.current += 1;
+    const generation = generationRef.current;
+
+    initAbortRef.current?.abort();
+    const controller = new AbortController();
+    initAbortRef.current = controller;
+
+    if (!enabled) {
+      controller.abort();
+      loadedPageRef.current = 0;
+      totalPagesRef.current = 1;
+      setData([]);
+      setLoading(false);
+      setError(null);
+      setHasMore(false);
+      setIsRefreshing(false);
+      setIsLoadingMore(false);
+      return;
+    }
+
+    const hasExistingData = dataRef.current.length > 0;
+    setError(null);
+    setLoading(!hasExistingData);
+    setIsRefreshing(hasExistingData);
+    setIsLoadingMore(false);
+
+    try {
+      const firstPage = await fetchPage(1, controller.signal);
+
+      if (generation !== generationRef.current || controller.signal.aborted) {
+        return;
+      }
+
+      totalPagesRef.current = Math.max(firstPage.total_pages, 1);
+      const finalInitialPage = Math.min(initialPageBatch, totalPagesRef.current);
+      const extraPages =
+        finalInitialPage > 1
+          ? await Promise.all(
+              Array.from({ length: finalInitialPage - 1 }, (_unused, index) =>
+                fetchPage(index + 2, controller.signal)
+              )
+            )
+          : [];
+
+      if (generation !== generationRef.current || controller.signal.aborted) {
+        return;
+      }
+
+      loadedPageRef.current = finalInitialPage;
+      startTransition(() => {
+        setData(toPersonBatch([firstPage, ...extraPages]));
+        setHasMore(finalInitialPage < totalPagesRef.current);
+      });
+    } catch (err: unknown) {
+      if (
+        generation !== generationRef.current ||
+        (err instanceof DOMException && err.name === 'AbortError')
+      ) {
+        return;
+      }
+
+      setError(getErrorMessage(err));
+      if (!hasExistingData) {
+        setData([]);
+        setHasMore(false);
+      }
+    } finally {
+      if (generation === generationRef.current && !controller.signal.aborted) {
+        setLoading(false);
+        setIsRefreshing(false);
+      }
+    }
+  }, [enabled, fetchPage, initialPageBatch]);
+
+  useEffect(() => {
+    void initialize();
+
+    return () => {
+      generationRef.current += 1;
+      initAbortRef.current?.abort();
+      loadMoreAbortRef.current?.abort();
+    };
+  }, [initialize]);
+
+  const loadMore = useCallback(async () => {
+    if (
+      !enabled ||
+      loading ||
+      isRefreshing ||
+      isLoadingMore ||
+      loadedPageRef.current >= totalPagesRef.current
+    ) {
+      return;
+    }
+
+    const generation = generationRef.current;
+    loadMoreAbortRef.current?.abort();
+    const controller = new AbortController();
+    loadMoreAbortRef.current = controller;
+    const nextPage = loadedPageRef.current + 1;
+
+    setIsLoadingMore(true);
+    setError(null);
+
+    try {
+      const page = await fetchPage(nextPage, controller.signal);
+
+      if (generation !== generationRef.current || controller.signal.aborted) {
+        return;
+      }
+
+      loadedPageRef.current = nextPage;
+      startTransition(() => {
+        setData((current) => mergeUniquePeople(current, page.results));
+        setHasMore(nextPage < totalPagesRef.current);
+      });
+    } catch (err: unknown) {
+      if (
+        generation !== generationRef.current ||
+        (err instanceof DOMException && err.name === 'AbortError')
+      ) {
+        return;
+      }
+
+      setError(getErrorMessage(err));
+    } finally {
+      if (generation === generationRef.current && !controller.signal.aborted) {
+        setIsLoadingMore(false);
+      }
+    }
+  }, [enabled, fetchPage, isLoadingMore, isRefreshing, loading]);
+
+  return {
+    data,
+    error,
+    hasMore,
+    isLoadingMore,
+    isRefreshing,
+    loading,
+    loadMore,
+    refetch: () => {
+      void initialize();
+    }
+  };
+}
+
 export function useTMDBCatalog(
   source: TMDBCatalogSource,
   options: PaginatedQueryOptions = {}
@@ -506,6 +714,22 @@ export function useDiscover(type: 'movie' | 'tv', genreId: number): UseTMDBResul
 
   return usePaginatedMovieQuery(fetchPage, {
     filter: hasPoster
+  });
+}
+
+export function useActorsCatalog(query: string): UsePeopleCatalogResult {
+  const trimmedQuery = query.trim();
+  const fetchPage = useCallback(
+    (page: number, signal?: AbortSignal) =>
+      trimmedQuery
+        ? searchPeople(trimmedQuery, page, { signal })
+        : getPopularPeople(page, { signal }),
+    [trimmedQuery]
+  );
+
+  return usePaginatedPeopleQuery(fetchPage, {
+    enabled: true,
+    initialPageBatch: trimmedQuery ? 1 : 2
   });
 }
 

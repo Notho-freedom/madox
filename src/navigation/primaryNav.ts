@@ -5,6 +5,7 @@ import {
   Settings,
   TrendingUp,
   Tv,
+  Users,
   type LucideIcon
 } from 'lucide-react';
 
@@ -12,45 +13,51 @@ export type NavPageId =
   | 'home'
   | 'movies'
   | 'series'
+  | 'actors'
   | 'trending'
   | 'watchlist'
   | 'settings';
 
 export interface PrimaryNavItem {
   id: NavPageId;
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
 }
 
 export const primaryNavItems: PrimaryNavItem[] = [
   {
     id: 'home',
-    label: 'Home',
+    labelKey: 'nav.home',
     icon: Home
   },
   {
     id: 'movies',
-    label: 'Movies',
+    labelKey: 'nav.movies',
     icon: Film
   },
   {
     id: 'series',
-    label: 'Series',
+    labelKey: 'nav.series',
     icon: Tv
   },
   {
+    id: 'actors',
+    labelKey: 'nav.actors',
+    icon: Users
+  },
+  {
     id: 'trending',
-    label: 'Trending',
+    labelKey: 'nav.trending',
     icon: TrendingUp
   },
   {
     id: 'watchlist',
-    label: 'Watchlist',
+    labelKey: 'nav.watchlist',
     icon: Bookmark
   },
   {
     id: 'settings',
-    label: 'Settings',
+    labelKey: 'nav.settings',
     icon: Settings
   }
 ];

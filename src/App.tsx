@@ -10,6 +10,7 @@ import { defaultHomeGenreId, type HomeGenreId } from './data/homeGenres';
 import { type MovieData } from './data/movies';
 import { type NavPageId } from './navigation/primaryNav';
 import { ActorProfilePage } from './pages/ActorProfilePage';
+import { ActorsPage } from './pages/ActorsPage';
 import { HomePage } from './pages/HomePage';
 import { HistoryPage } from './pages/HistoryPage';
 import { MovieDetailPage } from './pages/MovieDetailPage';
@@ -20,6 +21,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { TrendingPage } from './pages/TrendingPage';
 import { ViewAllPage } from './pages/ViewAllPage';
 import { WatchlistPage } from './pages/WatchlistPage';
+import { useI18n } from './i18n/useI18n';
 import { getTrailerId, type TMDBCast } from './services/tmdb';
 import { type WatchHistoryEntry } from './services/watchHistory';
 
@@ -36,6 +38,7 @@ interface PersonOriginState {
 }
 
 export function App() {
+  const { t } = useI18n();
   const [activePage, setActivePage] = useState<NavPageId>('home');
   const [activeHomeGenre, setActiveHomeGenre] =
     useState<HomeGenreId>(defaultHomeGenreId);
@@ -63,8 +66,8 @@ export function App() {
       behavior: 'smooth'
     });
   };
-  const handleActorClick = useCallback(
-    (actor: TMDBCast) => {
+  const handlePersonSelect = useCallback(
+    (personId: number) => {
       setPersonOrigin({
         activeHomeGenre,
         activePage,
@@ -73,7 +76,7 @@ export function App() {
         viewAllCategory
       });
       setSelectedPerson({
-        id: actor.id
+        id: personId
       });
       setSelectedMovie(null);
       setIsPlayerOpen(false);
@@ -86,6 +89,12 @@ export function App() {
       });
     },
     [activeHomeGenre, activePage, isHistoryOpen, selectedMovie, viewAllCategory]
+  );
+  const handleActorClick = useCallback(
+    (actor: TMDBCast) => {
+      handlePersonSelect(actor.id);
+    },
+    [handlePersonSelect]
   );
   const handlePlay = useCallback(
     async (movie?: MovieData) => {
@@ -279,6 +288,8 @@ export function App() {
         return <MoviesPage onMovieClick={handleMovieClick} />;
       case 'series':
         return <SeriesPage onMovieClick={handleMovieClick} />;
+      case 'actors':
+        return <ActorsPage onActorClick={handlePersonSelect} />;
       case 'trending':
         return <TrendingPage onMovieClick={handleMovieClick} />;
       case 'watchlist':
@@ -346,7 +357,7 @@ export function App() {
             <div className="text-center">
               <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-2 border-cyan-400/30 border-t-cyan-400" />
               <p className="text-gray-400 uppercase tracking-widest text-sm">
-                Loading trailer...
+                {t('movieDetail.loadingTrailer')}
               </p>
             </div>
           </motion.div>

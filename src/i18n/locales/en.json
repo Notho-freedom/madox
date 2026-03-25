@@ -1,0 +1,192 @@
+{
+  "common": {
+    "action": "Action",
+    "all": "All",
+    "animation": "Animation",
+    "back": "Back",
+    "cancel": "Cancel",
+    "clearAll": "Clear All",
+    "comedy": "Comedy",
+    "crime": "Crime",
+    "drama": "Drama",
+    "horror": "Horror",
+    "items": "{{count}} items",
+    "movie": "Movie",
+    "movies": "Movies",
+    "nowPlaying": "Now Playing",
+    "onTheAir": "On The Air",
+    "popular": "Popular",
+    "results": "{{count}} results",
+    "retry": "Retry",
+    "saveChanges": "Save Changes",
+    "scifi": "Sci-Fi",
+    "scifiFantasy": "Sci-Fi & Fantasy",
+    "search": "Search",
+    "series": "Series",
+    "thriller": "Thriller",
+    "topRated": "Top Rated",
+    "watchNow": "Watch Now"
+  },
+  "nav": {
+    "actors": "Actors",
+    "home": "Home",
+    "movies": "Movies",
+    "series": "Series",
+    "settings": "Settings",
+    "trending": "Trending",
+    "watchlist": "Watchlist"
+  },
+  "sidebar": {
+    "premiumMember": "Premium Member",
+    "searchPlaceholder": "Search for anything...",
+    "signOut": "Sign Out"
+  },
+  "moviesPage": {
+    "description": "Discover movies powered by TMDB.",
+    "searchPlaceholder": "Search movies...",
+    "title": "Movies"
+  },
+  "seriesPage": {
+    "featured": "Featured Series",
+    "searchPlaceholder": "Search series...",
+    "title": "Series"
+  },
+  "trendingPage": {
+    "description": "Most popular content this week — powered by TMDB.",
+    "falling": "Falling",
+    "rising": "Rising",
+    "stable": "Stable",
+    "title": "Trending Now"
+  },
+  "watchlistPage": {
+    "emptyDescription": "Browse content and add items to your watchlist.",
+    "emptyTitle": "Your watchlist is empty.",
+    "title": "My Watchlist"
+  },
+  "movieDetail": {
+    "addToList": "Add to List",
+    "details": "Details",
+    "genres": "Genres",
+    "inWatchlist": "In Watchlist",
+    "linkCopied": "Link copied",
+    "loadingTrailer": "Loading trailer...",
+    "moreLikeThis": "More Like This",
+    "officialTrailer": "Official Trailer",
+    "released": "Released",
+    "runtime": "Runtime",
+    "share": "Share",
+    "shared": "Shared",
+    "status": "Status",
+    "studio": "Studio",
+    "topCast": "Top Cast",
+    "watchTrailer": "Watch Trailer"
+  },
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "display": "Display",
+      "notifications": "Notifications",
+      "profile": "Profile",
+      "security": "Security",
+      "subscription": "Subscription"
+    },
+    "profile": {
+      "bio": "Bio",
+      "changeAvatar": "Change Avatar",
+      "emailAddress": "Email Address",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "title": "Profile Details",
+      "uploadHint": "JPG, GIF or PNG. Max 1MB."
+    },
+    "security": {
+      "activeSessions": "Active Sessions",
+      "changePassword": "Change Password",
+      "confirmPassword": "Confirm Password",
+      "current": "Current",
+      "currentPassword": "Current Password",
+      "loginAlerts": "Login Alerts",
+      "loginAlertsDescription": "Get notified of new sign-ins to your account",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Enter new password",
+      "revoke": "Revoke",
+      "securityOptions": "Security Options",
+      "twoFactorAuthentication": "Two-Factor Authentication",
+      "twoFactorDescription": "Add an extra layer of security to your account",
+      "updatePassword": "Update Password"
+    },
+    "subscription": {
+      "active": "Active",
+      "addPaymentMethod": "+ Add Payment Method",
+      "currentPlan": "Current Plan",
+      "edit": "Edit",
+      "managePlan": "Manage Plan",
+      "nextBillingDate": "Next billing date",
+      "paymentMethod": "Payment Method"
+    },
+    "notifications": {
+      "channels": "Channels",
+      "contentAlerts": "Content Alerts",
+      "emailDescription": "Receive updates via email",
+      "emailNotifications": "Email Notifications",
+      "newReleases": "New Releases",
+      "newReleasesDescription": "When new movies or series are added",
+      "personalizedRecommendations": "Personalized Recommendations",
+      "personalizedRecommendationsDescription": "Curated picks based on your taste",
+      "pushDescription": "Receive push notifications on your devices",
+      "pushNotifications": "Push Notifications",
+      "title": "Notification Preferences",
+      "watchlistUpdates": "Watchlist Updates",
+      "watchlistUpdatesDescription": "When items in your watchlist become available",
+      "weeklyNewsletter": "Weekly Newsletter",
+      "weeklyNewsletterDescription": "A digest of top content every week"
+    },
+    "display": {
+      "autoplayDescription": "Automatically play the next episode",
+      "autoplayNextEpisode": "Autoplay Next Episode",
+      "interface": "Interface",
+      "language": "Language",
+      "playback": "Playback",
+      "reducedMotion": "Reduced Motion",
+      "reducedMotionDescription": "Minimize animations throughout the app",
+      "subtitles": "Subtitles",
+      "subtitlesDescription": "Show subtitles by default",
+      "theme": "Theme",
+      "videoQuality": "Video Quality"
+    },
+    "languages": {
+      "de": "Deutsch",
+      "en": "English",
+      "es": "Español",
+      "fr": "Français"
+    },
+    "theme": {
+      "active": "Active",
+      "comingSoon": "Coming Soon",
+      "darkCrystal": "Dark Crystal",
+      "light": "Light"
+    }
+  },
+  "actorsPage": {
+    "description": "Browse the most popular actors and open their full profiles.",
+    "emptyDescription": "Try another name or reset your filters.",
+    "emptyTitle": "No actors match this search.",
+    "knownFor": "Known For",
+    "knownForFilter": "Known for",
+    "knownForOptions": {
+      "all": "All",
+      "mixed": "Mixed",
+      "movies": "Movies",
+      "series": "Series"
+    },
+    "loadHint": "Popular actors powered by TMDB.",
+    "popularity": "Popularity",
+    "searchPlaceholder": "Search actors...",
+    "sort": "Sort",
+    "sortOptions": {
+      "alphabetical": "A-Z",
+      "popular": "Most Popular"
+    },
+    "title": "Actors"
+  }
+}

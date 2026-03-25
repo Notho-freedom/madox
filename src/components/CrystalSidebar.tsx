@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useI18n } from '../i18n/useI18n';
 import { primaryNavItems, type NavPageId } from '../navigation/primaryNav';
 import {
   sidebarFooterAction,
@@ -16,6 +17,7 @@ export function CrystalSidebar({
   activePage,
   onNavigate
 }: CrystalSidebarProps) {
+  const { t } = useI18n();
   const [isExpanded, setIsExpanded] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rowClipPath =
@@ -99,7 +101,7 @@ export function CrystalSidebar({
                   }}>
                   <input
                     type="text"
-                    placeholder="Search for anything..."
+                    placeholder={t('sidebar.searchPlaceholder')}
                     className="w-full bg-transparent text-sm tracking-[0.18em] text-white outline-none placeholder:text-gray-500"
                   />
                 </div>
@@ -116,8 +118,8 @@ export function CrystalSidebar({
                 <button
                   key={item.id}
                   type="button"
-                  title={item.label}
-                  aria-label={item.label}
+                  title={t(item.labelKey)}
+                  aria-label={t(item.labelKey)}
                   onClick={() => handleSelect(item.id)}
                   className="group relative grid h-12 w-full grid-cols-[96px_minmax(0,1fr)] items-center overflow-hidden text-left"
                   style={{
@@ -174,15 +176,16 @@ export function CrystalSidebar({
                       } ${
                         isActive ? 'text-cyan-300' : 'text-gray-500 group-hover:text-white'
                       }`}>
-                      {item.label}
+                      {t(item.labelKey)}
                     </span>
                   </div>
                 </button>
               );
             })}
 
-            <div className="space-y-3 pt-3">
-              {sidebarUtilityActions.map((item) => (
+            {sidebarUtilityActions.length > 0 && (
+              <div className="space-y-3 pt-3">
+                {sidebarUtilityActions.map((item) => (
                 <button
                   key={item.id}
                   type="button"
@@ -228,15 +231,16 @@ export function CrystalSidebar({
                       className={`flex items-center gap-3 whitespace-nowrap text-sm uppercase tracking-[0.2em] transition-all duration-200 ${
                         isExpanded ? 'translate-x-0 opacity-100' : 'translate-x-3 opacity-0'
                       } text-gray-500 group-hover:text-white`}>
-                      <span>{item.label}</span>
+                      <span>{t(item.labelKey)}</span>
                       {item.hasIndicator && (
                         <span className="h-2 w-2 rounded-full bg-cyan-400" />
                       )}
                     </div>
                   </div>
                 </button>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="space-y-3">
@@ -292,7 +296,7 @@ export function CrystalSidebar({
                     {sidebarProfile.name}
                   </div>
                   <div className="text-[11px] uppercase tracking-[0.2em] text-cyan-400/80">
-                    {sidebarProfile.membership}
+                    {t(sidebarProfile.membershipKey)}
                   </div>
                 </div>
               </div>
@@ -341,7 +345,7 @@ export function CrystalSidebar({
                   className={`block whitespace-nowrap text-sm uppercase tracking-[0.2em] text-red-400 transition-all duration-200 group-hover:text-red-300 ${
                     isExpanded ? 'translate-x-0 opacity-100' : 'translate-x-3 opacity-0'
                   }`}>
-                  {sidebarFooterAction.label}
+                  {t(sidebarFooterAction.labelKey)}
                 </span>
               </div>
             </button>
