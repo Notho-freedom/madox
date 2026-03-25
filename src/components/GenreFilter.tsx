@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { HorizontalCarousel } from './HorizontalCarousel';
 import {
   homeGenreOptions,
   type HomeGenreId
@@ -12,8 +13,12 @@ interface GenreFilterProps {
 
 export function GenreFilter({ activeGenre, onChange }: GenreFilterProps) {
   return (
-    <div className="w-full px-16 py-8 overflow-x-auto scrollbar-hide">
-      <div className="flex items-center gap-4 min-w-max">
+    <HorizontalCarousel
+      className="w-full px-16 py-8"
+      contentClassName="flex min-w-max items-center gap-4"
+      scrollerClassName="py-1"
+      buttonClassName="h-9 w-9"
+    >
         {homeGenreOptions.map((genre) => {
           const isActive = activeGenre === genre.id;
           return (
@@ -56,7 +61,6 @@ export function GenreFilter({ activeGenre, onChange }: GenreFilterProps) {
             </button>);
 
         })}
-      </div>
-    </div>);
+    </HorizontalCarousel>);
 
 }

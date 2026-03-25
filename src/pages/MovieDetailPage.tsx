@@ -12,6 +12,7 @@ import {
   User } from
 'lucide-react';
 import { getYouTubeThumbnail, type MovieData } from '../data/movies';
+import { HorizontalCarousel } from '../components/HorizontalCarousel';
 import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { MovieCard } from '../components/MovieCard';
 import { CardSkeleton } from '../components/LoadingSkeleton';
@@ -270,9 +271,11 @@ export function MovieDetailPage({
             {loading ?
             <CardSkeleton count={4} /> :
             similar.length > 0 ?
-            <div
-              ref={similarScrollRef}
-              className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+            <HorizontalCarousel
+              className="pb-4"
+              contentClassName="flex min-w-max gap-6"
+              scrollerRef={similarScrollRef}
+            >
                 {similar.map((m, i) =>
               <MovieCard
                 key={m.id}
@@ -288,7 +291,7 @@ export function MovieDetailPage({
                   onLoadMore={loadMoreSimilar}
                   rootMargin="0px 320px 0px 0px"
                   rootRef={similarScrollRef} />
-              </div> :
+              </HorizontalCarousel> :
 
             <p className="text-gray-500">No similar content found.</p>
             }

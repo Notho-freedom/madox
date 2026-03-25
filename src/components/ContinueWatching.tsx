@@ -4,6 +4,7 @@ import { ChevronRight, Clock3, Play } from 'lucide-react';
 import { useWatchHistory } from '../hooks/useWatchHistory';
 import { poster } from '../services/tmdb';
 import { type WatchHistoryEntry } from '../services/watchHistory';
+import { HorizontalCarousel } from './HorizontalCarousel';
 import { ContinueWatchingSkeleton } from './LoadingSkeleton';
 
 interface ContinueWatchingProps {
@@ -60,84 +61,85 @@ export function ContinueWatching({
       }
 
       {!loading && data.length > 0 &&
-        <div className="overflow-x-auto pb-6 scrollbar-hide">
-          <div className="flex min-w-max gap-5 pr-8">
-            {data.map((item, index) =>
-              <motion.button
-                key={item.id}
-                type="button"
-                onClick={() => onResumeMovie?.(item)}
-                className="group relative w-[300px] overflow-hidden text-left"
-                initial={{
-                  opacity: 0,
-                  y: 18
-                }}
-                whileInView={{
-                  opacity: 1,
-                  y: 0
-                }}
-                viewport={{
-                  once: true
-                }}
-                transition={{
-                  delay: index * 0.06
-                }}
-                whileHover={{
-                  y: -4
+        <HorizontalCarousel
+          className="pb-6"
+          contentClassName="flex min-w-max gap-5 pr-8"
+        >
+          {data.map((item, index) =>
+            <motion.button
+              key={item.id}
+              type="button"
+              onClick={() => onResumeMovie?.(item)}
+              className="group relative w-[300px] overflow-hidden text-left"
+              initial={{
+                opacity: 0,
+                y: 18
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0
+              }}
+              viewport={{
+                once: true
+              }}
+              transition={{
+                delay: index * 0.06
+              }}
+              whileHover={{
+                y: -4
+              }}>
+              <div
+                className="relative aspect-video overflow-hidden bg-[#12121a]"
+                style={{
+                  clipPath:
+                    'polygon(8% 0, 100% 0, 100% 88%, 92% 100%, 0 100%, 0 12%)'
                 }}>
                 <div
-                  className="relative aspect-video overflow-hidden bg-[#12121a]"
+                  className="absolute inset-0 bg-cover bg-center opacity-80 transition-all duration-500 group-hover:scale-105 group-hover:opacity-95"
                   style={{
-                    clipPath:
-                      'polygon(8% 0, 100% 0, 100% 88%, 92% 100%, 0 100%, 0 12%)'
-                  }}>
-                  <div
-                    className="absolute inset-0 bg-cover bg-center opacity-80 transition-all duration-500 group-hover:scale-105 group-hover:opacity-95"
-                    style={{
-                      backgroundImage:
-                        item.backdropPath ?
-                          `url(https://image.tmdb.org/t/p/w780${item.backdropPath})` :
-                          `url(${poster(item.posterPath ?? null, 'w342')})`
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
+                    backgroundImage:
+                      item.backdropPath ?
+                        `url(https://image.tmdb.org/t/p/w780${item.backdropPath})` :
+                        `url(${poster(item.posterPath ?? null, 'w342')})`
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
 
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md">
-                      <Play size={18} fill="white" className="ml-0.5 text-white" />
-                    </div>
-                  </div>
-
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-cyan-300">
-                      <span>{item.genre || 'Entertainment'}</span>
-                      <span>{Math.round(item.progressPercent ?? 0)}%</span>
-                    </div>
-                    <h3 className="mb-2 truncate text-base font-bold text-white">
-                      {item.title}
-                    </h3>
-                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className="h-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"
-                        style={{
-                          width: `${item.progressPercent ?? 0}%`
-                        }}
-                      />
-                    </div>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-white/10 backdrop-blur-md">
+                    <Play size={18} fill="white" className="ml-0.5 text-white" />
                   </div>
                 </div>
 
-                <div
-                  className="absolute inset-[-1px] z-[-1] bg-gradient-to-br from-white/6 via-transparent to-white/6 opacity-30 transition-opacity duration-300 group-hover:opacity-55"
-                  style={{
-                    clipPath:
-                      'polygon(8% 0, 100% 0, 100% 88%, 92% 100%, 0 100%, 0 12%)'
-                  }}
-                />
-              </motion.button>
-            )}
-          </div>
-        </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.18em] text-cyan-300">
+                    <span>{item.genre || 'Entertainment'}</span>
+                    <span>{Math.round(item.progressPercent ?? 0)}%</span>
+                  </div>
+                  <h3 className="mb-2 truncate text-base font-bold text-white">
+                    {item.title}
+                  </h3>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"
+                      style={{
+                        width: `${item.progressPercent ?? 0}%`
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="absolute inset-[-1px] z-[-1] bg-gradient-to-br from-white/6 via-transparent to-white/6 opacity-30 transition-opacity duration-300 group-hover:opacity-55"
+                style={{
+                  clipPath:
+                    'polygon(8% 0, 100% 0, 100% 88%, 92% 100%, 0 100%, 0 12%)'
+                }}
+              />
+            </motion.button>
+          )}
+        </HorizontalCarousel>
       }
     </div>
   );

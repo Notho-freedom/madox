@@ -15,6 +15,7 @@ import {
   useTMDBCatalog
 } from '../hooks/useTMDB';
 import { type MoviePageResult } from '../services/tmdb';
+import { HorizontalCarousel } from './HorizontalCarousel';
 import { CardSkeleton, ErrorState } from './LoadingSkeleton';
 import { LoadMoreSentinel } from './LoadMoreSentinel';
 import { MovieCard } from './MovieCard';
@@ -106,8 +107,11 @@ function GridSection({
         <CardSkeleton count={6} /> :
       error && data.length === 0 ?
         <ErrorState message={error} onRetry={refetch} /> :
-        <div ref={scrollRef} className="overflow-x-auto pb-12 scrollbar-hide">
-          <div className="flex min-w-max gap-6 pr-16">
+        <HorizontalCarousel
+          className="pb-12"
+          contentClassName="flex min-w-max gap-6 pr-16"
+          scrollerRef={scrollRef}
+        >
             {data.map((movie, index) =>
               <MovieCard
                 key={movie.id}
@@ -122,8 +126,7 @@ function GridSection({
               onLoadMore={loadMore}
               rootMargin="0px 320px 0px 0px"
               rootRef={scrollRef} />
-          </div>
-        </div>
+        </HorizontalCarousel>
       }
     </div>
   );

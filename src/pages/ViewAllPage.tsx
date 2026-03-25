@@ -11,6 +11,7 @@ import {
   SortAsc } from
 'lucide-react';
 import { MovieCard } from '../components/MovieCard';
+import { HorizontalCarousel } from '../components/HorizontalCarousel';
 import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { getYouTubeThumbnail, type MovieData } from '../data/movies';
 import { useTMDBCatalog, type TMDBCatalogSource } from '../hooks/useTMDB';
@@ -185,7 +186,12 @@ export function ViewAllPage({
       </div>
 
       {/* Genre Filter */}
-      <div className="flex gap-3 mb-10 overflow-x-auto scrollbar-hide pb-2">
+      <HorizontalCarousel
+        className="mb-10 pb-2"
+        contentClassName="flex min-w-max gap-3"
+        scrollerClassName="py-1"
+        buttonClassName="h-9 w-9"
+      >
         {genres.map((genre) =>
         <button
           key={genre}
@@ -199,7 +205,7 @@ export function ViewAllPage({
             {genre}
           </button>
         )}
-      </div>
+      </HorizontalCarousel>
 
       {/* Content */}
       {filteredAndSorted.length === 0 ?

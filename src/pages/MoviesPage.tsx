@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { HorizontalCarousel } from '../components/HorizontalCarousel';
 import { LoadMoreSentinel } from '../components/LoadMoreSentinel';
 import { MovieCard } from '../components/MovieCard';
 import { GridSkeleton, ErrorState } from '../components/LoadingSkeleton';
@@ -151,7 +152,12 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
         </form>
       </div>
 
-      <div className="flex gap-3 mb-10 overflow-x-auto scrollbar-hide pb-2">
+      <HorizontalCarousel
+        className="mb-10 pb-2"
+        contentClassName="flex min-w-max gap-3"
+        scrollerClassName="py-1"
+        buttonClassName="h-9 w-9"
+      >
         {CATEGORIES.map((c, i) =>
         <button
           key={c.label}
@@ -169,7 +175,7 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
             {c.label}
           </button>
         )}
-      </div>
+      </HorizontalCarousel>
 
       {activeData.loading ?
       <GridSkeleton count={8} /> :
