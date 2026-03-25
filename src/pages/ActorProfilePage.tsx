@@ -502,7 +502,7 @@ export function ActorProfilePage({
       </section>
 
       <div className="mx-auto w-full max-w-[1600px] px-6 md:px-16">
-        <div className="grid gap-10 lg:h-[900px] lg:grid-cols-[1.35fr_0.95fr] lg:items-stretch">
+        <div className="relative z-10 grid gap-10 lg:h-[860px] lg:grid-cols-[1.35fr_0.95fr] lg:items-stretch">
           <div className="min-w-0">
             <FacetPanel className="lg:h-full" contentClassName="flex h-full flex-col p-7 md:p-8">
               <div className="mb-5 flex items-center gap-4">
@@ -592,11 +592,11 @@ export function ActorProfilePage({
               </div>
 
               {galleryImages.length > 0 ? (
-                <div className="grid min-h-0 flex-1 grid-cols-2 gap-4">
+                <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-4">
                   {galleryPreviewImages.map((imagePath, index) => (
                     <motion.div
                       key={imagePath}
-                      className="relative aspect-[0.82] overflow-hidden rounded-[22px] bg-white/[0.04]"
+                      className="relative h-full min-h-0 overflow-hidden rounded-[22px] bg-white/[0.04]"
                       initial={{ opacity: 0, y: 16 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, margin: '-40px' }}
@@ -631,7 +631,7 @@ export function ActorProfilePage({
           </div>
         </div>
 
-        <div className="mt-10 space-y-10">
+        <div className="relative z-0 mt-16 space-y-10">
           <section className="min-w-0">
             <div className="mb-6 flex items-center gap-4">
               <Sparkles size={18} className="text-cyan-300" />
