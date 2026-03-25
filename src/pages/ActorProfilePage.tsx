@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft,
   Calendar,
+  ChevronDown,
   ChevronRight,
   Film,
   Images,
@@ -126,10 +127,12 @@ export function ActorProfilePage({
   const [activeType, setActiveType] = useState<FilmographyTypeFilter>('all');
   const [activeGenres, setActiveGenres] = useState<string[]>([]);
   const [bioExpanded, setBioExpanded] = useState(false);
+  const [genrePickerOpen, setGenrePickerOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const { data, error, loading, refetch } = usePersonProfile(personId);
   const filmographySectionRef = useRef<HTMLElement | null>(null);
+  const genrePickerRef = useRef<HTMLDivElement | null>(null);
 
   const person = data?.person;
   const filmography = useMemo(() => data?.filmography ?? EMPTY_CREDITS, [data]);
@@ -232,6 +235,22 @@ export function ActorProfilePage({
     tv: 'Series'
   };
 
+  const selectedGenreLabel = useMemo(() => {
+    if (activeGenres.length === 0) {
+      return 'All genres';
+    }
+
+    if (activeGenres.length === 1) {
+      return activeGenres[0];
+    }
+
+    if (activeGenres.length === 2) {
+      return `${activeGenres[0]}, ${activeGenres[1]}`;
+    }
+
+    return `${activeGenres[0]} +${activeGenres.length - 1}`;
+  }, [activeGenres]);
+
   const handleViewMoreTitles = () => {
     filmographySectionRef.current?.scrollIntoView({
       behavior: 'smooth',
@@ -244,11 +263,6 @@ export function ActorProfilePage({
     setSearchQuery(searchInput.trim());
   };
 
-  const handleGenreSelection = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const values = Array.from(event.target.selectedOptions, (option) => option.value);
-    setActiveGenres(values);
-  };
-
   const filterSelectClassName =
     "w-full rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition-colors focus:border-cyan-400/45 focus:bg-white/[0.06]";
 
@@ -256,9 +270,28 @@ export function ActorProfilePage({
     setActiveType('all');
     setActiveGenres([]);
     setBioExpanded(false);
+    setGenrePickerOpen(false);
     setSearchInput('');
     setSearchQuery('');
   }, [personId]);
+
+  useEffect(() => {
+    if (!genrePickerOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!genrePickerRef.current?.contains(event.target as Node)) {
+        setGenrePickerOpen(false);
+      }
+    };
+
+    window.addEventListener('mousedown', handlePointerDown);
+
+    return () => {
+      window.removeEventListener('mousedown', handlePointerDown);
+    };
+  }, [genrePickerOpen]);
 
   if (loading && !data) {
     return (
@@ -545,9 +578,7 @@ export function ActorProfilePage({
                   {galleryImages.slice(0, 8).map((imagePath, index) => (
                     <motion.div
                       key={imagePath}
-                      className={`overflow-hidden rounded-[22px] bg-white/[0.04] ${
-                        index === 0 ? 'col-span-2 aspect-[1.45]' : 'aspect-[0.82]'
-                      }`}
+                      className="aspect-[0.82] overflow-hidden rounded-[22px] bg-white/[0.04]"
                       initial={{ opacity: 0, y: 16 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, margin: '-40px' }}
@@ -603,11 +634,17 @@ export function ActorProfilePage({
                         delay={index * 0.04}
                         onClick={() => onMovieClick(credit)}
                       />
-                      {credit.character && (
-                        <div className="px-2 text-sm text-gray-500">
-                          as <span className="text-cyan-200">{credit.character}</span>
-                        </div>
-                      )}
+                      <div className="min-h-[40px] px-2 text-sm text-gray-500">
+                        {credit.character ? (
+                          <>
+                            as <span className="text-cyan-200">{credit.character}</span>
+                          </>
+                        ) : (
+                          <span className="text-gray-600">
+                            {credit.year || (credit.mediaType === 'movie' ? 'Movie' : 'Series')}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -681,26 +718,74 @@ export function ActorProfilePage({
                     </select>
                   </div>
 
-                  <div className="min-w-0">
+                  <div ref={genrePickerRef} className="relative min-w-0">
                     <label className="mb-2 block text-[11px] uppercase tracking-[0.22em] text-gray-500">
                       Genres
                     </label>
-                    <select
-                      multiple
-                      value={activeGenres}
-                      onChange={handleGenreSelection}
+                    <button
+                      type="button"
+                      onClick={() => setGenrePickerOpen((current) => !current)}
                       disabled={genreOptions.length <= 1}
-                      className={`${filterSelectClassName} min-h-[148px] pr-2`}
+                      className={`${filterSelectClassName} flex h-[50px] items-center justify-between gap-3 text-left disabled:cursor-not-allowed disabled:opacity-60`}
                     >
-                      {genreOptions.filter((genre) => genre !== 'All').map((genre) => (
-                        <option key={genre} value={genre} className="bg-[#0b0d16] py-1">
-                          {genre}
-                        </option>
-                      ))}
-                    </select>
+                      <span className="truncate">{selectedGenreLabel}</span>
+                      <ChevronDown
+                        size={16}
+                        className={`shrink-0 text-gray-400 transition-transform ${
+                          genrePickerOpen ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                    {genrePickerOpen && genreOptions.length > 1 && (
+                      <FacetPanel
+                        className="absolute left-0 right-0 top-full z-30 mt-3"
+                        contentClassName="p-4"
+                      >
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                          <span className="text-xs uppercase tracking-[0.22em] text-gray-500">
+                            Pick genres
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setActiveGenres([])}
+                            className="text-xs uppercase tracking-[0.22em] text-cyan-300 transition-colors hover:text-cyan-200"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                        <div className="grid max-h-56 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                          {genreOptions
+                            .filter((genre) => genre !== 'All')
+                            .map((genre) => {
+                              const isSelected = activeGenres.includes(genre);
+
+                              return (
+                                <label
+                                  key={genre}
+                                  className="flex cursor-pointer items-center gap-3 rounded-[16px] border border-white/8 bg-white/[0.04] px-3 py-3 text-sm text-gray-200 transition-colors hover:bg-white/[0.07]"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() =>
+                                      setActiveGenres((current) =>
+                                        current.includes(genre)
+                                          ? current.filter((item) => item !== genre)
+                                          : [...current, genre]
+                                      )
+                                    }
+                                    className="h-4 w-4 rounded border-white/15 bg-transparent text-cyan-400 focus:ring-cyan-400/30"
+                                  />
+                                  <span className="truncate">{genre}</span>
+                                </label>
+                              );
+                            })}
+                        </div>
+                      </FacetPanel>
+                    )}
                     <p className="mt-2 text-xs text-gray-500">
                       {genreOptions.length > 1
-                        ? 'Leave empty to show every genre.'
+                        ? 'Open the list to combine genres without creating height offsets.'
                         : 'No genre tags are available for this filmography yet.'}
                     </p>
                   </div>
