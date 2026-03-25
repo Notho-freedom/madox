@@ -195,7 +195,7 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
       <ErrorState message={activeData.error} onRetry={activeData.refetch} /> :
 
       <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
             {activeData.data.slice(1).map((s, index) =>
               <motion.div
                 key={s.id}
@@ -211,7 +211,12 @@ export function SeriesPage({ onMovieClick }: SeriesPageProps) {
                 transition={{
                   delay: index * 0.03
                 }}>
-                <MovieCard {...s} delay={0} onClick={() => onMovieClick(s)} />
+                <MovieCard
+                  {...s}
+                  className="w-full max-w-[220px] xl:max-w-[228px] 2xl:max-w-[236px]"
+                  delay={0}
+                  onClick={() => onMovieClick(s)}
+                />
               </motion.div>
             )}
           </div>

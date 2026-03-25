@@ -177,7 +177,7 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
       <ErrorState message={activeData.error} onRetry={activeData.refetch} /> :
 
       <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
             {activeData.data.map((movie, index) =>
               <motion.div
                 key={movie.id}
@@ -195,6 +195,7 @@ export function MoviesPage({ onMovieClick }: MoviesPageProps) {
                 }}>
                 <MovieCard
                   {...movie}
+                  className="w-full max-w-[220px] xl:max-w-[228px] 2xl:max-w-[236px]"
                   delay={0}
                   onClick={() => onMovieClick(movie)} />
               </motion.div>

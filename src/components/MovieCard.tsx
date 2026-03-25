@@ -14,6 +14,7 @@ interface MovieCardProps {
   genre?: string;
   delay?: number;
   onClick?: () => void;
+  className?: string;
   [key: string]: any;
 }
 export function MovieCard({
@@ -26,7 +27,8 @@ export function MovieCard({
   image,
   genre,
   delay = 0,
-  onClick
+  onClick,
+  className = ''
 }: MovieCardProps) {
   // Prefer TMDB poster, fallback to YouTube thumbnail
   const thumbnail = posterPath ?
@@ -34,7 +36,7 @@ export function MovieCard({
   image || (videoId ? getYouTubeThumbnail(videoId, 'maxres') : '');
   return (
     <motion.div
-      className="group relative w-[280px] flex-shrink-0 cursor-pointer"
+      className={`group relative w-[280px] flex-shrink-0 cursor-pointer ${className}`}
       initial={{
         opacity: 0,
         y: 20

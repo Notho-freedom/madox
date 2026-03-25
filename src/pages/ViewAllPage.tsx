@@ -217,7 +217,7 @@ export function ViewAllPage({
           </button>
         </div> :
       viewMode === 'grid' ?
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
           {filteredAndSorted.map((movie, index) =>
         <motion.div
           key={movie.id}
@@ -236,6 +236,7 @@ export function ViewAllPage({
           
               <MovieCard
             {...movie}
+            className="w-full max-w-[220px] xl:max-w-[228px] 2xl:max-w-[236px]"
             delay={0}
             onClick={() => onMovieClick(movie)} />
           

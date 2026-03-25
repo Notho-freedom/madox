@@ -140,7 +140,7 @@ export function ActorProfilePage({
   const filmography = useMemo(() => data?.filmography ?? EMPTY_CREDITS, [data]);
   const knownFor = useMemo(() => data?.knownFor ?? EMPTY_CREDITS, [data]);
   const stats = data?.stats;
-  const knownForPreview = useMemo(() => knownFor.slice(0, 5), [knownFor]);
+  const knownForPreview = useMemo(() => knownFor.slice(0, 6), [knownFor]);
 
   const galleryImages = useMemo(() => {
     if (!data || !person) {
@@ -800,12 +800,12 @@ export function ActorProfilePage({
             </div>
 
             {knownFor.length > 0 ? (
-              <div className="overflow-x-auto pb-6 scrollbar-hide">
-                <div className="flex min-w-max gap-6 pr-4">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
                   {knownForPreview.map((credit, index) => (
                     <div key={`${credit.mediaType}-${credit.tmdbId}`} className="space-y-3">
                       <MovieCard
                         {...credit}
+                        className="w-full max-w-[220px] xl:max-w-[228px] 2xl:max-w-[236px]"
                         delay={index * 0.04}
                         onClick={() => onMovieClick(credit)}
                       />
@@ -822,7 +822,6 @@ export function ActorProfilePage({
                       </div>
                     </div>
                   ))}
-                </div>
               </div>
             ) : (
               <FacetPanel contentClassName="p-6">
@@ -969,7 +968,7 @@ export function ActorProfilePage({
             </FacetPanel>
 
             {filteredFilmography.length > 0 ? (
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
                 {filteredFilmography.map((credit, index) => (
                   <motion.div
                     key={`${credit.mediaType}-${credit.tmdbId}`}
@@ -988,6 +987,7 @@ export function ActorProfilePage({
                   >
                     <MovieCard
                       {...credit}
+                      className="w-full max-w-[220px] xl:max-w-[228px] 2xl:max-w-[236px]"
                       delay={0}
                       onClick={() => onMovieClick(credit)}
                     />

@@ -33,12 +33,12 @@ export function CardSkeleton({ count = 6 }: {count?: number;}) {
 }
 export function GridSkeleton({ count = 8 }: {count?: number;}) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
       {Array.from({
         length: count
       }).map((_, i) =>
       <div key={i} className="flex justify-center">
-          <div className="w-[280px]">
+          <div className="w-full max-w-[220px] xl:max-w-[228px] 2xl:max-w-[236px]">
             <div
             className="relative h-[400px] w-full bg-white/5 overflow-hidden animate-pulse"
             style={{

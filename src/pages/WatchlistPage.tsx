@@ -72,7 +72,7 @@ export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
         </div> :
 
       <>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
             {watchlist.map((item, index) =>
               <motion.div
                 key={item.id}
@@ -91,6 +91,7 @@ export function WatchlistPage({ onMovieClick }: WatchlistPageProps) {
                 <div className="flex justify-center">
                   <MovieCard
                     {...item}
+                    className="w-full max-w-[220px] xl:max-w-[228px] 2xl:max-w-[236px]"
                     delay={0}
                     onClick={() => onMovieClick(item)} />
                 </div>
