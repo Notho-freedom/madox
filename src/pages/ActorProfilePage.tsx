@@ -171,6 +171,8 @@ export function ActorProfilePage({
 
   const galleryPreviewImages = useMemo(() => galleryImages.slice(0, 4), [galleryImages]);
   const galleryOverflowCount = Math.max(0, galleryImages.length - galleryPreviewImages.length);
+  const featuredGalleryImages = useMemo(() => galleryImages.slice(0, 6), [galleryImages]);
+  const featuredGalleryOverflowCount = Math.max(0, galleryImages.length - featuredGalleryImages.length);
 
   const genreOptions = useMemo(() => {
     const genres = new Set<string>();
@@ -236,6 +238,8 @@ export function ActorProfilePage({
   }, [activeGenres, activeType, filmography, searchQuery]);
 
   const biography = person?.biography?.trim() || '';
+  const hasBiography = biography.length > 0;
+  const hasGallery = galleryImages.length > 0;
   const biographyNeedsClamp = biography.length > 1200;
   const displayedBiography =
     biographyNeedsClamp && !bioExpanded ? `${biography.slice(0, 1200).trim()}...` : biography;
@@ -266,6 +270,8 @@ export function ActorProfilePage({
 
     return `${activeGenres[0]} +${activeGenres.length - 1}`;
   }, [activeGenres]);
+
+  const shouldFeatureGallery = hasGallery && (!hasBiography || (galleryImages.length > 4 && biography.length < 900));
 
   const handleViewMoreTitles = () => {
     filmographySectionRef.current?.scrollIntoView({
@@ -308,6 +314,107 @@ export function ActorProfilePage({
       window.removeEventListener('mousedown', handlePointerDown);
     };
   }, [genrePickerOpen]);
+
+  const renderBiographyPanel = (variant: 'featured' | 'compact') => {
+    const panelTitleClass =
+      variant === 'featured'
+        ? "font-['Advent_Pro'] text-3xl font-bold text-white"
+        : "font-['Advent_Pro'] text-2xl font-bold text-white";
+    const scrollClass =
+      variant === 'featured'
+        ? 'min-h-0 overflow-y-auto pr-2 lg:max-h-[680px]'
+        : 'min-h-0 overflow-y-auto pr-2 lg:max-h-[340px]';
+
+    return (
+      <FacetPanel contentClassName="flex min-h-0 flex-col p-7 md:p-8">
+        <div className="mb-5 flex items-center gap-4">
+          <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_16px_rgba(34,211,238,0.55)]" />
+          <h2 className={panelTitleClass}>Biography</h2>
+          <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+        </div>
+
+        <div className={scrollClass}>
+          <p className="break-words text-base leading-8 text-gray-300">
+            {displayedBiography ||
+              'No biography is available yet for this actor, but the filmography below already maps out the most visible chapters of the career.'}
+          </p>
+        </div>
+
+        {biographyNeedsClamp && (
+          <button
+            onClick={() => setBioExpanded((current) => !current)}
+            className="mt-6 text-sm font-medium uppercase tracking-[0.22em] text-cyan-300 transition-colors hover:text-cyan-200"
+          >
+            {bioExpanded ? 'Show Less' : 'Read More'}
+          </button>
+        )}
+      </FacetPanel>
+    );
+  };
+
+  const renderGalleryPanel = (variant: 'featured' | 'compact') => {
+    const panelTitleClass =
+      variant === 'featured'
+        ? "font-['Advent_Pro'] text-3xl font-bold text-white"
+        : "font-['Advent_Pro'] text-2xl font-bold text-white";
+    const images = variant === 'featured' ? featuredGalleryImages : galleryPreviewImages;
+    const overflowCount =
+      variant === 'featured' ? featuredGalleryOverflowCount : galleryOverflowCount;
+    const gridClass =
+      variant === 'featured'
+        ? 'grid min-h-0 grid-cols-2 gap-4 xl:grid-cols-3'
+        : 'grid min-h-0 grid-cols-2 grid-rows-2 gap-4';
+    const imageClass =
+      variant === 'featured'
+        ? 'relative aspect-[0.88] overflow-hidden rounded-[22px] bg-white/[0.04]'
+        : 'relative aspect-[0.82] overflow-hidden rounded-[22px] bg-white/[0.04]';
+
+    return (
+      <FacetPanel contentClassName="flex min-h-0 flex-col p-7">
+        <div className="mb-5 flex items-center gap-3">
+          <Images size={18} className="text-cyan-300" />
+          <h2 className={panelTitleClass}>Photo Gallery</h2>
+        </div>
+
+        {hasGallery ? (
+          <div className={gridClass}>
+            {images.map((imagePath, index) => (
+              <motion.div
+                key={`${variant}-${imagePath}`}
+                className={imageClass}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.4, delay: index * 0.04 }}
+              >
+                <img
+                  src={profile(imagePath, index === 0 ? 'original' : 'h632')}
+                  alt={`${person.name} portrait ${index + 1}`}
+                  className="h-full w-full object-cover"
+                />
+                {overflowCount > 0 && index === images.length - 1 && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/55 backdrop-blur-sm">
+                    <div className="text-center">
+                      <div className="font-['Advent_Pro'] text-3xl font-bold text-white">
+                        +{overflowCount}
+                      </div>
+                      <div className="mt-1 text-[11px] uppercase tracking-[0.22em] text-cyan-200">
+                        more photos
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex min-h-0 flex-1 items-center text-gray-400">
+            No additional photos are available for this actor yet.
+          </div>
+        )}
+      </FacetPanel>
+    );
+  };
 
   if (loading && !data) {
     return (
@@ -502,36 +609,12 @@ export function ActorProfilePage({
       </section>
 
       <div className="mx-auto w-full max-w-[1600px] px-6 md:px-16">
-        <div className="relative z-10 grid gap-10 lg:h-[860px] lg:grid-cols-[1.35fr_0.95fr] lg:items-stretch">
+        <div className="relative z-10 grid gap-10 lg:grid-cols-[1.35fr_0.95fr] lg:items-start">
           <div className="min-w-0">
-            <FacetPanel className="lg:h-full" contentClassName="flex h-full flex-col p-7 md:p-8">
-              <div className="mb-5 flex items-center gap-4">
-                <div className="h-8 w-1 bg-cyan-500 shadow-[0_0_16px_rgba(34,211,238,0.55)]" />
-                <h2 className="font-['Advent_Pro'] text-3xl font-bold text-white">
-                  Biography
-                </h2>
-                <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-              </div>
-
-              <div className="min-h-0 flex-1 overflow-y-auto pr-2">
-                <p className="break-words text-base leading-8 text-gray-300">
-                  {displayedBiography ||
-                    'No biography is available yet for this actor, but the filmography below already maps out the most visible chapters of the career.'}
-                </p>
-              </div>
-
-              {biographyNeedsClamp && (
-                <button
-                  onClick={() => setBioExpanded((current) => !current)}
-                  className="mt-6 text-sm font-medium uppercase tracking-[0.22em] text-cyan-300 transition-colors hover:text-cyan-200"
-                >
-                  {bioExpanded ? 'Show Less' : 'Read More'}
-                </button>
-              )}
-            </FacetPanel>
+            {shouldFeatureGallery ? renderGalleryPanel('featured') : renderBiographyPanel('featured')}
           </div>
 
-          <div className="grid min-w-0 gap-8 lg:h-full lg:grid-rows-[auto_minmax(0,1fr)]">
+          <div className="grid min-w-0 gap-8 lg:max-h-[860px] lg:grid-rows-[auto_auto]">
             <FacetPanel contentClassName="p-7">
               <div className="mb-5 flex items-center gap-3">
                 <Star size={18} className="text-cyan-300" />
@@ -583,51 +666,13 @@ export function ActorProfilePage({
               </div>
             </FacetPanel>
 
-            <FacetPanel className="lg:h-full" contentClassName="flex h-full flex-col p-7">
-              <div className="mb-5 flex items-center gap-3">
-                <Images size={18} className="text-cyan-300" />
-                <h2 className="font-['Advent_Pro'] text-2xl font-bold text-white">
-                  Photo Gallery
-                </h2>
-              </div>
-
-              {galleryImages.length > 0 ? (
-                <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-4">
-                  {galleryPreviewImages.map((imagePath, index) => (
-                    <motion.div
-                      key={imagePath}
-                      className="relative h-full min-h-0 overflow-hidden rounded-[22px] bg-white/[0.04]"
-                      initial={{ opacity: 0, y: 16 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: '-40px' }}
-                      transition={{ duration: 0.4, delay: index * 0.04 }}
-                    >
-                      <img
-                        src={profile(imagePath, index === 0 ? 'original' : 'h632')}
-                        alt={`${person.name} portrait ${index + 1}`}
-                        className="h-full w-full object-cover"
-                      />
-                      {galleryOverflowCount > 0 && index === galleryPreviewImages.length - 1 && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/55 backdrop-blur-sm">
-                          <div className="text-center">
-                            <div className="font-['Advent_Pro'] text-3xl font-bold text-white">
-                              +{galleryOverflowCount}
-                            </div>
-                            <div className="mt-1 text-[11px] uppercase tracking-[0.22em] text-cyan-200">
-                              more photos
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex min-h-0 flex-1 items-center text-gray-400">
-                  No additional photos are available for this actor yet.
-                </div>
-              )}
-            </FacetPanel>
+            {shouldFeatureGallery
+              ? hasBiography
+                ? renderBiographyPanel('compact')
+                : null
+              : hasGallery
+                ? renderGalleryPanel('compact')
+                : null}
           </div>
         </div>
 
